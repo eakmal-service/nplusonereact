@@ -6,36 +6,19 @@ import Link from 'next/link';
 
 const HeroSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
   
-  // Check if device is mobile on component mount and when window is resized
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Initial check
-    checkIsMobile();
-    
-    // Add event listener for window resize
-    window.addEventListener('resize', checkIsMobile);
-    
-    // Cleanup event listener
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
-  
-  // Use local image paths with empty text fields
+  // Use single image paths that will automatically be responsive
   const slides = [
     {
-      url: isMobile ? '/images/mobile/mobile.jpg' : '/images/slider_1.jpg',
-      alt: 'Elegant Women\'s Fashion',
+      url: '/hero-1.png',
+      alt: 'NPlusOne Fashion Collection',
     },
     {
-      url: isMobile ? '/images/mobile/Mobile-Heroslider_2.jpg' : '/images/Slider_2.jpg',
+      url: '/images/Slider_2.jpg',
       alt: 'Premium Collection',
     },
     {
-      url: isMobile ? '/images/mobile/Mobile-Heroslider_3.png' : '/images/slider_3.png',
+      url: '/images/slider_3.png',
       alt: 'Stylish Designs',
     },
   ];
@@ -65,6 +48,28 @@ const HeroSlider = () => {
     setCurrentIndex(slideIndex);
   };
 
+  // Function to notify parent that slider is visible
+  useEffect(() => {
+    // Dispatch an event to notify that HeroSlider is in view
+    const dispatchVisibleEvent = () => {
+      const event = new CustomEvent('heroslider-visible');
+      window.dispatchEvent(event);
+    };
+    
+    // Immediately dispatch when component mounts
+    dispatchVisibleEvent();
+    
+    // Also set up an interval to keep dispatching the event
+    const intervalId = setInterval(dispatchVisibleEvent, 1000);
+    
+    return () => {
+      // When component unmounts, notify that HeroSlider is no longer in view
+      clearInterval(intervalId);
+      const event = new CustomEvent('heroslider-hidden');
+      window.dispatchEvent(event);
+    };
+  }, []);
+
   return (
     <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
       {/* Hero images */}
@@ -78,12 +83,18 @@ const HeroSlider = () => {
           >
             <div className="relative w-full h-full">
               <div className="absolute inset-0 bg-black opacity-30 z-10"></div>
+              {/* Top gradient overlay */}
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black to-transparent opacity-70 z-20"></div>
+              {/* Bottom gradient overlay */}
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent opacity-70 z-20"></div>
               <Image
                 src={slide.url}
                 alt={slide.alt}
                 fill
+                sizes="100vw"
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
                 priority={index === 0}
+                className="w-full h-full"
               />
             </div>
           </div>

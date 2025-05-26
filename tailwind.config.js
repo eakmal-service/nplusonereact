@@ -9,8 +9,9 @@ module.exports = {
         'xs': '475px',
       },
       colors: {
-        silver: "#CDCDCD",
-        black: "#000000",
+        'silver': "#CDCDCD",
+        'black': "#000000",
+        'custom-black': "#000000",
       }
     },
   },

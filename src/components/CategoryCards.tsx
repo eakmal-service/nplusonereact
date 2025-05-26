@@ -67,7 +67,9 @@ const CategoryCards = () => {
         <CategoryGrid categories={categories} />
         
         {/* Discount Banner */}
-        <DiscountBanner />
+        <div className="px-2 sm:px-4">
+          <DiscountBanner />
+        </div>
         
         {/* Explore Collection Title */}
         <SectionTitle title="Explore Collection" />

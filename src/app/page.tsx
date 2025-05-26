@@ -1,12 +1,17 @@
 import React from 'react';
 import HeroSlider from '../components/HeroSlider';
 import CategoryCards from '../components/CategoryCards';
+import MyFavorite from '../components/home/MyFavorite';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-custom-black text-white w-full">
       <div className="relative z-10 w-full">
         <HeroSlider />
+      </div>
+      
+      <div className="w-full mx-auto px-2 sm:px-4">
+        <MyFavorite />
       </div>
       
       <div className="w-full mx-auto px-2 sm:px-4 py-8 sm:py-10 md:py-12">

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CollectionItem } from '@/types';
 
 interface CollectionSliderProps {
@@ -60,7 +61,7 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
   return (
     <>
       {/* Collection Slider */}
-      <div className="mt-8 mb-8 overflow-hidden relative px-6 sm:px-8 md:px-10">
+      <div className="mt-12 mb-12 overflow-hidden relative px-4 sm:px-6 md:px-8 lg:px-10">
         {/* Prev button */}
         <button 
           onClick={prevSlide}
@@ -72,21 +73,22 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
           </svg>
         </button>
         
-        <div className="flex justify-center sm:justify-between items-center gap-2 md:gap-4 lg:gap-6 w-full">
+        <div className="flex justify-center sm:justify-between items-center gap-3 md:gap-4 lg:gap-6 w-full">
           {getCurrentItems().map((item, index) => (
-            <div key={index} className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2">
-              <Link href={item.link}>
-                <div className="relative rounded-full overflow-hidden border-4 border-[#CDCDCD] w-full">
-                  <div className="aspect-[3/4] w-full max-w-[273px] mx-auto">
-                    <img 
+            <div key={index} className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2">
+              <Link href={item.link} className="w-full">
+                <div className="relative rounded-lg overflow-hidden shadow-md w-full">
+                  <div className="w-full aspect-[3/4] relative">
+                    <Image 
                       src={item.image}
                       alt={item.alt}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      role="image"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover transition-transform duration-300 hover:scale-105"
+                      priority
                     />
                   </div>
-                  <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity hover:bg-opacity-10"></div>
-                  <div className="absolute bottom-0 w-full bg-black bg-opacity-60 py-2 md:py-4 flex flex-col items-center">
+                  <div className="absolute bottom-0 w-full bg-black bg-opacity-60 py-2 md:py-3 flex flex-col items-center">
                     <h4 className="text-white text-base sm:text-lg font-bold text-center">{item.title}</h4>
                     <span className="text-white text-xs sm:text-sm mt-1">SHOP NOW</span>
                   </div>
@@ -108,7 +110,7 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
         </button>
         
         {/* Slider pagination */}
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-6">
           {Array.from({ length: totalPages }).map((_, idx) => (
             <button
               key={idx}

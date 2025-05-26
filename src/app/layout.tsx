@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-custom-black">
         <Header />
-        <main className="flex-grow pt-20 md:pt-24 w-full max-w-[100vw] overflow-x-hidden">{children}</main>
+        <main className="flex-grow w-full max-w-[100vw] overflow-x-hidden">{children}</main>
         <Footer />
       </body>
     </html>

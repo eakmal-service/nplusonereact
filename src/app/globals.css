@@ -4,7 +4,7 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-rgb: 35, 31, 30;
+  --background-rgb: 0, 0, 0;
 }
 
 body {
@@ -14,7 +14,20 @@ body {
 }
 
 .bg-custom-black {
-  background-color: #231f1e;
+  background-color: #000000;
+}
+
+/* SVG display fixes */
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Allow logo SVG to display properly */
+#Layer_1 {
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 
 @keyframes fadeIn {

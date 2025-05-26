@@ -4,37 +4,37 @@ import { Category, CollectionItem, Product } from "../types";
 export const categories: Category[] = [
   {
     title: 'TSHIRT',
-    image: '/images/categories/tshirt.jpg',
+    image: '/images/categories/5.png',
     link: '/tshirt-top',
     alt: 'T-shirts'
   },
   {
     title: 'TOP WEAR',
-    image: '/images/categories/topwear.jpg',
+    image: '/images/categories/1.png',
     link: '/tshirt-top',
     alt: 'Top Wear'
   },
   {
     title: 'NIGHT PANT',
-    image: '/images/categories/nightpant.jpg',
+    image: '/images/categories/2.png',
     link: '/night-bottoms',
     alt: 'Night Pants'
   },
   {
     title: 'CHILD WEAR',
-    image: '/images/categories/childwear.jpg',
+    image: '/images/categories/6.png',
     link: '/girls-wear',
     alt: 'Child Wear'
   },
   {
     title: 'CO-ORD SETS',
-    image: '/images/categories/coordsets.jpg',
+    image: '/images/categories/3.png',
     link: '/co-ord-sets',
     alt: 'Co-ord Sets'
   },
   {
     title: 'LADIES NIGHT DRESS',
-    image: '/images/categories/ladiesnight.jpg',
+    image: '/images/categories/4.png',
     link: '/night-bottoms',
     alt: 'Ladies Night Dress'
   }
@@ -43,50 +43,50 @@ export const categories: Category[] = [
 // Collection items for the collection slider
 export const collectionItems: CollectionItem[] = [
   {
-    title: 'BOTTOMWEAR',
-    image: 'https://placehold.co/600x800/orange/white?text=Bottomwear',
+    title: 'DENIMWEAR',
+    image: '/images/collections/1.png',
     link: '/night-bottoms',
-    alt: 'Bottomwear Collection'
+    alt: 'Denimwear Collection'
   },
   {
     title: 'INDIGO CHRONICALS',
-    image: 'https://placehold.co/600x800/blue/white?text=Indigo',
+    image: '/images/collections/2.png',
     link: '/tshirt-top',
     alt: 'Indigo Chronicals Collection'
   },
   {
     title: 'EVERYDAY GRACE',
-    image: 'https://placehold.co/600x800/purple/white?text=Grace',
+    image: '/images/collections/3.png',
     link: '/co-ord-sets',
     alt: 'Everyday Grace Collection'
   },
   {
     title: 'ONLINE EXCLUSIVE',
-    image: 'https://placehold.co/600x800/red/white?text=Exclusive',
+    image: '/images/collections/4.png',
     link: '/tshirt-top',
     alt: 'Online Exclusive Collection'
   },
   {
-    title: 'RED LEHENGA',
-    image: 'https://placehold.co/600x800/maroon/white?text=Lehenga',
+    title: 'Short Kurta',
+    image: '/images/collections/5.png',
     link: '/co-ord-sets',
-    alt: 'Red Lehenga Collection'
+    alt: 'Short Kurta Collection'
   },
   {
     title: 'CASUAL CHIC',
-    image: 'https://placehold.co/600x800/teal/white?text=Casual',
+    image: '/images/collections/6.png',
     link: '/tshirt-top',
     alt: 'Casual Chic Collection'
   },
   {
     title: 'SUMMER VIBES',
-    image: 'https://placehold.co/600x800/yellow/black?text=Summer',
+    image: '/images/collections/7.png',
     link: '/tshirt-top',
     alt: 'Summer Vibes Collection'
   },
   {
     title: 'ETHNIC FUSION',
-    image: 'https://placehold.co/600x800/green/white?text=Ethnic',
+    image: '/images/collections/8.png',
     link: '/co-ord-sets',
     alt: 'Ethnic Fusion Collection'
   }
@@ -97,7 +97,7 @@ export const recommendedProducts: Product[] = [
   {
     id: 1,
     title: 'OFF-WHITE AND BLACK COTTON PRINTED TIERED DRESS',
-    image: 'https://placehold.co/600x800/olive/white?text=Sage+Green',
+    image: '/images/products/product-1/115998d5-47c8-4143-ba49-17351e01b3b3_PicCopilot_b131a.png',
     price: '₹3,999',
     originalPrice: '₹5,999',
     discount: '30% OFF',
@@ -110,16 +110,16 @@ export const recommendedProducts: Product[] = [
     ],
     sizes: ['32', '34', '36', '38', '40', '42'],
     thumbnails: [
-      { url: 'https://placehold.co/600x800/olive/white?text=Sage+Green', alt: 'Front view' },
-      { url: 'https://placehold.co/600x800/olive/white?text=Sage+Green+Back', alt: 'Back view' },
-      { url: 'https://placehold.co/600x800/olive/white?text=Sage+Green+Side', alt: 'Side view' },
-      { url: 'https://placehold.co/600x800/olive/white?text=Sage+Green+Detail', alt: 'Detail view' }
+      { url: '/images/products/product-1/115998d5-47c8-4143-ba49-17351e01b3b3_PicCopilot_b131a.png', alt: 'Front view' },
+      { url: '/images/products/product-1/115998d5-47c8-4143-ba49-17351e01b3b3_PicCopilot_dfdb4.png', alt: 'Back view' },
+      { url: '/images/products/product-1/9be1af35-6d6c-4f34-9d9f-5f63188e1fca_PicCopilot_81ee1.png', alt: 'Side view' },
+      { url: '/images/products/product-1/image-13_PicCopilot_2d726.png', alt: 'Detail view' }
     ]
   },
   {
     id: 2,
     title: 'Pink Cotton Floral Strappy Straight Suit Set',
-    image: 'https://placehold.co/600x800/pink/white?text=Pink+Floral',
+    image: '/images/products/product-2/House_of_Chikankari_Tamara_Chikankari_Mulmul_Straight_Kurta_4_PicCopilot_4bbec.png',
     price: '₹5,995',
     link: '/product/2',
     alt: 'Pink Cotton Floral Strappy Straight Suit Set',
@@ -129,10 +129,10 @@ export const recommendedProducts: Product[] = [
     ],
     sizes: ['32', '34', '36', '38', '40', '42'],
     thumbnails: [
-      { url: 'https://placehold.co/600x800/pink/white?text=Pink+Floral', alt: 'Front view' },
-      { url: 'https://placehold.co/600x800/pink/white?text=Pink+Floral+Back', alt: 'Back view' },
-      { url: 'https://placehold.co/600x800/pink/white?text=Pink+Floral+Side', alt: 'Side view' },
-      { url: 'https://placehold.co/600x800/pink/white?text=Pink+Floral+Detail', alt: 'Detail view' }
+      { url: '/images/products/product-2/House_of_Chikankari_Tamara_Chikankari_Mulmul_Straight_Kurta_4_PicCopilot_4bbec.png', alt: 'Front view' },
+      { url: '/images/products/product-2/House_of_Chikankari_Tamara_Chikankari_Mulmul_Straight_Kurta_4_PicCopilot_9da7a.png', alt: 'Back view' },
+      { url: '/images/products/product-2/House_of_Chikankari_Tamara_Chikankari_Mulmul_Straight_Kurta_4_PicCopilot_d6d96.png', alt: 'Side view' },
+      { url: '/images/products/product-2/House_of_Chikankari_Tamara_Chikankari_Mulmul_Straight_Kurta_4_PicCopilot_e8a16.png', alt: 'Detail view' }
     ]
   },
   {

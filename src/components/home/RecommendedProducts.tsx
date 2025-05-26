@@ -98,11 +98,11 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products }) =
                 )}
                 <div className="relative overflow-hidden">
                   <Link href={product.link}>
-                    <div className="aspect-[4/5] w-full max-w-[290px] mx-auto">
+                    <div className="w-full">
                       <img 
                         src={product.image}
                         alt={product.alt}
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto max-w-100%"
                         role="image"
                       />
                     </div>
