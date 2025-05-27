@@ -15,6 +15,7 @@ const nextConfig = {
     port: "3000"
   },
   images: {
+    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',

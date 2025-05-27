@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <style>
-    .ring { fill: #000000; }
-    .text { fill: #CDCDCD; }
-  </style>
-  <circle class="ring" cx="50" cy="50" r="45" />
-  <circle fill="#FFFFFF" cx="50" cy="50" r="20" />
-  <text class="text" x="50" y="55" text-anchor="middle" font-size="8">N+1</text>
-</svg> 

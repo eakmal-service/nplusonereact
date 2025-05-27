@@ -63,12 +63,15 @@ const CategoryCards = () => {
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        {/* Category Explore Title */}
+        <SectionTitle title="Category Explore" />
+        
         {/* Category Grid */}
         <CategoryGrid categories={categories} />
         
         {/* Discount Banner */}
         <div className="px-2 sm:px-4">
-          <DiscountBanner />
+        <DiscountBanner />
         </div>
         
         {/* Explore Collection Title */}
@@ -77,7 +80,7 @@ const CategoryCards = () => {
         {/* Collection Slider */}
         <CollectionSlider collectionItems={collectionItems} />
         
-        {/* Recommended Products */}
+        {/* Recommended Products Section */}
         <RecommendedProducts products={recommendedProducts} />
       </div>
 

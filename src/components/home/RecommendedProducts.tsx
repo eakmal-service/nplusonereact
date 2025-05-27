@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Product } from '@/types';
 import QuickViewModal from '../QuickViewModal';
+import SectionTitle from './SectionTitle';
 
 interface RecommendedProductsProps {
   products: Product[];
 }
 
-const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products }) => {
+const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = [] }) => {
   const [recommendedIndex, setRecommendedIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -38,6 +39,11 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products }) =
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Safety check for empty products array
+  if (!products || products.length === 0) {
+    return null;
+  }
   
   // Calculate total pages
   const totalRecommendedPages = Math.ceil(products.length / itemsPerView);
@@ -73,7 +79,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products }) =
 
   return (
     <div className="mt-10 md:mt-16 mb-8">
-      <h3 className="text-2xl md:text-4xl font-bold text-center mb-6 md:mb-8 text-[#CDCDCD]">RECOMMENDED FOR YOU</h3>
+      <SectionTitle title="Recommended for you" />
       
       <div className="overflow-hidden relative px-6 sm:px-8 md:px-10">
         {/* Prev button */}

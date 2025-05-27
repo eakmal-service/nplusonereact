@@ -138,54 +138,122 @@ export const recommendedProducts: Product[] = [
   {
     id: 3,
     title: 'Off-White Cotton Embroidered Flared Suit Set',
-    image: 'https://placehold.co/600x800/ivory/black?text=Off-White',
+    image: '/products/3/female_76_1-370.png.avif',
     price: '₹15,950',
     link: '/product/3',
-    alt: 'Off-White Cotton Embroidered Flared Suit Set'
+    alt: 'Off-White Cotton Embroidered Flared Suit Set',
+    description: 'Elegant off-white cotton suit with beautiful embroidery and a comfortable flared design.',
+    colors: [
+      { name: 'Off-White', color: '#f7f7f7' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/3/female_76_1-370.png.avif', alt: 'Front view' },
+      { url: '/products/3/female_76_2-371.png.avif', alt: 'Back view' },
+      { url: '/products/3/female_76_3-372.png.avif', alt: 'Side view' }
+    ]
   },
   {
     id: 4,
     title: 'Beige and Teal Pure Cotton Straight Kurta Set',
-    image: 'https://placehold.co/600x800/teal/white?text=Beige+Teal',
+    image: '/products/4/female_1006_01-21.png.avif',
     price: '₹3,299',
+    originalPrice: '₹4,999',
+    discount: '34% OFF',
     link: '/product/4',
-    alt: 'Beige and Teal Pure Cotton Straight Kurta Set'
+    alt: 'Beige and Teal Pure Cotton Straight Kurta Set',
+    badge: 'Sale',
+    description: 'A comfortable and stylish straight kurta set made with pure cotton in beautiful beige and teal colors.',
+    colors: [
+      { name: 'Beige-Teal', color: '#f5f5dc' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/4/female_1006_01-21.png.avif', alt: 'Front view' },
+      { url: '/products/4/female_1006_02-22.png.avif', alt: 'Back view' },
+      { url: '/products/4/female_1006_03-23.png.avif', alt: 'Side view' },
+      { url: '/products/4/female_1006_04-24.png.avif', alt: 'Detail view' }
+    ]
   },
   {
     id: 5,
     title: 'Dull Pink Embroidered Straight Suit Set',
-    image: 'https://placehold.co/600x800/lightpink/white?text=Dull+Pink',
+    image: '/products/5/female_1013_01-45.png.avif',
     price: '₹4,599',
     link: '/product/5',
-    alt: 'Dull Pink Embroidered Straight Suit Set'
+    alt: 'Dull Pink Embroidered Straight Suit Set',
+    description: 'Elegant dull pink suit set with detailed embroidery and a classic straight cut design.',
+    colors: [
+      { name: 'Dull-Pink', color: '#d8a0a6' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/5/female_1013_01-45.png.avif', alt: 'Front view' },
+      { url: '/products/5/female_1013_02-46.png.avif', alt: 'Back view' },
+      { url: '/products/5/female_1013_03-47.png.avif', alt: 'Side view' },
+      { url: '/products/5/female_1013_04-48.png.avif', alt: 'Detail view' }
+    ]
   },
   {
     id: 6,
     title: 'Blue Chanderi Silk Printed Kurta Set',
-    image: 'https://placehold.co/600x800/blue/white?text=Silk+Kurta',
+    image: '/products/6/female_1036_01-129.png.avif',
     price: '₹5,699',
     link: '/product/6',
     alt: 'Blue Chanderi Silk Printed Kurta Set',
-    badge: 'Online Exclusive'
+    badge: 'Online Exclusive',
+    description: 'Premium blue Chanderi silk kurta set with elegant prints and premium quality finish.',
+    colors: [
+      { name: 'Blue-Print', color: '#4169e1' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/6/female_1036_01-129.png.avif', alt: 'Front view' },
+      { url: '/products/6/female_1036_02-130.png.avif', alt: 'Back view' },
+      { url: '/products/6/female_1036_03-131.png.avif', alt: 'Side view' },
+      { url: '/products/6/female_1036_04-132.png.avif', alt: 'Detail view' }
+    ]
   },
   {
     id: 7,
     title: 'Yellow Linen Embroidered Sharara Suit',
-    image: 'https://placehold.co/600x800/yellow/black?text=Sharara',
+    image: '/products/7/female_scene1_1.png.avif',
     price: '₹5,250',
     originalPrice: '₹8,250',
     discount: '35% OFF',
     link: '/product/7',
     alt: 'Yellow Linen Embroidered Sharara Suit',
-    badge: 'Sale'
+    badge: 'Sale',
+    description: 'Vibrant yellow linen sharara suit featuring beautiful embroidery and a comfortable fit.',
+    colors: [
+      { name: 'Yellow-Embroidered', color: '#ffd700' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/7/female_scene1_1.png.avif', alt: 'Front view' },
+      { url: '/products/7/female_scene1_2.png.avif', alt: 'Back view' },
+      { url: '/products/7/female_scene1_3.png.avif', alt: 'Side view' },
+      { url: '/products/7/female_scene1_4.png.avif', alt: 'Detail view' }
+    ]
   },
   {
     id: 8,
     title: 'Teal Rayon Printed Straight Kurta Set',
-    image: 'https://placehold.co/600x800/teal/white?text=Rayon+Kurta',
+    image: '/products/8/female_Spr7_1.png.avif',
     price: '₹4,299',
     link: '/product/8',
-    alt: 'Teal Rayon Printed Straight Kurta Set'
+    alt: 'Teal Rayon Printed Straight Kurta Set',
+    description: 'Comfortable and stylish teal rayon kurta set with beautiful prints and a straight cut design.',
+    colors: [
+      { name: 'Teal-Print', color: '#008080' }
+    ],
+    sizes: ['32', '34', '36', '38', '40', '42'],
+    thumbnails: [
+      { url: '/products/8/female_Spr7_1.png.avif', alt: 'Front view' },
+      { url: '/products/8/female_Spr7_2.png.avif', alt: 'Back view' },
+      { url: '/products/8/female_Spr7_3.png.avif', alt: 'Side view' },
+      { url: '/products/8/female_Spr7_4.png.avif', alt: 'Detail view' }
+    ]
   }
 ];
 
