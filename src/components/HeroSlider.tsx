@@ -134,10 +134,28 @@ const HeroSlider = () => {
 
   const uiSizes = getUISizes();
 
+  // Get the appropriate objectFit based on screen size
+  const getImageStyle = () => {
+    const width = screenSize.width;
+    if (width < 640) {
+      return {
+        objectFit: 'contain',
+        objectPosition: 'center center'
+      } as const;
+    } else {
+      return {
+        objectFit: 'cover',
+        objectPosition: 'center center'
+      } as const;
+    }
+  };
+
+  const imageStyle = getImageStyle();
+
   return (
-    <div className="relative w-full overflow-hidden">
-      {/* Dynamic responsive height based on screen size */}
-      <div className="relative w-full h-[50vh] sm:h-[55vh] md:h-[60vh] lg:h-[70vh] xl:h-[80vh]">
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      {/* Full screen height for all devices */}
+      <div className="relative w-full h-full">
         {slides.map((slide, index) => (
           <div
             key={index}
@@ -155,11 +173,8 @@ const HeroSlider = () => {
                 src={slide.src}
                 alt={slide.alt}
                 fill
-                sizes="100vw"
-                style={{ 
-                  objectFit: screenSize.width < 640 ? 'cover' : 'cover',
-                  objectPosition: screenSize.width < 640 ? 'center center' : 'center center'
-                }}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                style={imageStyle}
                 priority={index === 0}
                 className="w-full h-full"
               />
