@@ -11,23 +11,33 @@ const HeroSlider = () => {
     height: typeof window !== 'undefined' ? window.innerHeight : 800
   });
   
-  // Slides with desktop images only
+  // Slides with both desktop and mobile images
   const slides = [
     {
-      src: '/hero-3.png',
+      desktopSrc: '/hero-3.png',
+      mobileSrc: '/Mobile view/1.png',
       alt: 'NPlusOne Fashion Collection',
       mobilePosition: '50% 50%'
     },
     {
-      src: '/Discount.png',
+      desktopSrc: '/Discount.png',
+      mobileSrc: '/Mobile view/2.png',
       alt: 'Special Offer - 35% Off',
       mobilePosition: '50% 50%'
     },
     {
-      src: '/hero-2-2.png',
+      desktopSrc: '/hero-2-2.png',
+      mobileSrc: '/Mobile view/3.png',
       alt: 'Stylish Designs',
       mobilePosition: '50% 50%'
     },
+    {
+      // Adding the fourth mobile image for the collection
+      desktopSrc: '/hero-3.png', // Reusing existing desktop image as fallback
+      mobileSrc: '/Mobile view/4.png',
+      alt: 'Fashion Collection',
+      mobilePosition: '50% 50%'
+    }
   ];
 
   // Track screen size for responsive behavior
@@ -137,6 +147,13 @@ const HeroSlider = () => {
 
   const uiSizes = getUISizes();
 
+  // Get the appropriate image source based on screen size
+  const getImageSource = (index: number) => {
+    return screenSize.width < 640 
+      ? slides[index].mobileSrc 
+      : slides[index].desktopSrc;
+  };
+
   // Get the appropriate image styles based on screen size
   const getImageStyle = () => {
     const width = screenSize.width;
@@ -176,7 +193,7 @@ const HeroSlider = () => {
               {/* Bottom gradient overlay - responsive heights */}
               <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 md:h-24 lg:h-32 bg-gradient-to-t from-black to-transparent opacity-70 z-20"></div>
               <Image
-                src={slide.src}
+                src={getImageSource(index)}
                 alt={slide.alt}
                 fill
                 sizes="100vw"
