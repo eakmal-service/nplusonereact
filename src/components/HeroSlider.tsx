@@ -16,14 +16,17 @@ const HeroSlider = () => {
     {
       src: '/hero-3.png',
       alt: 'NPlusOne Fashion Collection',
+      mobilePosition: '50% 50%'
     },
     {
       src: '/Discount.png',
       alt: 'Special Offer - 35% Off',
+      mobilePosition: '50% 50%'
     },
     {
       src: '/hero-2-2.png',
       alt: 'Stylish Designs',
+      mobilePosition: '50% 50%'
     },
   ];
 
@@ -111,7 +114,7 @@ const HeroSlider = () => {
         arrowPadding: 'p-1.5',
         dotSize: 'w-1.5 h-1.5',
         dotSpacing: 'space-x-1.5',
-        bottomPosition: 'bottom-3'
+        bottomPosition: 'bottom-6'
       };
     } else if (width < 1024) {
       return {
@@ -119,7 +122,7 @@ const HeroSlider = () => {
         arrowPadding: 'p-2',
         dotSize: 'w-2 h-2',
         dotSpacing: 'space-x-2',
-        bottomPosition: 'bottom-4'
+        bottomPosition: 'bottom-8'
       };
     } else {
       return {
@@ -127,33 +130,36 @@ const HeroSlider = () => {
         arrowPadding: 'p-3',
         dotSize: 'w-3 h-3',
         dotSpacing: 'space-x-3',
-        bottomPosition: 'bottom-8'
+        bottomPosition: 'bottom-10'
       };
     }
   };
 
   const uiSizes = getUISizes();
 
-  // Get the appropriate objectFit based on screen size
+  // Get the appropriate image styles based on screen size
   const getImageStyle = () => {
     const width = screenSize.width;
     if (width < 640) {
       return {
-        objectFit: 'contain',
-        objectPosition: 'center center'
-      } as const;
+        objectFit: 'cover' as const,
+        objectPosition: slides[currentIndex]?.mobilePosition || 'center center'
+      };
     } else {
       return {
-        objectFit: 'cover',
+        objectFit: 'cover' as const,
         objectPosition: 'center center'
-      } as const;
+      };
     }
   };
 
-  const imageStyle = getImageStyle();
-
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
+      {/* Logo wrapper with higher z-index */}
+      <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
+        <div className="h-16 md:h-20 bg-gradient-to-b from-black to-transparent opacity-60"></div>
+      </div>
+      
       {/* Full screen height for all devices */}
       <div className="relative w-full h-full">
         {slides.map((slide, index) => (
@@ -168,13 +174,13 @@ const HeroSlider = () => {
               {/* Top gradient overlay - responsive heights */}
               <div className="absolute top-0 left-0 right-0 h-12 sm:h-16 md:h-20 lg:h-28 bg-gradient-to-b from-black to-transparent opacity-70 z-20"></div>
               {/* Bottom gradient overlay - responsive heights */}
-              <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 md:h-20 lg:h-28 bg-gradient-to-t from-black to-transparent opacity-70 z-20"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 md:h-24 lg:h-32 bg-gradient-to-t from-black to-transparent opacity-70 z-20"></div>
               <Image
                 src={slide.src}
                 alt={slide.alt}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                style={imageStyle}
+                sizes="100vw"
+                style={getImageStyle()}
                 priority={index === 0}
                 className="w-full h-full"
               />
@@ -187,7 +193,7 @@ const HeroSlider = () => {
       <div className="absolute left-2 sm:left-3 md:left-4 lg:left-6 top-1/2 transform -translate-y-1/2 z-20">
         <button
           onClick={goToPrevious}
-          className={`bg-black bg-opacity-40 text-white ${uiSizes.arrowPadding} rounded-full hover:bg-opacity-60 transition-all duration-300 backdrop-blur-sm`}
+          className={`bg-black bg-opacity-50 text-white ${uiSizes.arrowPadding} rounded-full hover:bg-opacity-70 transition-all duration-300 backdrop-blur-sm`}
           aria-label="Previous slide"
         >
           <svg xmlns="http://www.w3.org/2000/svg" 
@@ -206,7 +212,7 @@ const HeroSlider = () => {
       <div className="absolute right-2 sm:right-3 md:right-4 lg:right-6 top-1/2 transform -translate-y-1/2 z-20">
         <button
           onClick={goToNext}
-          className={`bg-black bg-opacity-40 text-white ${uiSizes.arrowPadding} rounded-full hover:bg-opacity-60 transition-all duration-300 backdrop-blur-sm`}
+          className={`bg-black bg-opacity-50 text-white ${uiSizes.arrowPadding} rounded-full hover:bg-opacity-70 transition-all duration-300 backdrop-blur-sm`}
           aria-label="Next slide"
         >
           <svg xmlns="http://www.w3.org/2000/svg" 
