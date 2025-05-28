@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 const HeroSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const [screenSize, setScreenSize] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 1200,
     height: typeof window !== 'undefined' ? window.innerHeight : 800
@@ -44,13 +45,24 @@ const HeroSlider = () => {
     }
   ];
 
-  // Track screen size for responsive behavior
+  // Track screen size for responsive behavior and set device type
   useEffect(() => {
+    const updateDeviceType = (width: number) => {
+      if (width < 640) {
+        setDeviceType('mobile');
+      } else if (width < 1024) {
+        setDeviceType('tablet');
+      } else {
+        setDeviceType('desktop');
+      }
+    };
+
     const handleResize = () => {
-      setScreenSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      setScreenSize({ width, height });
+      updateDeviceType(width);
     };
     
     // Check on initial load
@@ -151,38 +163,38 @@ const HeroSlider = () => {
 
   const uiSizes = getUISizes();
 
-  // Get the appropriate image source based on screen size
+  // Get the appropriate image source based on device type
   const getImageSource = (index: number) => {
-    const width = screenSize.width;
-    if (width < 640) {
-      return slides[index].mobileSrc;
-    } else if (width < 1024) {
-      return slides[index].tabletSrc;
-    } else {
-      return slides[index].desktopSrc;
+    switch (deviceType) {
+      case 'mobile':
+        return slides[index].mobileSrc;
+      case 'tablet':
+        return slides[index].tabletSrc;
+      default:
+        return slides[index].desktopSrc;
     }
   };
 
-  // Get the appropriate image styles based on screen size
+  // Get the appropriate image styles based on device type
   const getImageStyle = () => {
-    const width = screenSize.width;
-    if (width < 640) {
-      return {
-        objectFit: 'cover' as const,
-        objectPosition: slides[currentIndex]?.mobilePosition || 'center center'
-      };
-    } else if (width < 1024) {
-      return {
-        objectFit: 'cover' as const,
-        objectPosition: 'center center'
-      };
-    } else {
-      return {
-        objectFit: 'cover' as const,
-        objectPosition: 'center center'
-      };
+    switch (deviceType) {
+      case 'mobile':
+        return {
+          objectFit: 'cover' as const,
+          objectPosition: slides[currentIndex]?.mobilePosition || 'center center'
+        };
+      case 'tablet':
+      case 'desktop':
+      default:
+        return {
+          objectFit: 'cover' as const,
+          objectPosition: 'center center'
+        };
     }
   };
+
+  // Create a debug display to check what's happening (can be removed in production)
+  const currentImageSrc = getImageSource(currentIndex);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
