@@ -11,29 +11,33 @@ const HeroSlider = () => {
     height: typeof window !== 'undefined' ? window.innerHeight : 800
   });
   
-  // Slides with both desktop and mobile images
+  // Slides with desktop, tablet and mobile images
   const slides = [
     {
       desktopSrc: '/hero-3.png',
+      tabletSrc: '/Tablet view/1.png',
       mobileSrc: '/Mobile view/1.png',
       alt: 'NPlusOne Fashion Collection',
       mobilePosition: '50% 50%'
     },
     {
       desktopSrc: '/Discount.png',
+      tabletSrc: '/Tablet view/2.png',
       mobileSrc: '/Mobile view/2.png',
       alt: 'Special Offer - 35% Off',
       mobilePosition: '50% 50%'
     },
     {
       desktopSrc: '/hero-2-2.png',
+      tabletSrc: '/Tablet view/3.png',
       mobileSrc: '/Mobile view/3.png',
       alt: 'Stylish Designs',
       mobilePosition: '50% 50%'
     },
     {
-      // Adding the fourth mobile image for the collection
+      // Adding the fourth image for mobile/tablet
       desktopSrc: '/hero-3.png', // Reusing existing desktop image as fallback
+      tabletSrc: '/Tablet view/4.png',
       mobileSrc: '/Mobile view/4.png',
       alt: 'Fashion Collection',
       mobilePosition: '50% 50%'
@@ -149,9 +153,14 @@ const HeroSlider = () => {
 
   // Get the appropriate image source based on screen size
   const getImageSource = (index: number) => {
-    return screenSize.width < 640 
-      ? slides[index].mobileSrc 
-      : slides[index].desktopSrc;
+    const width = screenSize.width;
+    if (width < 640) {
+      return slides[index].mobileSrc;
+    } else if (width < 1024) {
+      return slides[index].tabletSrc;
+    } else {
+      return slides[index].desktopSrc;
+    }
   };
 
   // Get the appropriate image styles based on screen size
@@ -161,6 +170,11 @@ const HeroSlider = () => {
       return {
         objectFit: 'cover' as const,
         objectPosition: slides[currentIndex]?.mobilePosition || 'center center'
+      };
+    } else if (width < 1024) {
+      return {
+        objectFit: 'cover' as const,
+        objectPosition: 'center center'
       };
     } else {
       return {
