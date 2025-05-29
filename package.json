@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx next dev",
+    "dev:4000": "npx next dev -p 4000",
     "build": "npx next build",
     "start": "npx next start",
+    "start:4000": "npx next start -p 4000",
     "lint": "npx next lint"
   },
   "keywords": [],

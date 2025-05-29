@@ -1,26 +1,36 @@
-import React from 'react';
-import './globals.css';
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { CartProvider } from '@/contexts/CartContext';
+import { WishlistProvider } from '@/contexts/WishlistContext';
+import { ProductProvider } from '@/contexts/ProductContext';
 
 export const metadata: Metadata = {
-  title: 'NPlusOne - Women\'s Fashion',
-  description: 'Premium women\'s wear shopping platform',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-};
+  title: 'NPlusOne Fashion',
+  description: 'Contemporary fashion for everyone',
+}
+
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-custom-black">
-        <Header />
-        <main className="flex-grow w-full max-w-[100vw] overflow-x-hidden">{children}</main>
-        <Footer />
+        <ProductProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Header />
+              <main className="flex-grow w-full max-w-[100vw] overflow-x-hidden">{children}</main>
+              <Footer />
+            </WishlistProvider>
+          </CartProvider>
+        </ProductProvider>
       </body>
     </html>
   );

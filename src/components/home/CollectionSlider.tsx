@@ -65,7 +65,7 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
         {/* Prev button */}
         <button 
           onClick={prevSlide}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Previous slide"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -73,9 +73,9 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
           </svg>
         </button>
         
-        <div className="flex justify-center sm:justify-between items-center gap-3 md:gap-4 lg:gap-6 w-full">
+        <div className="flex justify-center sm:justify-between items-center gap-3 md:gap-4 lg:gap-6 w-full pointer-events-none">
           {getCurrentItems().map((item, index) => (
-            <div key={index} className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2">
+            <div key={index} className="flex flex-col items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2 pointer-events-auto">
               <Link href={item.link} className="w-full">
                 <div className="relative rounded-lg overflow-hidden shadow-md w-full">
                   <div className="w-full aspect-[3/4] relative">
@@ -101,7 +101,7 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
         {/* Next button */}
         <button 
           onClick={nextSlide}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Next slide"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -110,7 +110,7 @@ const CollectionSlider: React.FC<CollectionSliderProps> = ({ collectionItems }) 
         </button>
         
         {/* Slider pagination */}
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center mt-6 z-30 relative">
           {Array.from({ length: totalPages }).map((_, idx) => (
             <button
               key={idx}

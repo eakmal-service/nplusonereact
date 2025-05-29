@@ -67,7 +67,8 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
     return products.slice(startIndex, startIndex + itemsPerView);
   };
 
-  const openQuickView = (product: Product) => {
+  const openQuickView = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault(); // Prevent navigation to product detail page
     setSelectedProduct(product);
     setIsQuickViewOpen(true);
   };
@@ -85,7 +86,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
         {/* Prev button */}
         <button 
           onClick={prevRecommended}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Previous recommended products"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,9 +94,10 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
           </svg>
         </button>
         
-        <div className="flex justify-center sm:justify-between items-center gap-2 md:gap-4 lg:gap-6 w-full">
+        <div className="flex justify-center sm:justify-between items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
           {getCurrentRecommended().map((product) => (
-            <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2">
+            <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
+              <Link href={`/product/${product.id}`} className="block relative">
               <div className="relative">
                 {product.badge && (
                   <div className={`absolute top-0 left-0 z-10 px-2 sm:px-4 py-1 text-xs text-white font-medium ${product.badge === 'Sale' ? 'bg-red-600' : 'bg-blue-600'}`}>
@@ -103,22 +105,20 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   </div>
                 )}
                 <div className="relative overflow-hidden">
-                  <Link href={product.link}>
                     <div className="w-full">
                       <img 
                         src={product.image}
                         alt={product.alt}
-                        className="w-full h-auto max-w-100%"
+                        className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
                         role="image"
                       />
                     </div>
-                  </Link>
                   <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>
                   
                   {/* Quick View Button */}
                   <button 
                     className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md"
-                    onClick={() => openQuickView(product)}
+                      onClick={(e) => openQuickView(e, product)}
                     aria-label="Quick view"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -143,6 +143,10 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   <button 
                     className="text-gray-400 hover:text-red-500 transition-colors"
                     aria-label="Add to wishlist"
+                      onClick={(e) => {
+                        e.preventDefault(); // Prevent navigation
+                        console.log('Added to wishlist:', product.id);
+                      }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -150,6 +154,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   </button>
                 </div>
               </div>
+              </Link>
             </div>
           ))}
         </div>
@@ -157,7 +162,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
         {/* Next button */}
         <button 
           onClick={nextRecommended}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Next recommended products"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -166,7 +171,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
         </button>
         
         {/* Slider pagination */}
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-4 z-30 relative">
           {Array.from({ length: totalRecommendedPages }).map((_, idx) => (
             <button
               key={idx}

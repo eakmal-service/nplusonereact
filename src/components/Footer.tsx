@@ -141,6 +141,9 @@ const Footer: React.FC = () => {
           <Link href="/help" className="hover:underline flex items-center">
             <span className="mr-1 md:mr-2">❔</span> Help Center
           </Link>
+          <Link href="/admin/dashboard" className="hover:underline flex items-center bg-black text-white px-2 py-1 rounded-sm">
+            <span className="mr-1 md:mr-2">👤</span> Admin Panel
+          </Link>
         </div>
       </div>
     </footer>

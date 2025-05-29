@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import LoginModal from './LoginModal';
+import CartPopup from './CartPopup';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 const Header = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -11,6 +14,10 @@ const Header = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showCartPopup, setShowCartPopup] = useState(false);
+  
+  const { getCartCount } = useCart();
+  const { wishlist } = useWishlist();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,6 +57,102 @@ const Header = () => {
   const closeLoginModal = () => {
     setShowLoginModal(false);
   };
+
+  // Cart and wishlist sections in desktop view
+  const cartAndWishlistSection = (
+    <div className="hidden md:flex items-center space-x-4">
+      <button 
+        onClick={openLoginModal}
+        className="text-white hover:text-silver"
+        aria-label="Account"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </button>
+    
+      <Link 
+        href="/wishlist" 
+        className="text-white hover:text-silver relative"
+      >
+        <span className="sr-only">Wishlist</span>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        {wishlist.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {wishlist.length}
+          </span>
+        )}
+      </Link>
+    
+      <div 
+        className="relative"
+        onMouseEnter={() => setShowCartPopup(true)}
+        onMouseLeave={() => setShowCartPopup(false)}
+      >
+        <Link href="/cart" className="text-white hover:text-silver relative">
+          <span className="sr-only">Cart</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          {getCartCount() > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {getCartCount()}
+            </span>
+          )}
+        </Link>
+        <CartPopup isVisible={showCartPopup} />
+      </div>
+    </div>
+  );
+
+  // Replace the cart and wishlist section in mobile view
+  const mobileCartAndWishlistSection = (
+    <div className="flex space-x-4 mt-4 border-t border-gray-700 pt-4">
+      <button 
+        onClick={openLoginModal} 
+        className="text-white hover:text-silver"
+        aria-label="Account"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </button>
+      
+      <Link 
+        href="/wishlist" 
+        className="text-white hover:text-silver relative"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        <span className="sr-only">Wishlist</span>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        {wishlist.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {wishlist.length}
+          </span>
+        )}
+      </Link>
+      
+      <Link 
+        href="/cart" 
+        className="text-white hover:text-silver relative"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        <span className="sr-only">Cart</span>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        {getCartCount() > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {getCartCount()}
+          </span>
+        )}
+      </Link>
+    </div>
+  );
 
   return (
     <>
@@ -388,31 +491,7 @@ const Header = () => {
           </nav>
 
           {/* Right side icons - always visible */}
-          <div className="hidden md:flex items-center space-x-4">
-              <button 
-                onClick={openLoginModal}
-                className="text-white hover:text-silver"
-                aria-label="Account"
-              >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              </button>
-            
-              <Link href="/wishlist" className="text-white hover:text-silver">
-              <span className="sr-only">Wishlist</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </Link>
-            
-              <Link href="/cart" className="text-white hover:text-silver">
-              <span className="sr-only">Cart</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </Link>
-          </div>
+          {cartAndWishlistSection}
         </div>
       </div>
       </header>
@@ -459,37 +538,7 @@ const Header = () => {
             </Link>
             
             {/* Mobile icons */}
-            <div className="flex space-x-4 mt-4 border-t border-gray-700 pt-4">
-              <button 
-                onClick={openLoginModal} 
-                className="text-white hover:text-silver"
-                aria-label="Account"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
-              
-              <Link href="/wishlist" 
-                className="text-white hover:text-silver"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="sr-only">Wishlist</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </Link>
-              
-              <Link href="/cart" 
-                className="text-white hover:text-silver"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="sr-only">Cart</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </Link>
-            </div>
+            {mobileCartAndWishlistSection}
           </div>
         </div>
       )}
