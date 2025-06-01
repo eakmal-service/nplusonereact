@@ -51,16 +51,56 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Save new product
   const saveNewProduct = (productData: Omit<Product, 'id'>) => {
-    const newProduct = saveProduct(productData);
-    setProducts(prev => [newProduct, ...prev]);
+    // Ensure product is active and globally visible
+    const productWithDefaults: Omit<Product, 'id'> = {
+      ...productData,
+      status: 'active' as const,
+      isAdminUploaded: true,
+      isGloballyVisible: true,
+      responsive: true,
+      browserCompatible: true,
+      viewCount: 0,
+      cartCount: 0,
+      purchaseCount: 0,
+      dateAdded: new Date().toISOString().split('T')[0],
+    };
+
+    const newProduct = saveProduct(productWithDefaults);
+    
+    // Update state immediately for real-time visibility
+    setProducts(prev => {
+      const updatedProducts = [newProduct, ...prev];
+      // Sort by date added (newest first)
+      return updatedProducts.sort((a, b) => 
+        new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+      );
+    });
+
     return newProduct;
   };
 
   // Update existing product
   const updateExistingProduct = (product: Product) => {
-    const success = updateProduct(product);
+    // Ensure product remains active and visible
+    const productWithDefaults = {
+      ...product,
+      isAdminUploaded: true,
+      isGloballyVisible: true,
+      responsive: true,
+      browserCompatible: true,
+    };
+
+    const success = updateProduct(productWithDefaults);
     if (success) {
-      setProducts(prev => prev.map(p => p.id === product.id ? product : p));
+      setProducts(prev => {
+        const updatedProducts = prev.map(p => 
+          p.id === product.id ? productWithDefaults : p
+        );
+        // Sort by date added (newest first)
+        return updatedProducts.sort((a, b) => 
+          new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+        );
+      });
     }
     return success;
   };
@@ -69,7 +109,15 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   const updateStatus = (id: number, status: 'active' | 'inactive' | 'draft') => {
     const success = updateProductStatus(id, status);
     if (success) {
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+      setProducts(prev => {
+        const updatedProducts = prev.map(p => 
+          p.id === id ? { ...p, status } : p
+        );
+        // Sort by date added (newest first)
+        return updatedProducts.sort((a, b) => 
+          new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+        );
+      });
     }
     return success;
   };
@@ -97,13 +145,16 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     return products.filter(product => product.category === category);
   };
 
-  // Get active products by category
+  // Get active products by category with proper sorting
   const getActiveProductsByCategory = (category: string) => {
-    return products.filter(product => 
-      product.category === category && 
-      product.status === 'active' && 
-      product.stockQuantity > 0
-    );
+    return products
+      .filter(product => 
+        product.category === category && 
+        product.status === 'active' && 
+        product.stockQuantity > 0 &&
+        product.isGloballyVisible
+      )
+      .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
   };
 
   // Context value

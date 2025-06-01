@@ -4,6 +4,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Product } from '../../utils/productUtils';
 import { useProducts } from '../../contexts/ProductContext';
+import { processImageFiles, validateImageFile, optimizeImage } from '../../utils/imageUtils';
 
 // Define category options
 const CATEGORIES = [
@@ -112,6 +113,7 @@ interface ProductFormValues {
   images: File[];
   colorName: string;
   colorCode: string;
+  colorOptions: { name: string; code: string }[];
   sizes: string[];
   stockQuantity: { [size: string]: string };
   material: string;
@@ -133,6 +135,7 @@ const AddProductForm: React.FC = () => {
     images: [],
     colorName: '',
     colorCode: '#000000',
+    colorOptions: [],
     sizes: [],
     stockQuantity: {},
     material: '',
@@ -262,21 +265,56 @@ const AddProductForm: React.FC = () => {
   };
 
   // Handle image uploads
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    // Limit to 5 images
-    const selectedFiles = Array.from(files).slice(0, 5);
-    
-    setFormValues(prev => ({
-      ...prev,
-      images: [...prev.images, ...selectedFiles].slice(0, 5)
-    }));
+    // Clear any previous errors
+    setErrors(prev => ({ ...prev, images: undefined }));
 
-    // Create preview URLs
-    const newImagePreviews = Array.from(selectedFiles).map(file => URL.createObjectURL(file));
-    setImagePreviewUrls(prev => [...prev, ...newImagePreviews].slice(0, 5));
+    // Validate and process files
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (validateImageFile(file)) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    }
+
+    if (invalidFiles.length > 0) {
+      setErrors(prev => ({
+        ...prev,
+        images: `Invalid files: ${invalidFiles.join(', ')}. Images must be under 5MB.`
+      }));
+      return;
+    }
+
+    // Limit to 5 images
+    const selectedFiles = validFiles.slice(0, 5);
+    
+    try {
+      // Process images and create optimized data URLs
+      const dataUrls = await processImageFiles(selectedFiles);
+      const optimizedUrls = await Promise.all(dataUrls.map(url => optimizeImage(url)));
+      
+      setFormValues(prev => ({
+        ...prev,
+        images: [...prev.images, ...selectedFiles].slice(0, 5)
+      }));
+
+      // Set preview URLs
+      setImagePreviewUrls(prev => [...prev, ...optimizedUrls].slice(0, 5));
+    } catch (error) {
+      console.error('Error processing images:', error);
+      setErrors(prev => ({
+        ...prev,
+        images: 'Failed to process images. Please try again.'
+      }));
+    }
   };
 
   // Remove an image
@@ -297,39 +335,40 @@ const AddProductForm: React.FC = () => {
     });
   };
 
-  // Form validation
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof ProductFormValues, string>> = {};
-    
-    // Required fields validation
-    if (!formValues.title.trim()) newErrors.title = 'Product title is required';
-    if (!formValues.description.trim()) newErrors.description = 'Product description is required';
-    if (!formValues.mrp.trim()) newErrors.mrp = 'MRP is required';
-    if (!formValues.salePrice.trim()) newErrors.salePrice = 'Sale price is required';
-    if (!formValues.category) newErrors.category = 'Category is required';
-    if (formValues.images.length === 0) newErrors.images = 'At least one product image is required';
-    if (!formValues.colorName.trim()) newErrors.colorName = 'Color name is required';
-    if (formValues.sizes.length === 0) newErrors.sizes = 'At least one size option is required';
-    if (!formValues.material.trim()) newErrors.material = 'Material is required';
-    
-    // Check if all selected sizes have stock quantity
-    formValues.sizes.forEach(size => {
-      if (!formValues.stockQuantity[size] || formValues.stockQuantity[size] === '0') {
-        newErrors.stockQuantity = 'Stock quantity is required for all selected sizes';
-      }
-    });
-    
-    // Numeric validation
-    if (formValues.mrp && !/^\d+(\.\d{1,2})?$/.test(formValues.mrp)) {
-      newErrors.mrp = 'MRP must be a valid number';
+  // Add current color to color options
+  const addColorOption = () => {
+    if (!formValues.colorName.trim()) {
+      setErrors(prev => ({ ...prev, colorName: 'Color name is required' }));
+      return;
     }
-    
-    if (formValues.salePrice && !/^\d+(\.\d{1,2})?$/.test(formValues.salePrice)) {
-      newErrors.salePrice = 'Sale price must be a valid number';
+
+    // Check if color already exists
+    const colorExists = formValues.colorOptions.some(
+      color => color.name.toLowerCase() === formValues.colorName.toLowerCase()
+    );
+
+    if (colorExists) {
+      setErrors(prev => ({ ...prev, colorName: 'This color already exists' }));
+      return;
     }
+
+    setFormValues(prev => ({
+      ...prev,
+      colorOptions: [...prev.colorOptions, { name: prev.colorName, code: prev.colorCode }],
+      colorName: '',
+      colorCode: '#000000'
+    }));
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setIsColorPickerManuallyChanged(false);
+    setErrors(prev => ({ ...prev, colorName: '', colorOptions: '' }));
+  };
+
+  // Remove color option
+  const removeColorOption = (index: number) => {
+    setFormValues(prev => ({
+      ...prev,
+      colorOptions: prev.colorOptions.filter((_, i) => i !== index)
+    }));
   };
 
   // Handle form submission
@@ -348,6 +387,11 @@ const AddProductForm: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Process and optimize all images
+      const optimizedImageUrls = await Promise.all(
+        imagePreviewUrls.map(url => optimizeImage(url))
+      );
+      
       // Format the product data
       const productData: Omit<Product, 'id'> = {
         title: formValues.title,
@@ -356,9 +400,10 @@ const AddProductForm: React.FC = () => {
         price: `₹${formValues.mrp}`,
         salePrice: `₹${formValues.salePrice}`,
         discount: `${formValues.discount}% OFF`,
-        imageUrl: imagePreviewUrls.length > 0 ? 
-          imagePreviewUrls[0] : 
-          'https://placehold.co/300x400/gray/white?text=Product',
+        // Set the main image URL as the first image
+        imageUrl: optimizedImageUrls[0],
+        // Store all image URLs in the imageUrls array
+        imageUrls: optimizedImageUrls,
         stockQuantity: Object.values(formValues.stockQuantity).reduce(
           (total, qty) => total + parseInt(qty || '0'), 0
         ),
@@ -366,7 +411,20 @@ const AddProductForm: React.FC = () => {
         cartCount: 0,
         purchaseCount: 0,
         dateAdded: new Date().toISOString().split('T')[0],
-        status: formValues.status,
+        status: 'active', // Always set to active for immediate visibility
+        // Additional fields needed for proper display
+        description: formValues.description,
+        sizes: formValues.sizes,
+        colorName: formValues.colorOptions.length > 0 ? formValues.colorOptions[0].name : '',
+        colorOptions: formValues.colorOptions.length > 0 ? formValues.colorOptions : undefined,
+        material: formValues.material,
+        washCare: formValues.careInstructions,
+        alt: formValues.title,
+        // Fields for proper integration
+        isAdminUploaded: true,
+        isGloballyVisible: true,
+        responsive: true,
+        browserCompatible: true
       };
       
       // Save product using context
@@ -404,6 +462,41 @@ const AddProductForm: React.FC = () => {
     setImagePreviewUrls([]);
     setErrors({});
     setIsColorPickerManuallyChanged(false);
+  };
+
+  // Form validation
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof ProductFormValues, string>> = {};
+    
+    // Required fields validation
+    if (!formValues.title.trim()) newErrors.title = 'Product title is required';
+    if (!formValues.description.trim()) newErrors.description = 'Product description is required';
+    if (!formValues.mrp.trim()) newErrors.mrp = 'MRP is required';
+    if (!formValues.salePrice.trim()) newErrors.salePrice = 'Sale price is required';
+    if (!formValues.category) newErrors.category = 'Category is required';
+    if (formValues.images.length === 0) newErrors.images = 'At least one product image is required';
+    if (formValues.colorOptions.length === 0) newErrors.colorOptions = 'At least one color option is required';
+    if (formValues.sizes.length === 0) newErrors.sizes = 'At least one size option is required';
+    if (!formValues.material.trim()) newErrors.material = 'Material is required';
+    
+    // Check if all selected sizes have stock quantity
+    formValues.sizes.forEach(size => {
+      if (!formValues.stockQuantity[size] || formValues.stockQuantity[size] === '0') {
+        newErrors.stockQuantity = 'Stock quantity is required for all selected sizes';
+      }
+    });
+    
+    // Numeric validation
+    if (formValues.mrp && !/^\d+(\.\d{1,2})?$/.test(formValues.mrp)) {
+      newErrors.mrp = 'MRP must be a valid number';
+    }
+    
+    if (formValues.salePrice && !/^\d+(\.\d{1,2})?$/.test(formValues.salePrice)) {
+      newErrors.salePrice = 'Sale price must be a valid number';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   return (
@@ -646,17 +739,26 @@ const AddProductForm: React.FC = () => {
             <div>
               <div className="mb-4">
                 <label htmlFor="colorName" className="block mb-1 font-medium text-gray-200">
-                  Color Name <span className="text-red-500">*</span>
+                  Color Name
                 </label>
-                <input
-                  type="text"
-                  id="colorName"
-                  name="colorName"
-                  value={formValues.colorName}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
-                  placeholder="e.g. Midnight Black"
-                />
+                <div className="flex">
+                  <input
+                    type="text"
+                    id="colorName"
+                    name="colorName"
+                    value={formValues.colorName}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-l px-3 py-2 text-white"
+                    placeholder="e.g. Midnight Black"
+                  />
+                  <button
+                    type="button"
+                    onClick={addColorOption}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-r"
+                  >
+                    Add
+                  </button>
+                </div>
                 {errors.colorName && <p className="text-red-500 mt-1 text-sm error-message">{errors.colorName}</p>}
               </div>
               
@@ -681,6 +783,38 @@ const AddProductForm: React.FC = () => {
                     className="ml-2 w-32 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
                   />
                 </div>
+              </div>
+              
+              {/* Color Options List */}
+              <div className="mb-4">
+                <h4 className="font-medium mb-2 text-gray-300">Added Colors <span className="text-red-500">*</span></h4>
+                {formValues.colorOptions.length > 0 ? (
+                  <div className="space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-2 rounded">
+                    {formValues.colorOptions.map((color, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-800 p-2 rounded">
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            className="w-6 h-6 rounded-full border border-gray-600" 
+                            style={{ backgroundColor: color.code }}
+                          ></div>
+                          <span className="text-gray-200">{color.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeColorOption(index)}
+                          className="text-red-500 hover:text-red-400"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 italic">No colors added yet. Add at least one color.</div>
+                )}
+                {errors.colorOptions && <p className="text-red-500 mt-1 text-sm error-message">{errors.colorOptions}</p>}
               </div>
             </div>
             
