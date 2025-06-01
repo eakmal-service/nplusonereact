@@ -3,175 +3,255 @@
 import React, { useState } from 'react';
 import { Product } from '@/types';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 interface QuickViewModalProps {
   product: Product;
-  isOpen: boolean;
   onClose: () => void;
 }
 
-const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose }) => {
+// Thumbnail interface to support both product thumbnail formats
+interface Thumbnail {
+  url: string;
+  alt: string;
+}
+
+// Interface for product colors
+interface ProductColor {
+  name: string;
+  code: string;
+}
+
+const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-
-  // Default values
-  const sizes = product.sizes || ['32', '34', '36', '38', '40', '42'];
-  const colors = product.colors || [
-    { name: 'Off-White-Black', color: '#f8f4e3' }
-  ];
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   
-  // Use product thumbnails or create default ones
-  const thumbnails = product.thumbnails || [
-    { url: product.image, alt: product.alt },
-    { url: product.image, alt: product.alt },
-    { url: product.image, alt: product.alt },
-    { url: product.image, alt: product.alt },
-  ];
-
-  if (!isOpen) return null;
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  
   const handleAddToCart = () => {
-    // Implement add to cart functionality
-    console.log('Added to cart:', { product, size: selectedSize, quantity });
+    if (!selectedSize) {
+      alert("Please select a size");
+      return;
+    }
+    
+    addToCart(product, quantity, selectedSize);
+    alert("Product added to cart successfully!");
     onClose();
   };
-
-  const handleBuyNow = () => {
-    // Implement buy now functionality
-    console.log('Buy now:', { product, size: selectedSize, quantity });
-    // Redirect to checkout
+  
+  const toggleWishlist = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+  
+  // Navigate to previous image
+  const prevImage = () => {
+    setSelectedImage((prev) => (prev === 0 ? thumbnails.length - 1 : prev - 1));
   };
 
-  return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={handleBackdropClick}
-    >
-      <div className="relative bg-white text-gray-800 max-w-4xl w-full max-h-[90vh] overflow-auto rounded-lg shadow-xl">
-        {/* Close button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 z-10"
-          aria-label="Close modal"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+  // Navigate to next image
+  const nextImage = () => {
+    setSelectedImage((prev) => (prev === thumbnails.length - 1 ? 0 : prev + 1));
+  };
+  
+  // Default sizes if not provided by API
+  const sizes = product.sizes || product.availableSizes || ['32', '34', '36', '38', '40', '42'];
+  
+  // Create thumbnail array from product images
+  const thumbnails: Thumbnail[] = product.thumbnails && product.thumbnails.length > 0 
+    ? product.thumbnails 
+    : product.images && product.images.length > 0 
+      ? product.images 
+      : (product as any).imageUrls && (product as any).imageUrls.length > 0
+        ? (product as any).imageUrls.map((url: string) => ({
+            url,
+            alt: product.alt || product.title
+          }))
+        : [{ url: product.image || (product as any).imageUrl, alt: product.title }];
 
-        <div className="flex flex-col md:flex-row">
+  // Get color options if provided by the product, or use defaults
+  const colorOptions: ProductColor[] = product.colorOptions || [
+    { name: 'Black', code: '#000000' },
+    { name: 'White', code: '#FFFFFF' },
+    { name: 'Red', code: '#FF0000' },
+    { name: 'Blue', code: '#0000FF' },
+  ];
+
+  // Set default selected color if not already selected
+  React.useEffect(() => {
+    if (!selectedColor && colorOptions.length > 0) {
+      setSelectedColor(colorOptions[0].name);
+    }
+  }, [colorOptions, selectedColor]);
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-black text-white rounded-lg max-w-4xl w-full overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-end p-4">
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex flex-col md:flex-row p-4 md:p-6 gap-6">
           {/* Left side - Product images */}
-          <div className="md:w-1/2 p-4">
+          <div className="md:w-1/2">
             <div className="flex">
-              {/* Thumbnails */}
-              <div className="w-1/5 mr-2">
-                {thumbnails.map((thumb, index) => (
-                  <div 
-                    key={index}
-                    className={`mb-2 border-2 ${selectedImage === index ? 'border-gray-800' : 'border-gray-200'}`}
-                    onClick={() => setSelectedImage(index)}
-                  >
-                    <img 
-                      src={thumb.url} 
-                      alt={`${thumb.alt} thumbnail ${index + 1}`}
-                      className="w-full cursor-pointer"
-                    />
-                  </div>
-                ))}
-              </div>
+              {/* Thumbnails - Vertical carousel - Only show if there are multiple images */}
+              {thumbnails.length > 1 && (
+                <div className="w-1/5 mr-4 max-h-[400px] overflow-y-auto flex flex-col items-center">
+                  {thumbnails.map((thumb: Thumbnail, index: number) => (
+                    <div 
+                      key={index}
+                      className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
+                      onClick={() => setSelectedImage(index)}
+                    >
+                      <img 
+                        src={thumb.url} 
+                        alt={`${thumb.alt || product.title} thumbnail ${index + 1}`}
+                        className="w-full h-auto cursor-pointer"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
               
               {/* Main image */}
-              <div className="w-4/5">
-                <img
-                  src={thumbnails[selectedImage].url}
-                  alt={thumbnails[selectedImage].alt}
-                  className="w-full h-auto"
-                />
+              <div className={`${thumbnails.length > 1 ? 'w-4/5' : 'w-full'} relative overflow-hidden`}>
+                {product.discount && (
+                  <div className="absolute top-0 left-0 z-10 px-4 py-1 text-xs text-white font-medium bg-red-600">
+                    {product.discount}
+                  </div>
+                )}
+                <div className="relative overflow-hidden cursor-zoom-in" style={{ height: '400px' }}>
+                  <img
+                    src={thumbnails[selectedImage].url}
+                    alt={thumbnails[selectedImage].alt || product.title}
+                    className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
+                  />
+                </div>
+                
+                {/* Image counter - Only show if there are multiple images */}
+                {thumbnails.length > 1 && (
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                    {selectedImage + 1} / {thumbnails.length}
+                  </div>
+                )}
+                
+                {/* Product action buttons */}
+                <div className="absolute top-2 right-2 flex flex-col space-y-2">
+                  <button 
+                    onClick={toggleWishlist}
+                    className={`${isInWishlist(product.id) ? 'bg-red-600' : 'bg-white'} p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isInWishlist(product.id) ? 'text-white' : 'text-gray-800'}`} fill={isInWishlist(product.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-
+          
           {/* Right side - Product details */}
-          <div className="md:w-1/2 p-6">
-            <h2 className="text-xl md:text-2xl font-bold uppercase mb-2">{product.title}</h2>
+          <div className="md:w-1/2">
+            <h1 className="text-xl md:text-2xl font-semibold uppercase mb-3 text-white">{product.title}</h1>
             
+            {/* Price section */}
             <div className="mb-4">
-              <span className="text-xl font-bold">MRP {product.price}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-sm text-gray-500 line-through ml-2">{product.originalPrice}</span>
-                  <span className="text-sm text-red-600 ml-2">{product.discount}</span>
-                </>
-              )}
-              <p className="text-sm text-gray-500">Inclusive of all taxes</p>
+              <div className="flex items-center">
+                <p className="text-sm text-gray-400">MRP</p>
+                <span className="text-xl font-bold ml-2 text-white">{product.salePrice || product.price}</span>
+                {product.originalPrice && (
+                  <span className="text-gray-500 line-through ml-3">{product.originalPrice}</span>
+                )}
+                {product.price && product.salePrice && product.price !== product.salePrice && (
+                  <span className="text-gray-500 line-through ml-3">{product.price}</span>
+                )}
+                {product.discount && (
+                  <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm">{product.discount}</span>
+                )}
+              </div>
+              <p className="text-sm text-gray-400 mt-1">Inclusive of all taxes</p>
             </div>
-
+            
             {/* Color selection */}
             <div className="mb-4">
-              <h3 className="font-medium mb-2">SELECT COLOR</h3>
-              <div className="flex">
-                {colors.map((color, index) => (
-                  <div key={index} className="mr-2 relative">
-                    <div 
-                      className="w-10 h-10 rounded-full border border-gray-300 cursor-pointer"
-                      style={{ backgroundColor: color.color }}
-                      title={color.name}
-                    ></div>
-                    <div className="mt-1 text-xs text-center">{color.name}</div>
-                  </div>
+              <h3 className="font-medium mb-2 text-white">SELECT COLOR</h3>
+              <div className="flex flex-wrap gap-2">
+                {colorOptions.map((color, index) => (
+                  <button
+                    key={index}
+                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${
+                      selectedColor === color.name 
+                        ? 'border-silver' 
+                        : 'border-gray-600 hover:border-silver'
+                    }`}
+                    style={{ backgroundColor: color.code }}
+                    onClick={() => setSelectedColor(color.name)}
+                    title={color.name}
+                  >
+                    {selectedColor === color.name && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill={color.code === '#FFFFFF' ? '#000000' : '#FFFFFF'}>
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
-
+            
             {/* Size selection */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2">SELECT SIZE</h3>
+            <div className="mb-4">
+              <h3 className="font-medium mb-2 text-white">SELECT SIZE</h3>
               <div className="flex flex-wrap gap-2">
-                {sizes.map((size) => (
+                {sizes.map((size: string) => (
                   <button
                     key={size}
+                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${
+                      selectedSize === size 
+                        ? 'border-silver bg-silver text-black' 
+                        : 'border-gray-600 text-white hover:border-silver'
+                    }`}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-12 h-12 rounded-full border flex items-center justify-center
-                      ${selectedSize === size 
-                        ? 'border-gray-800 bg-gray-100' 
-                        : 'border-gray-300 hover:border-gray-400'}`}
                   >
                     {size}
                   </button>
                 ))}
               </div>
             </div>
-
+            
+            {/* View full details link */}
+            <div className="mb-6">
+              <Link href={`/product/${product.id}`} className="text-silver underline hover:text-white">
+                View Full Product Details
+              </Link>
+            </div>
+            
             {/* Action buttons */}
-            <div className="flex gap-4 mb-6">
-              <button
+            <div className="grid grid-cols-2 gap-4">
+              <button 
                 onClick={handleAddToCart}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded uppercase font-medium"
+                className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium transition-all"
               >
                 ADD TO BAG
               </button>
-              <button
-                onClick={handleBuyNow}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded uppercase font-medium"
+              <Link 
+                href={`/product/${product.id}`} 
+                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 font-medium transition-all text-center"
               >
-                BUY NOW
-              </button>
-            </div>
-
-            {/* Product details section */}
-            <div>
-              <h3 className="font-bold text-red-600 mb-2">PRODUCT DETAILS</h3>
-              <p className="text-sm text-gray-700">
-                {product.description || 'This elegant piece features premium fabric with intricate details. Perfect for both casual and formal occasions.'}
-              </p>
+                VIEW DETAILS
+              </Link>
             </div>
           </div>
         </div>

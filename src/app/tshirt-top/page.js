@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import ProductCard from '../../components/common/ProductCard';
+import CategoryProductsGrid from '../../components/common/CategoryProductsGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
 export default function TshirtTopPage() {
@@ -19,11 +19,7 @@ export default function TshirtTopPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-silver"></div>
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <CategoryProductsGrid products={products} />
         ) : (
           <div className="text-center py-16">
             <p className="text-xl mb-4">No products found in this category.</p>

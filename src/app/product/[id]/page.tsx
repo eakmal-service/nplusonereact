@@ -4,22 +4,42 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import SimilarProducts from '../../../components/home/SimilarProducts';
+import SimilarProducts from '@/components/home/SimilarProducts';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { useProducts } from '@/contexts/ProductContext';
-import { Product, convertToTypeProduct } from '@/utils/productUtils';
 import Header from '@/components/Header';
+import { Product } from '@/types';
+import useSWR from 'swr';
+import { fetchProductById, fetchSimilarProducts, checkDeliveryAvailability } from '@/utils/api';
+import { getProductById, convertToTypeProduct } from '@/utils/productUtils';
+
+// SWR fetcher function
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    if (res.status === 404) {
+      // Try to find the product in localStorage (for admin-uploaded products)
+      const urlParts = url.split('/');
+      const productId = parseInt(urlParts[urlParts.length - 1]);
+      if (!isNaN(productId)) {
+        const localProduct = getProductById(productId);
+        if (localProduct) {
+          // Convert to the expected format
+          return convertToTypeProduct(localProduct);
+        }
+      }
+    }
+    throw new Error('Failed to fetch');
+  }
+  return res.json();
+};
 
 const ProductDetail = () => {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  const productId = parseInt(id);
   
-  const { products, getProductsByCategory, getActiveProductsByCategory } = useProducts();
-  
-  const [product, setProduct] = useState<Product | null>(null);
+  // Data states
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -27,54 +47,68 @@ const ProductDetail = () => {
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [pincode, setPincode] = useState('');
   const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
-  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+  const [productDetailsOpen, setProductDetailsOpen] = useState(false);
+  const [washCareOpen, setWashCareOpen] = useState(false);
+  const [deliveryReturnsOpen, setDeliveryReturnsOpen] = useState(false);
+  const [productDeclarationOpen, setProductDeclarationOpen] = useState(false);
+  const [sizeChartTab, setSizeChartTab] = useState('sizes');
+  const [measurementUnit, setMeasurementUnit] = useState('in');
+  
+  // State to hold admin-uploaded product (as fallback)
+  const [adminProduct, setAdminProduct] = useState<Product | null>(null);
+
+  // Try to find admin-uploaded product immediately on client-side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const productId = parseInt(id);
+      if (!isNaN(productId)) {
+        const localProduct = getProductById(productId);
+        if (localProduct) {
+          setAdminProduct(convertToTypeProduct(localProduct));
+        }
+      }
+    }
+  }, [id]);
+
+  // Fetch product data using SWR
+  const { data: product, error: productError, isLoading: productLoading } = useSWR(
+    `/api/products/${id}`,
+    fetcher
+  );
+
+  // Fetch similar products using SWR
+  const { data: similarProducts = [], error: similarError } = useSWR(
+    product || adminProduct ? `/api/products/${id}/similar` : null,
+    fetcher
+  );
 
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Fetch product data
-  useEffect(() => {
-    // Find product by ID from the products list
-    const fetchedProduct = products.find(p => p.id === productId) || null;
-    setProduct(fetchedProduct);
-    
-    // Fetch similar products if we have a product
-    if (fetchedProduct) {
-      const relatedProducts = getActiveProductsByCategory(fetchedProduct.category)
-        .filter(p => p.id !== fetchedProduct.id)
-        .slice(0, 4);
-      setSimilarProducts(relatedProducts);
-    }
-  }, [productId, products, getActiveProductsByCategory]);
-
-  // Default values for sizes
-  const sizes = ['32', '34', '36', '38', '40', '42'];
+  // Use either the API-fetched product or the admin product from localStorage
+  const currentProduct = product || adminProduct;
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!currentProduct) return;
     
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
     
-    // Convert product to the type expected by CartContext
-    const convertedProduct = convertToTypeProduct(product);
-    addToCart(convertedProduct, quantity, selectedSize);
+    addToCart(currentProduct, quantity, selectedSize);
     alert("Product added to cart successfully!");
   };
 
   const handleBuyNow = () => {
-    if (!product) return;
+    if (!currentProduct) return;
     
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
     
-    // Convert product to the type expected by CartContext
-    const convertedProduct = convertToTypeProduct(product);
-    addToCart(convertedProduct, quantity, selectedSize);
+    addToCart(currentProduct, quantity, selectedSize);
     router.push('/checkout');
   };
 
@@ -90,36 +124,58 @@ const ProductDetail = () => {
     setShowSizeChart(true);
   };
 
-  const handlePincodeCheck = () => {
-    // Simplified validation for demo purposes
+  const handlePincodeCheck = async () => {
+    // Validate pincode format
     if (pincode.length === 6 && /^\d+$/.test(pincode)) {
-      // Mock validation: Even pincodes are valid, odd are invalid
-      const isDeliverable = parseInt(pincode) % 2 === 0;
-      setDeliveryStatus(isDeliverable 
+      // Use the API service
+      const result = await checkDeliveryAvailability(pincode);
+      setDeliveryStatus(result.available 
         ? "Delivery available to your location" 
-        : "Sorry, delivery is not available in your area");
+        : result.message);
     } else {
       setDeliveryStatus("Please enter a valid 6-digit pincode");
     }
   };
 
   const toggleWishlist = () => {
-    if (!product) return;
+    if (!currentProduct) return;
     
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+    const productId = currentProduct.id;
+    
+    if (isInWishlist(productId)) {
+      removeFromWishlist(productId);
     } else {
-      // Convert product to the type expected by WishlistContext
-      const convertedProduct = convertToTypeProduct(product);
-      addToWishlist(convertedProduct);
+      addToWishlist(currentProduct);
     }
   };
 
-  if (!product) {
+  // If loading, show skeleton
+  if (productLoading && !adminProduct) {
     return (
       <>
         <Header />
-        <div className="container mx-auto py-20 mt-20 text-center text-white">
+        <div className="container mx-auto py-20 mt-20 text-center">
+          <div className="animate-pulse flex flex-col md:flex-row space-x-8">
+            <div className="md:w-1/2 bg-gray-200 h-96"></div>
+            <div className="md:w-1/2">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mb-6"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/4 mb-8"></div>
+              <div className="h-10 bg-gray-200 rounded w-full mb-4"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // If error or no product found (and no admin product)
+  if ((productError || !product) && !adminProduct) {
+    return (
+      <>
+        <Header />
+        <div className="container mx-auto py-20 mt-20 text-center">
           <h2 className="text-2xl font-bold">Product not found</h2>
           <p className="mt-4">The product you're looking for doesn't exist or has been removed.</p>
           <Link href="/" className="mt-6 inline-block bg-silver hover:bg-gray-300 text-black px-6 py-2 rounded">
@@ -130,28 +186,39 @@ const ProductDetail = () => {
     );
   }
 
-  // Create thumbnail array from main image
-  const thumbnails = [
-    { url: product.imageUrl, alt: product.title },
-    { url: product.imageUrl, alt: product.title },
-    { url: product.imageUrl, alt: product.title },
-  ];
+  // Default sizes if not provided by API
+  const sizes = currentProduct?.availableSizes || ['32', '34', '36', '38', '40', '42'];
+
+  // Create thumbnail array from product images
+  const thumbnails = currentProduct?.images?.length > 0
+    ? currentProduct.images.map((img: { url: string; alt?: string }) => ({ 
+        url: img.url, 
+        alt: img.alt || currentProduct.title 
+      }))
+    : currentProduct?.thumbnails?.length > 0
+      ? currentProduct.thumbnails
+      : currentProduct?.imageUrls?.length > 0
+        ? currentProduct.imageUrls.map((url: string) => ({
+            url,
+            alt: currentProduct.alt || currentProduct.title
+          }))
+        : [{ url: currentProduct?.image || currentProduct?.imageUrl, alt: currentProduct?.title }];
 
   return (
     <div className="bg-black text-white">
       {/* Use the Header component from homepage */}
       <Header />
 
-      <div className="bg-gray-900 py-3 shadow-md mt-28">
+      <div className="bg-gray-900 py-3 shadow-sm mt-28">
         <div className="container mx-auto px-4">
           <div className="flex text-sm text-gray-400">
             <Link href="/" className="hover:text-white">HOME</Link>
             <span className="mx-2">/</span>
-            <Link href={`/${product.category}`} className="hover:text-white">
-              {product.category.toUpperCase().replace('-', ' ')}
+            <Link href={`/${currentProduct?.category || 'products'}`} className="hover:text-white">
+              {(currentProduct?.category || 'PRODUCTS').toUpperCase().replace('-', ' ')}
             </Link>
             <span className="mx-2">/</span>
-            <span className="text-white font-medium">{product.title}</span>
+            <span className="text-white font-medium">{currentProduct?.title}</span>
           </div>
         </div>
       </div>
@@ -162,54 +229,69 @@ const ProductDetail = () => {
           {/* Left side - Product images */}
           <div className="md:w-1/2 px-4 mb-8 md:mb-0">
             <div className="flex">
-              {/* Thumbnails */}
-              <div className="w-1/5 mr-4">
-                {thumbnails.map((thumb, index) => (
+              {/* Thumbnails - Vertical carousel */}
+              <div className="w-1/5 mr-4 max-h-[500px] overflow-y-auto flex flex-col items-center">
+                {thumbnails.map((thumb: { url: string; alt: string }, index: number) => (
                   <div 
                     key={index}
-                    className={`mb-4 border-2 ${selectedImage === index ? 'border-white' : 'border-gray-700'}`}
+                    className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
                     onClick={() => setSelectedImage(index)}
                   >
                     <img 
                       src={thumb.url} 
-                      alt={`${thumb.alt} thumbnail ${index + 1}`}
-                      className="w-full cursor-pointer"
+                      alt={`${thumb.alt || currentProduct?.title} thumbnail ${index + 1}`}
+                      className="w-full h-auto cursor-pointer"
                     />
                   </div>
                 ))}
               </div>
               
-              {/* Main image */}
-              <div className="w-4/5 relative">
-                {product.discount && (
+              {/* Main image with zoom */}
+              <div className="w-4/5 relative overflow-hidden">
+                {currentProduct?.discount && (
                   <div className="absolute top-0 left-0 z-10 px-4 py-1 text-xs text-white font-medium bg-red-600">
-                    {product.discount}
+                    {currentProduct.discount}
                   </div>
                 )}
-                <img
-                  src={thumbnails[selectedImage].url}
-                  alt={thumbnails[selectedImage].alt}
-                  className="w-full h-auto"
-                />
+                <div className="relative overflow-hidden cursor-zoom-in" 
+                  style={{ height: '500px' }}
+                  onMouseMove={(e) => {
+                    const container = e.currentTarget;
+                    const { left, top, width, height } = container.getBoundingClientRect();
+                    const x = (e.clientX - left) / width;
+                    const y = (e.clientY - top) / height;
+                    
+                    const img = container.querySelector('img');
+                    if (img) {
+                      img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                    }
+                  }}
+                >
+                  <img
+                    src={thumbnails[selectedImage].url}
+                    alt={thumbnails[selectedImage].alt || currentProduct?.title}
+                    className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
+                  />
+                </div>
                 
                 {/* Product action buttons */}
                 <div className="absolute top-2 right-2 flex flex-col space-y-2">
                   <button 
-                    onClick={handleShareClick}
-                    className="bg-gray-800 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full"
-                    aria-label="Share"
+                    onClick={toggleWishlist}
+                    className={`${isInWishlist(currentProduct.id) ? 'bg-red-600' : 'bg-white'} p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all`}
+                    aria-label={isInWishlist(currentProduct.id) ? "Remove from wishlist" : "Add to wishlist"}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isInWishlist(currentProduct.id) ? 'text-white' : 'text-gray-800'}`} fill={isInWishlist(currentProduct.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </button>
                   <button 
-                    onClick={toggleWishlist}
-                    className={`${isInWishlist(product.id) ? 'bg-red-600' : 'bg-gray-800'} bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full`}
-                    aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                    onClick={handleShareClick}
+                    className="bg-white p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all"
+                    aria-label="Share"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                     </svg>
                   </button>
                 </div>
@@ -219,33 +301,55 @@ const ProductDetail = () => {
           
           {/* Right side - Product details */}
           <div className="md:w-1/2 px-4">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase mb-2">{product.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-semibold uppercase mb-3 text-white">{currentProduct?.title}</h1>
             
+            {/* Price section */}
             <div className="mb-6">
               <div className="flex items-center">
-                <span className="text-2xl font-bold">{product.salePrice}</span>
-                <span className="text-gray-400 line-through ml-3">{product.price}</span>
-                <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm">{product.discount}</span>
+                <p className="text-sm text-gray-400">MRP</p>
+                <span className="text-2xl font-bold ml-2 text-white">{currentProduct.salePrice}</span>
+                {currentProduct.price && currentProduct.price !== currentProduct.salePrice && (
+                  <span className="text-gray-500 line-through ml-3">{currentProduct.price}</span>
+                )}
+                {currentProduct.discount && (
+                  <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm">{currentProduct.discount}</span>
+                )}
               </div>
               <p className="text-sm text-gray-400 mt-1">Inclusive of all taxes</p>
+            </div>
+
+            {/* Color selection */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-3 text-white">SELECT COLOR</h3>
+              <div className="flex space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-silver flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#f8f4e3]"></div>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm font-medium text-gray-300">Off-White</p>
+                </div>
+              </div>
             </div>
 
             {/* Size selection */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-medium">SELECT SIZE</h3>
+                <h3 className="font-medium text-white">SELECT SIZE</h3>
                 <button 
-                  className="text-silver underline text-sm"
+                  className="text-silver underline text-sm flex items-center"
                   onClick={handleSizeChartClick}
                 >
-                  Size Chart
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Size Guide
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {sizes.map((size) => (
+                {sizes.map((size: string) => (
                   <button
                     key={size}
-                    className={`w-10 h-10 flex items-center justify-center border ${
+                    className={`w-10 h-10 flex items-center justify-center border rounded-full ${
                       selectedSize === size 
                         ? 'border-silver bg-silver text-black' 
                         : 'border-gray-600 text-white hover:border-silver'
@@ -258,125 +362,258 @@ const ProductDetail = () => {
               </div>
             </div>
             
-            {/* Quantity selector */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2">QUANTITY</h3>
-              <div className="flex items-center">
-                <button 
-                  className="w-10 h-10 border border-gray-600 flex items-center justify-center text-white"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  -
-                </button>
-                <div className="w-14 h-10 border-t border-b border-gray-600 flex items-center justify-center">
-                  {quantity}
-                </div>
-                <button 
-                  className="w-10 h-10 border border-gray-600 flex items-center justify-center text-white"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            
             {/* Action buttons */}
             <div className="mb-6 grid grid-cols-2 gap-4">
               <button 
                 onClick={handleAddToCart}
-                className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium"
+                className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium transition-all"
               >
-                ADD TO CART
+                ADD TO BAG
               </button>
               <button 
                 onClick={handleBuyNow}
-                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 font-medium"
+                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 font-medium transition-all"
               >
                 BUY NOW
               </button>
             </div>
             
-            {/* Delivery checker */}
-            <div className="mb-6 p-4 bg-gray-900 rounded">
-              <h3 className="font-medium mb-3">DELIVERY AVAILABILITY</h3>
-              <div className="flex">
+            {/* Delivery section */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-3 text-white">DELIVERY</h3>
+              <div className="flex mb-3">
                 <input 
                   type="text" 
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
                   placeholder="Enter pincode" 
-                  className="flex-1 bg-black border border-gray-700 px-3 py-2 text-white"
+                  className="flex-1 bg-gray-800 border border-gray-700 px-3 py-2 text-white"
                 />
                 <button 
                   onClick={handlePincodeCheck}
-                  className="ml-2 bg-silver hover:bg-gray-300 text-black px-4 py-2 font-medium"
+                  className="ml-2 bg-transparent hover:bg-gray-700 text-white px-4 py-2 font-medium border border-gray-600 uppercase text-sm"
                 >
                   CHECK
                 </button>
               </div>
               {deliveryStatus && (
-                <p className={`mt-2 text-sm ${deliveryStatus.includes('available') ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-sm ${deliveryStatus.includes('available') ? 'text-green-500' : 'text-red-500'}`}>
                   {deliveryStatus}
                 </p>
               )}
+              
+              {/* Delivery features */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-sm text-gray-300">Free Shipping</span>
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span className="text-sm text-gray-300">10 Days Easy Return</span>
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-sm text-gray-300">Assured Quality</span>
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-sm text-gray-300">COD Available</span>
+                </div>
+              </div>
             </div>
-            
-            {/* Product description */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 border-b border-gray-700 pb-1">PRODUCT DETAILS</h3>
-              <p className="text-gray-300">
-                {product.title} - {product.category.replace('-', ' ')} - {product.subcategory}
+          </div>
+        </div>
+      </div>
+      
+      {/* Detailed Product Information */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Product Details Accordion */}
+        <div className="border-t border-b border-gray-700">
+          <div className="py-4 cursor-pointer" onClick={() => setProductDetailsOpen(!productDetailsOpen)}>
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg text-white">PRODUCT DETAILS</h3>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 text-gray-400 transition-transform ${productDetailsOpen ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          {productDetailsOpen && (
+            <div className="pb-4">
+              <p className="text-gray-400 mb-4">
+                This off-white embroidered suit set, handpicked by Kriti Sanon, effortlessly blends modern elegance
+                with unparalleled comfort, making it the ideal choice for women who seek grace on every occasion.
               </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Top Style</span>
+                    <span className="text-white">{currentProduct?.topStyle}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Top Pattern</span>
+                    <span className="text-white">{currentProduct?.topPattern}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Bottom Fabric</span>
+                    <span className="text-white">{currentProduct?.bottomFabric}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Fabric Dupatta/Stole</span>
+                    <span className="text-white">{currentProduct?.fabricDupattaStole}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Neck/Neckline</span>
+                    <span className="text-white">{currentProduct?.neckline}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Sleeve Detail</span>
+                    <span className="text-white">{currentProduct?.sleeveDetail}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Lining Fabric</span>
+                    <span className="text-white">{currentProduct?.liningFabric}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-700">
+                    <span className="font-medium text-gray-300">Fabric</span>
+                    <span className="text-white">{currentProduct?.fabric}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Wash & Care Accordion */}
+        <div className="border-b border-gray-700">
+          <div className="py-4 cursor-pointer" onClick={() => setWashCareOpen(!washCareOpen)}>
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg text-white">WASH & CARE</h3>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 text-gray-400 transition-transform ${washCareOpen ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          {washCareOpen && (
+            <div className="pb-4">
+              <ul className="list-disc pl-5 text-gray-400 space-y-1">
+                <li>{currentProduct?.washCare}</li>
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Delivery & Returns Accordion */}
+        <div className="border-b border-gray-700">
+          <div className="py-4 cursor-pointer" onClick={() => setDeliveryReturnsOpen(!deliveryReturnsOpen)}>
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg text-white">DELIVERY & RETURNS</h3>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 text-gray-400 transition-transform ${deliveryReturnsOpen ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          {deliveryReturnsOpen && (
+            <div className="pb-4">
+              <h4 className="font-medium mb-2 text-gray-300">Delivery Policy:</h4>
+              <ul className="list-disc pl-5 text-gray-400 space-y-1 mb-4">
+                <li>Free shipping on all orders</li>
+                <li>Standard delivery: 3-5 business days</li>
+                <li>Express delivery: 1-2 business days (additional charges apply)</li>
+              </ul>
+              
+              <h4 className="font-medium mb-2 text-gray-300">Return Policy:</h4>
+              <ul className="list-disc pl-5 text-gray-400 space-y-1">
+                <li>Easy 10-day returns</li>
+                <li>Products must be unused, unwashed, and in original packaging</li>
+                <li>Return shipping is free for eligible returns</li>
+                <li>Refunds will be processed within 7 business days after we receive your return</li>
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Product Declaration Accordion */}
+        <div className="border-b border-gray-700">
+          <div className="py-4 cursor-pointer" onClick={() => setProductDeclarationOpen(!productDeclarationOpen)}>
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg text-white">PRODUCT DECLARATION</h3>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 text-gray-400 transition-transform ${productDeclarationOpen ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          {productDeclarationOpen && (
+            <div className="pb-4">
+              <p className="text-gray-400 mb-2">
+                We strive to display as accurately as possible the colors of our products. However, due to individual monitor settings and variations, the actual colors may differ slightly from what appears on your screen.
+              </p>
+              <p className="text-gray-400">
+                All measurements are approximate. Please allow for a slight variation in the stated dimensions due to the handcrafted nature of our products.
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* Customer Support Section */}
+        <div className="mt-8">
+          <h3 className="font-medium text-lg mb-4 text-white">HAVE A QUESTION? WE ARE HERE TO HELP!</h3>
+          <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-8">
+            <p className="text-gray-400">We are available on <span className="font-semibold text-white">011-41583041</span>. Monday - Saturday from 9:30am - 6:30pm.</p>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span className="text-gray-400">Email us at <a href="mailto:customercare@bibaindia.com" className="text-blue-400 hover:underline">customercare@bibaindia.com</a></span>
             </div>
           </div>
         </div>
       </div>
       
       {/* Similar Products */}
-      <div className="bg-gray-900 py-8">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold mb-6">You May Also Like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {similarProducts.map((product) => (
-              <div key={product.id} className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition">
-                <Link href={`/product/${product.id}`}>
-                  <div className="relative h-64 w-full">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                    />
-                    {product.discount && (
-                      <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
-                        {product.discount}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-                
-                <div className="p-4">
-                  <Link href={`/product/${product.id}`}>
-                    <h3 className="text-white font-medium text-lg hover:text-silver transition">{product.title}</h3>
-                  </Link>
-                  
-                  <div className="mt-2 flex items-center">
-                    <span className="text-silver font-bold">{product.salePrice}</span>
-                    <span className="ml-2 text-gray-500 line-through text-sm">{product.price}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SimilarProducts products={similarProducts} />
 
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 p-6 rounded-lg max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Share This Product</h3>
+              <h3 className="text-xl font-bold text-white">Share This Product</h3>
               <button 
                 onClick={handleShareClose}
                 className="text-gray-400 hover:text-white"
@@ -390,64 +627,68 @@ const ProductDetail = () => {
             <div className="mb-4">
               <div className="flex items-center mb-4">
                 <img 
-                  src={product.imageUrl} 
-                  alt={product.title} 
+                  src={currentProduct?.image} 
+                  alt={currentProduct?.title} 
                   className="w-20 h-20 object-cover mr-4"
                 />
                 <div>
-                  <h4 className="font-bold">{product.title}</h4>
-                  <p className="text-sm text-gray-400">{product.salePrice}</p>
+                  <h4 className="font-bold text-white">{currentProduct?.title}</h4>
+                  <p className="text-sm text-gray-400">{currentProduct?.salePrice}</p>
                 </div>
               </div>
             </div>
             
             <div className="flex justify-center space-x-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-transform hover:scale-110">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
                 </svg>
               </button>
-              <button className="bg-blue-400 hover:bg-blue-500 text-white p-2 rounded-full">
+              <button className="bg-blue-400 hover:bg-blue-500 text-white p-2 rounded-full transition-transform hover:scale-110">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" />
                 </svg>
               </button>
-              <button className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full">
+              <button className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-transform hover:scale-110">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M2.004 22l1.352-4.968A9.954 9.954 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.954 9.954 0 0 1-5.03-1.355L2.004 22zM8.391 7.308a.961.961 0 0 0-.371.1 1.293 1.293 0 0 0-.294.228c-.12.113-.188.211-.261.306A2.729 2.729 0 0 0 6.9 9.62c.002.49.13.967.33 1.413.409.902 1.082 1.857 1.971 2.742.214.213.423.427.648.626a9.448 9.448 0 0 0 3.84 2.046l.569.087c.185.01.37-.004.556-.013a1.99 1.99 0 0 0 .833-.231c.166-.088.244-.132.383-.22 0 0 .043-.028.125-.09.135-.1.218-.171.33-.288.083-.086.155-.187.21-.302.078-.163.156-.474.188-.733.024-.198.017-.306.014-.373-.004-.107-.093-.218-.19-.265l-.582-.261s-.87-.379-1.401-.621a.498.498 0 0 0-.177-.041.482.482 0 0 0-.378.127v-.002c-.005 0-.072.057-.795.933a.35.35 0 0 1-.368.13 1.416 1.416 0 0 1-.191-.066c-.124-.052-.167-.072-.252-.109l-.005-.002a6.01 6.01 0 0 1-1.57-1c-.126-.11-.243-.23-.363-.346a6.296 6.296 0 0 1-1.02-1.268l-.059-.095a.923.923 0 0 1-.102-.205c-.038-.147.061-.265.061-.265s.243-.266.356-.41a4.38 4.38 0 0 0 .263-.373c.118-.19.155-.385.093-.536-.28-.684-.57-1.365-.868-2.041-.059-.134-.234-.23-.393-.249-.054-.006-.108-.012-.162-.016a3.385 3.385 0 0 0-.403.004z" />
                 </svg>
               </button>
-              <button className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full">
+              {/* Instagram share button */}
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Link copied for sharing on Instagram");
+                }}
+                className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-2 rounded-full transition-transform hover:scale-110"
+              >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                 </svg>
               </button>
-            </div>
-            
-            <div className="mt-6">
-              <p className="text-sm text-gray-400 mb-2">Or copy link</p>
-              <div className="flex">
-                <input 
-                  type="text" 
-                  readOnly
-                  value={`https://nplusone.com/product/${product.id}`}
-                  className="flex-1 bg-black border border-gray-700 px-3 py-2 text-white text-sm truncate"
-                />
-                <button className="ml-2 bg-silver hover:bg-gray-300 text-black px-4 py-2 font-medium text-sm">
-                  Copy
-                </button>
-              </div>
+              {/* Telegram share button */}
+              <button 
+                onClick={() => {
+                  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(currentProduct?.title || 'Check out this product')}`;
+                  window.open(telegramUrl, '_blank');
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition-transform hover:scale-110"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Size Chart Modal */}
       {showSizeChart && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 p-6 rounded-lg max-w-3xl w-full">
+          <div className="bg-gray-900 p-6 rounded-lg max-w-2xl w-full text-white">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Size Chart</h3>
+              <h3 className="text-xl font-bold">SIZE CHART</h3>
               <button 
                 onClick={() => setShowSizeChart(false)}
                 className="text-gray-400 hover:text-white"
@@ -458,61 +699,277 @@ const ProductDetail = () => {
               </button>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Size</th>
-                    <th className="px-4 py-2 text-left">Bust (in)</th>
-                    <th className="px-4 py-2 text-left">Waist (in)</th>
-                    <th className="px-4 py-2 text-left">Hip (in)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-700">
-                    <td className="px-4 py-2">32</td>
-                    <td className="px-4 py-2">32</td>
-                    <td className="px-4 py-2">26</td>
-                    <td className="px-4 py-2">35</td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <td className="px-4 py-2">34</td>
-                    <td className="px-4 py-2">34</td>
-                    <td className="px-4 py-2">28</td>
-                    <td className="px-4 py-2">37</td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <td className="px-4 py-2">36</td>
-                    <td className="px-4 py-2">36</td>
-                    <td className="px-4 py-2">30</td>
-                    <td className="px-4 py-2">39</td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <td className="px-4 py-2">38</td>
-                    <td className="px-4 py-2">38</td>
-                    <td className="px-4 py-2">32</td>
-                    <td className="px-4 py-2">41</td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <td className="px-4 py-2">40</td>
-                    <td className="px-4 py-2">40</td>
-                    <td className="px-4 py-2">34</td>
-                    <td className="px-4 py-2">43</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2">42</td>
-                    <td className="px-4 py-2">42</td>
-                    <td className="px-4 py-2">36</td>
-                    <td className="px-4 py-2">45</td>
-                  </tr>
-                </tbody>
-              </table>
+            <p className="text-sm text-gray-400 mb-4">
+              Our Sizes fit the best for mentioned body measurements (not garment measurements)*<br/>
+              Tip: Biba sizes are to fit Indian Body.
+            </p>
+            
+            {/* Tabs */}
+            <div className="border-b border-gray-700 mb-4">
+              <div className="flex">
+                <button 
+                  className={`py-2 px-6 border-b-2 ${sizeChartTab === 'sizes' ? 'border-red-600 text-white font-medium' : 'border-transparent text-gray-400'}`}
+                  onClick={() => setSizeChartTab('sizes')}
+                >
+                  Size Chart
+                </button>
+                <button 
+                  className={`py-2 px-6 border-b-2 ${sizeChartTab === 'howToMeasure' ? 'border-red-600 text-white font-medium' : 'border-transparent text-gray-400'}`}
+                  onClick={() => setSizeChartTab('howToMeasure')}
+                >
+                  How to Measure
+                </button>
+              </div>
             </div>
             
-            <p className="mt-4 text-sm text-gray-400">
-              Note: These are general measurements and may vary slightly by style.
-              For the best fit, please measure yourself and compare with the size chart.
-            </p>
+            {sizeChartTab === 'sizes' && (
+              <>
+                {/* Measurement Unit Toggle */}
+                <div className="flex mb-4 border border-gray-700 inline-flex rounded">
+                  <button 
+                    className={`py-1 px-4 ${measurementUnit === 'in' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+                    onClick={() => setMeasurementUnit('in')}
+                  >
+                    IN
+                  </button>
+                  <button 
+                    className={`py-1 px-4 ${measurementUnit === 'cm' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+                    onClick={() => setMeasurementUnit('cm')}
+                  >
+                    CM
+                  </button>
+                </div>
+                
+                {/* Size Chart Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm bg-gray-800">
+                    <thead>
+                      <tr className="border-b border-gray-700">
+                        <th className="py-3 px-4 text-left font-medium">Sizes</th>
+                        <th className="py-3 px-4 text-left font-medium">Standard Size</th>
+                        <th className="py-3 px-4 text-left font-medium">To Fit Bust</th>
+                        <th className="py-3 px-4 text-left font-medium">To Fit Waist</th>
+                        <th className="py-3 px-4 text-left font-medium">To Fit Hip</th>
+                        <th className="py-3 px-4 text-left font-medium">Front Length</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-gray-300">
+                      {measurementUnit === 'in' ? (
+                        <>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                32
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">S</td>
+                            <td className="py-3 px-4">32-33</td>
+                            <td className="py-3 px-4">28-29</td>
+                            <td className="py-3 px-4">36-37</td>
+                            <td className="py-3 px-4">35.0</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                34
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">M</td>
+                            <td className="py-3 px-4">34-35</td>
+                            <td className="py-3 px-4">30-31</td>
+                            <td className="py-3 px-4">38-39</td>
+                            <td className="py-3 px-4">36.0</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                36
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">L</td>
+                            <td className="py-3 px-4">36-37</td>
+                            <td className="py-3 px-4">32-33</td>
+                            <td className="py-3 px-4">40-41</td>
+                            <td className="py-3 px-4">36.0</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                38
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XL</td>
+                            <td className="py-3 px-4">38-39</td>
+                            <td className="py-3 px-4">34-35</td>
+                            <td className="py-3 px-4">42-43</td>
+                            <td className="py-3 px-4">37.0</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                40
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XXL</td>
+                            <td className="py-3 px-4">40-41</td>
+                            <td className="py-3 px-4">36-38</td>
+                            <td className="py-3 px-4">44-45</td>
+                            <td className="py-3 px-4">37.0</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                42
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XXXL</td>
+                            <td className="py-3 px-4">42-43</td>
+                            <td className="py-3 px-4">40-41</td>
+                            <td className="py-3 px-4">47-48</td>
+                            <td className="py-3 px-4">38.0</td>
+                          </tr>
+                        </>
+                      ) : (
+                        <>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                32
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">S</td>
+                            <td className="py-3 px-4">81-84</td>
+                            <td className="py-3 px-4">71-74</td>
+                            <td className="py-3 px-4">91-94</td>
+                            <td className="py-3 px-4">89</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                34
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">M</td>
+                            <td className="py-3 px-4">86-89</td>
+                            <td className="py-3 px-4">76-79</td>
+                            <td className="py-3 px-4">97-99</td>
+                            <td className="py-3 px-4">91</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                36
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">L</td>
+                            <td className="py-3 px-4">91-94</td>
+                            <td className="py-3 px-4">81-84</td>
+                            <td className="py-3 px-4">102-104</td>
+                            <td className="py-3 px-4">91</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                38
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XL</td>
+                            <td className="py-3 px-4">97-99</td>
+                            <td className="py-3 px-4">86-89</td>
+                            <td className="py-3 px-4">107-109</td>
+                            <td className="py-3 px-4">94</td>
+                          </tr>
+                          <tr className="border-b border-gray-200">
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                40
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XXL</td>
+                            <td className="py-3 px-4">102-104</td>
+                            <td className="py-3 px-4">91-97</td>
+                            <td className="py-3 px-4">112-114</td>
+                            <td className="py-3 px-4">94</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4">
+                              <label className="flex items-center">
+                                <input type="radio" name="size" className="mr-2" />
+                                42
+                              </label>
+                            </td>
+                            <td className="py-3 px-4">XXXL</td>
+                            <td className="py-3 px-4">107-109</td>
+                            <td className="py-3 px-4">102-104</td>
+                            <td className="py-3 px-4">119-122</td>
+                            <td className="py-3 px-4">97</td>
+                          </tr>
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">*These measurements are indicative. Actual Size may differ.</p>
+                
+                <div className="mt-6 text-center">
+                  <button 
+                    className="bg-red-600 text-white py-2 px-8 rounded-sm hover:bg-red-700 transition-colors"
+                    onClick={() => setShowSizeChart(false)}
+                  >
+                    ADD TO BAG
+                  </button>
+                </div>
+              </>
+            )}
+            
+            {sizeChartTab === 'howToMeasure' && (
+              <div className="text-gray-300">
+                <div className="mb-8 flex justify-center">
+                  <img 
+                    src="/images/size-chart-diagram.png" 
+                    alt="How to measure diagram" 
+                    className="max-h-60"
+                    onError={(e) => {
+                      // Fallback if image doesn't exist
+                      e.currentTarget.src = "https://via.placeholder.com/300x200?text=Size+Chart+Diagram";
+                    }}
+                  />
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-bold uppercase mb-2 text-white">SHOULDER</h4>
+                    <p>Measure from the tip of one shoulder to the other.</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-bold uppercase mb-2 text-white">BUST</h4>
+                    <p>Place the measuring tape under your arms, wrapping around the fullest part of the bustline.</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-bold uppercase mb-2 text-white">WAIST</h4>
+                    <p>Measure around natural waist line, above the belly button along the slimmest part (without tightening the measuring tape)</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-bold uppercase mb-2 text-white">HIPS</h4>
+                    <p>Measure around the largest circumference at the hips.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

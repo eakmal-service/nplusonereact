@@ -400,9 +400,7 @@ const AddProductForm: React.FC = () => {
         price: `₹${formValues.mrp}`,
         salePrice: `₹${formValues.salePrice}`,
         discount: `${formValues.discount}% OFF`,
-        // Set the main image URL as the first image
         imageUrl: optimizedImageUrls[0],
-        // Store all image URLs in the imageUrls array
         imageUrls: optimizedImageUrls,
         stockQuantity: Object.values(formValues.stockQuantity).reduce(
           (total, qty) => total + parseInt(qty || '0'), 0
@@ -411,16 +409,13 @@ const AddProductForm: React.FC = () => {
         cartCount: 0,
         purchaseCount: 0,
         dateAdded: new Date().toISOString().split('T')[0],
-        status: 'active', // Always set to active for immediate visibility
-        // Additional fields needed for proper display
+        status: 'active',
         description: formValues.description,
         sizes: formValues.sizes,
-        colorName: formValues.colorOptions.length > 0 ? formValues.colorOptions[0].name : '',
-        colorOptions: formValues.colorOptions.length > 0 ? formValues.colorOptions : undefined,
+        colorOptions: formValues.colorOptions,
         material: formValues.material,
         washCare: formValues.careInstructions,
         alt: formValues.title,
-        // Fields for proper integration
         isAdminUploaded: true,
         isGloballyVisible: true,
         responsive: true,

@@ -11,26 +11,67 @@ export interface Product {
   salePrice: string;
   discount: string;
   imageUrl: string;
+  imageUrls?: string[]; // Array of image URLs for multiple images
   stockQuantity: number;
   viewCount: number;
   cartCount: number;
   purchaseCount: number;
   dateAdded: string;
   status: 'active' | 'inactive' | 'draft';
+  // Additional fields for UI integration
+  description?: string;
+  sizes?: string[];
+  colorName?: string;
+  colorOptions?: Array<{name: string, code: string}>;
+  material?: string;
+  washCare?: string;
+  alt?: string;
+  isAdminUploaded?: boolean;
+  isGloballyVisible?: boolean;
+  responsive?: boolean;
+  browserCompatible?: boolean;
 }
 
 // Convert from utils/productUtils Product to types/index Product for use with contexts
-export const convertToTypeProduct = (product: Product): any => {
+export const convertToTypeProduct = (product: any): any => {
+  // Create thumbnails/images arrays from imageUrls if available, or fall back to single imageUrl
+  const images = product.imageUrls && product.imageUrls.length > 0
+    ? product.imageUrls.map((url: string) => ({
+        url,
+        alt: product.alt || product.title
+      }))
+    : [{ url: product.imageUrl || product.image, alt: product.alt || product.title }];
+
+  // Ensure we always have at least the main image in thumbnails/images
+  const thumbnails = images;
+
   return {
     id: product.id,
     title: product.title,
-    image: product.imageUrl,
+    image: product.imageUrl || product.image,
+    imageUrl: product.imageUrl || product.image,
     price: product.price,
+    salePrice: product.salePrice,
     originalPrice: product.price,
     discount: product.discount,
     link: `/product/${product.id}`,
-    alt: product.title,
-    description: `${product.title} - ${product.category} - ${product.subcategory}`
+    alt: product.alt || product.title,
+    description: product.description || `${product.title} - ${product.category || ''} - ${product.subcategory || ''}`,
+    // Add proper QuickView support
+    sizes: product.sizes || ['32', '34', '36', '38', '40', '42'],
+    thumbnails: thumbnails,
+    images: thumbnails,
+    imageUrls: product.imageUrls, // Pass through original imageUrls
+    isAdminUploaded: product.isAdminUploaded || false,
+    category: product.category || 'clothing',
+    subcategory: product.subcategory || '',
+    status: product.status || 'active',
+    colorOptions: product.colorOptions || [
+      { name: 'Black', code: '#000000' },
+      { name: 'White', code: '#FFFFFF' },
+      { name: 'Red', code: '#FF0000' },
+      { name: 'Blue', code: '#0000FF' },
+    ]
   };
 };
 
