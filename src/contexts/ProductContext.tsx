@@ -1,27 +1,28 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, getAllProducts, saveProduct, updateProduct, updateProductStatus, updateProductStock, deleteProduct } from '../utils/productUtils';
+import { Product as UIProduct } from '@/types';
+import { Product as StorageProduct, getAllProducts, saveProduct, updateProduct, updateProductStatus, updateProductStock, deleteProduct, convertToTypeProduct } from '../utils/productUtils';
 
 // Define context type
 interface ProductContextType {
-  products: Product[];
+  products: UIProduct[];
   isLoading: boolean;
-  saveNewProduct: (product: Omit<Product, 'id'>) => Product;
-  updateExistingProduct: (product: Product) => boolean;
+  saveNewProduct: (product: Omit<StorageProduct, 'id'>) => UIProduct;
+  updateExistingProduct: (product: StorageProduct) => boolean;
   updateStatus: (id: number, status: 'active' | 'inactive' | 'draft') => boolean;
   updateStock: (id: number, newStock: number) => boolean;
   removeProduct: (id: number) => boolean;
   refreshProducts: () => void;
-  getProductsByCategory: (category: string) => Product[];
-  getActiveProductsByCategory: (category: string) => Product[];
+  getProductsByCategory: (category: string) => UIProduct[];
+  getActiveProductsByCategory: (category: string) => UIProduct[];
 }
 
 // Create context with default values
 const ProductContext = createContext<ProductContextType>({
   products: [],
   isLoading: true,
-  saveNewProduct: () => ({} as Product),
+  saveNewProduct: () => ({} as UIProduct),
   updateExistingProduct: () => false,
   updateStatus: () => false,
   updateStock: () => false,
@@ -33,7 +34,7 @@ const ProductContext = createContext<ProductContextType>({
 
 // Provider component
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<UIProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize products from localStorage
@@ -44,61 +45,36 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Refresh products from localStorage
   const refreshProducts = () => {
     setIsLoading(true);
-    const loadedProducts = getAllProducts();
+    const loadedProducts = getAllProducts().map(convertToTypeProduct);
     setProducts(loadedProducts);
     setIsLoading(false);
   };
 
   // Save new product
-  const saveNewProduct = (productData: Omit<Product, 'id'>) => {
-    // Ensure product is active and globally visible
-    const productWithDefaults: Omit<Product, 'id'> = {
-      ...productData,
-      status: 'active' as const,
-      isAdminUploaded: true,
-      isGloballyVisible: true,
-      responsive: true,
-      browserCompatible: true,
-      viewCount: 0,
-      cartCount: 0,
-      purchaseCount: 0,
-      dateAdded: new Date().toISOString().split('T')[0],
-    };
-
-    const newProduct = saveProduct(productWithDefaults);
+  const saveNewProduct = (productData: Omit<StorageProduct, 'id'>) => {
+    const savedProduct = saveProduct(productData);
+    const uiProduct = convertToTypeProduct(savedProduct);
     
-    // Update state immediately for real-time visibility
     setProducts(prev => {
-      const updatedProducts = [newProduct, ...prev];
-      // Sort by date added (newest first)
+      const updatedProducts = [uiProduct, ...prev];
       return updatedProducts.sort((a, b) => 
-        new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+        new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
       );
     });
 
-    return newProduct;
+    return uiProduct;
   };
 
   // Update existing product
-  const updateExistingProduct = (product: Product) => {
-    // Ensure product remains active and visible
-    const productWithDefaults = {
-      ...product,
-      isAdminUploaded: true,
-      isGloballyVisible: true,
-      responsive: true,
-      browserCompatible: true,
-    };
-
-    const success = updateProduct(productWithDefaults);
+  const updateExistingProduct = (product: StorageProduct) => {
+    const success = updateProduct(product);
     if (success) {
       setProducts(prev => {
         const updatedProducts = prev.map(p => 
-          p.id === product.id ? productWithDefaults : p
+          p.id === product.id ? convertToTypeProduct(product) : p
         );
-        // Sort by date added (newest first)
         return updatedProducts.sort((a, b) => 
-          new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+          new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
         );
       });
     }
@@ -115,7 +91,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         );
         // Sort by date added (newest first)
         return updatedProducts.sort((a, b) => 
-          new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+          new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
         );
       });
     }
@@ -151,10 +127,10 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       .filter(product => 
         product.category === category && 
         product.status === 'active' && 
-        product.stockQuantity > 0 &&
+        (product.stockQuantity || 0) > 0 &&
         product.isGloballyVisible
       )
-      .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
+      .sort((a, b) => new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime());
   };
 
   // Context value
@@ -178,7 +154,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   );
 };
 
-// Custom hook for using the product context
-export const useProducts = () => useContext(ProductContext);
+// Hook for using the product context
+export const useProducts = () => {
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error('useProducts must be used within a ProductProvider');
+  }
+  return context;
+};
 
 export default ProductContext; 

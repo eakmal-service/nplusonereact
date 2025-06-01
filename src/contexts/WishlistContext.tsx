@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '@/types';
+import { convertToTypeProduct } from '@/utils/productUtils';
 
 interface WishlistContextType {
   wishlist: Product[];
