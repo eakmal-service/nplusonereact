@@ -4,7 +4,6 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Product } from '../../utils/productUtils';
 import { useProducts } from '../../contexts/ProductContext';
-import { processImageFiles, validateImageFile, optimizeImage } from '../../utils/imageUtils';
 
 // Define category options
 const CATEGORIES = [
@@ -265,56 +264,21 @@ const AddProductForm: React.FC = () => {
   };
 
   // Handle image uploads
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    // Clear any previous errors
-    setErrors(prev => ({ ...prev, images: undefined }));
-
-    // Validate and process files
-    const validFiles: File[] = [];
-    const invalidFiles: string[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (validateImageFile(file)) {
-        validFiles.push(file);
-      } else {
-        invalidFiles.push(file.name);
-      }
-    }
-
-    if (invalidFiles.length > 0) {
-      setErrors(prev => ({
-        ...prev,
-        images: `Invalid files: ${invalidFiles.join(', ')}. Images must be under 5MB.`
-      }));
-      return;
-    }
-
     // Limit to 5 images
-    const selectedFiles = validFiles.slice(0, 5);
+    const selectedFiles = Array.from(files).slice(0, 5);
     
-    try {
-      // Process images and create optimized data URLs
-      const dataUrls = await processImageFiles(selectedFiles);
-      const optimizedUrls = await Promise.all(dataUrls.map(url => optimizeImage(url)));
-      
-      setFormValues(prev => ({
-        ...prev,
-        images: [...prev.images, ...selectedFiles].slice(0, 5)
-      }));
+    setFormValues(prev => ({
+      ...prev,
+      images: [...prev.images, ...selectedFiles].slice(0, 5)
+    }));
 
-      // Set preview URLs
-      setImagePreviewUrls(prev => [...prev, ...optimizedUrls].slice(0, 5));
-    } catch (error) {
-      console.error('Error processing images:', error);
-      setErrors(prev => ({
-        ...prev,
-        images: 'Failed to process images. Please try again.'
-      }));
-    }
+    // Create preview URLs
+    const newImagePreviews = Array.from(selectedFiles).map(file => URL.createObjectURL(file));
+    setImagePreviewUrls(prev => [...prev, ...newImagePreviews].slice(0, 5));
   };
 
   // Remove an image
@@ -387,11 +351,6 @@ const AddProductForm: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Process and optimize all images
-      const optimizedImageUrls = await Promise.all(
-        imagePreviewUrls.map(url => optimizeImage(url))
-      );
-      
       // Format the product data
       const productData: Omit<Product, 'id'> = {
         title: formValues.title,
@@ -400,8 +359,14 @@ const AddProductForm: React.FC = () => {
         price: `₹${formValues.mrp}`,
         salePrice: `₹${formValues.salePrice}`,
         discount: `${formValues.discount}% OFF`,
-        imageUrl: optimizedImageUrls[0],
-        imageUrls: optimizedImageUrls,
+        // Set the main image URL as the first image
+        imageUrl: imagePreviewUrls.length > 0 ? 
+          imagePreviewUrls[0] : 
+          'https://placehold.co/300x400/gray/white?text=Product',
+        // Store all image URLs in the imageUrls array
+        imageUrls: imagePreviewUrls.length > 0 ? 
+          [...imagePreviewUrls] : 
+          ['https://placehold.co/300x400/gray/white?text=Product'],
         stockQuantity: Object.values(formValues.stockQuantity).reduce(
           (total, qty) => total + parseInt(qty || '0'), 0
         ),
@@ -409,13 +374,16 @@ const AddProductForm: React.FC = () => {
         cartCount: 0,
         purchaseCount: 0,
         dateAdded: new Date().toISOString().split('T')[0],
-        status: 'active',
+        status: formValues.status,
+        // Additional fields needed for proper display
         description: formValues.description,
         sizes: formValues.sizes,
-        colorOptions: formValues.colorOptions,
+        colorName: formValues.colorOptions.length > 0 ? formValues.colorOptions[0].name : '',
+        colorOptions: formValues.colorOptions.length > 0 ? formValues.colorOptions : undefined,
         material: formValues.material,
         washCare: formValues.careInstructions,
         alt: formValues.title,
+        // Fields for proper integration
         isAdminUploaded: true,
         isGloballyVisible: true,
         responsive: true,

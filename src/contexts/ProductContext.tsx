@@ -1,28 +1,27 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product as UIProduct } from '@/types';
-import { Product as StorageProduct, getAllProducts, saveProduct, updateProduct, updateProductStatus, updateProductStock, deleteProduct, convertToTypeProduct } from '../utils/productUtils';
+import { Product, getAllProducts, saveProduct, updateProduct, updateProductStatus, updateProductStock, deleteProduct } from '../utils/productUtils';
 
 // Define context type
 interface ProductContextType {
-  products: UIProduct[];
+  products: Product[];
   isLoading: boolean;
-  saveNewProduct: (product: Omit<StorageProduct, 'id'>) => UIProduct;
-  updateExistingProduct: (product: StorageProduct) => boolean;
+  saveNewProduct: (product: Omit<Product, 'id'>) => Product;
+  updateExistingProduct: (product: Product) => boolean;
   updateStatus: (id: number, status: 'active' | 'inactive' | 'draft') => boolean;
   updateStock: (id: number, newStock: number) => boolean;
   removeProduct: (id: number) => boolean;
   refreshProducts: () => void;
-  getProductsByCategory: (category: string) => UIProduct[];
-  getActiveProductsByCategory: (category: string) => UIProduct[];
+  getProductsByCategory: (category: string) => Product[];
+  getActiveProductsByCategory: (category: string) => Product[];
 }
 
 // Create context with default values
 const ProductContext = createContext<ProductContextType>({
   products: [],
   isLoading: true,
-  saveNewProduct: () => ({} as UIProduct),
+  saveNewProduct: () => ({} as Product),
   updateExistingProduct: () => false,
   updateStatus: () => false,
   updateStock: () => false,
@@ -34,7 +33,7 @@ const ProductContext = createContext<ProductContextType>({
 
 // Provider component
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<UIProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize products from localStorage
@@ -45,38 +44,23 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Refresh products from localStorage
   const refreshProducts = () => {
     setIsLoading(true);
-    const loadedProducts = getAllProducts().map(convertToTypeProduct);
+    const loadedProducts = getAllProducts();
     setProducts(loadedProducts);
     setIsLoading(false);
   };
 
   // Save new product
-  const saveNewProduct = (productData: Omit<StorageProduct, 'id'>) => {
-    const savedProduct = saveProduct(productData);
-    const uiProduct = convertToTypeProduct(savedProduct);
-    
-    setProducts(prev => {
-      const updatedProducts = [uiProduct, ...prev];
-      return updatedProducts.sort((a, b) => 
-        new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
-      );
-    });
-
-    return uiProduct;
+  const saveNewProduct = (productData: Omit<Product, 'id'>) => {
+    const newProduct = saveProduct(productData);
+    setProducts(prev => [newProduct, ...prev]);
+    return newProduct;
   };
 
   // Update existing product
-  const updateExistingProduct = (product: StorageProduct) => {
+  const updateExistingProduct = (product: Product) => {
     const success = updateProduct(product);
     if (success) {
-      setProducts(prev => {
-        const updatedProducts = prev.map(p => 
-          p.id === product.id ? convertToTypeProduct(product) : p
-        );
-        return updatedProducts.sort((a, b) => 
-          new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
-        );
-      });
+      setProducts(prev => prev.map(p => p.id === product.id ? product : p));
     }
     return success;
   };
@@ -85,15 +69,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   const updateStatus = (id: number, status: 'active' | 'inactive' | 'draft') => {
     const success = updateProductStatus(id, status);
     if (success) {
-      setProducts(prev => {
-        const updatedProducts = prev.map(p => 
-          p.id === id ? { ...p, status } : p
-        );
-        // Sort by date added (newest first)
-        return updatedProducts.sort((a, b) => 
-          new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime()
-        );
-      });
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
     }
     return success;
   };
@@ -121,16 +97,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     return products.filter(product => product.category === category);
   };
 
-  // Get active products by category with proper sorting
+  // Get active products by category
   const getActiveProductsByCategory = (category: string) => {
-    return products
-      .filter(product => 
-        product.category === category && 
-        product.status === 'active' && 
-        (product.stockQuantity || 0) > 0 &&
-        product.isGloballyVisible
-      )
-      .sort((a, b) => new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime());
+    return products.filter(product => 
+      product.category === category && 
+      product.status === 'active' && 
+      product.stockQuantity > 0
+    );
   };
 
   // Context value
@@ -154,13 +127,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   );
 };
 
-// Hook for using the product context
-export const useProducts = () => {
-  const context = useContext(ProductContext);
-  if (!context) {
-    throw new Error('useProducts must be used within a ProductProvider');
-  }
-  return context;
-};
+// Custom hook for using the product context
+export const useProducts = () => useContext(ProductContext);
 
 export default ProductContext; 
