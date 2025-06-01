@@ -115,7 +115,7 @@ export default function TestProductsPage() {
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-full bg-gray-900 text-white">
                 <thead className="bg-gray-800">
                   <tr>
                     <th className="px-4 py-2 text-left">ID</th>
@@ -129,61 +129,66 @@ export default function TestProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map(product => (
-                    <tr key={product.id} className="border-b border-gray-700">
-                      <td className="px-4 py-2">{product.id}</td>
-                      <td className="px-4 py-2">
-                        <div className="relative h-12 w-12">
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.title}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">{product.title}</td>
-                      <td className="px-4 py-2">{product.category}</td>
-                      <td className="px-4 py-2">{product.salePrice}</td>
-                      <td className="px-4 py-2">{product.stockQuantity}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          product.status === 'active' ? 'bg-green-600' :
-                          product.status === 'inactive' ? 'bg-yellow-600' :
-                          'bg-gray-600'
-                        }`}>
-                          {product.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => updateStock(product.id, product.stockQuantity + 1)}
-                            className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
-                          >
-                            +Stock
-                          </button>
-                          
-                          <button 
-                            onClick={() => updateStatus(
-                              product.id, 
-                              product.status === 'active' ? 'inactive' : 'active'
-                            )}
-                            className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
-                          >
-                            Toggle
-                          </button>
-                          
-                          <button 
-                            onClick={() => removeProduct(product.id)}
-                            className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredProducts.map(product => {
+                    // Fallback image URL
+                    const imageUrl = product.imageUrl || '/images/placeholder-product.jpg';
+                    
+                    return (
+                      <tr key={product.id} className="border-b border-gray-700">
+                        <td className="px-4 py-2">{product.id}</td>
+                        <td className="px-4 py-2">
+                          <div className="relative h-12 w-12">
+                            <Image
+                              src={imageUrl}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-2">{product.title}</td>
+                        <td className="px-4 py-2">{product.category || 'Uncategorized'}</td>
+                        <td className="px-4 py-2">{product.salePrice || product.price}</td>
+                        <td className="px-4 py-2">{product.stockQuantity ?? 0}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            product.status === 'active' ? 'bg-green-600' :
+                            product.status === 'inactive' ? 'bg-yellow-600' :
+                            'bg-gray-600'
+                          }`}>
+                            {product.status || 'draft'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => updateStock(product.id, product.stockQuantity + 1)}
+                              className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
+                            >
+                              +Stock
+                            </button>
+                            
+                            <button 
+                              onClick={() => updateStatus(
+                                product.id, 
+                                product.status === 'active' ? 'inactive' : 'active'
+                              )}
+                              className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
+                            >
+                              Toggle
+                            </button>
+                            
+                            <button 
+                              onClick={() => removeProduct(product.id)}
+                              className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

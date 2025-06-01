@@ -213,7 +213,7 @@ const ManageProductsSection = () => {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Filters and Sorting */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Search */}
@@ -311,116 +311,60 @@ const ManageProductsSection = () => {
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.length > 0 ? (
-          filteredProducts.map(product => (
-            <div key={product.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition">
-              {/* Product Image */}
-              <div className="relative h-48 md:h-64">
-                <Image
-                  src={product.imageUrl}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
-                  {product.discount}
-                </div>
-                {product.stockQuantity === 0 && (
-                  <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">OUT OF STOCK</span>
+          filteredProducts.map(product => {
+            // Fallback image URL and default values
+            const imageUrl = product.imageUrl || '/images/placeholder-product.jpg';
+            const stockQuantity = product.stockQuantity ?? 0;
+            const category = product.category || 'Uncategorized';
+            const subcategory = product.subcategory || '';
+            const dateAdded = product.dateAdded || new Date().toISOString();
+            const salePrice = product.salePrice || '0';
+            
+            return (
+              <div key={product.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition">
+                {/* Product Image */}
+                <div className="relative h-48 md:h-64">
+                  <Image
+                    src={imageUrl}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
+                    {product.discount}
                   </div>
-                )}
-                {product.status !== 'active' && (
-                  <div className="absolute top-2 left-2 bg-yellow-600 text-white text-xs font-medium px-2 py-1 rounded">
-                    {product.status.toUpperCase()}
-                  </div>
-                )}
-              </div>
-              
-              {/* Product Details */}
-              <div className="p-4">
-                <h3 className="text-white font-medium text-lg truncate">{product.title}</h3>
-                
-                <div className="mt-1 text-sm text-gray-400">
-                  Category: {CATEGORIES.find(cat => cat.value === product.category)?.label || product.category} &bull; {product.subcategory}
-                </div>
-                
-                <div className="mt-2 flex items-center">
-                  <span className="text-silver font-bold">{product.salePrice}</span>
-                  <span className="ml-2 text-gray-500 line-through text-sm">{product.price}</span>
+                  {stockQuantity === 0 && (
+                    <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                      <span className="text-white font-bold text-xl">OUT OF STOCK</span>
+                    </div>
+                  )}
+                  {product.status !== 'active' && (
+                    <div className="absolute top-2 left-2 bg-yellow-600 text-white text-xs font-medium px-2 py-1 rounded">
+                      {product.status.toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 
-                {/* Performance Metrics */}
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-gray-400">
-                  <div className="flex flex-col items-center p-1 rounded bg-gray-800">
-                    <span className="text-white text-base mb-1">{product.viewCount}</span>
-                    <span>👁️ Views</span>
+                {/* Product Details */}
+                <div className="p-4">
+                  <h3 className="text-lg font-medium text-white mb-2">{product.title}</h3>
+                  <div className="text-sm text-gray-400 mb-2">
+                    <p>Category: {category}</p>
+                    {subcategory && <p>Subcategory: {subcategory}</p>}
                   </div>
-                  <div className="flex flex-col items-center p-1 rounded bg-gray-800">
-                    <span className="text-white text-base mb-1">{product.cartCount}</span>
-                    <span>🛒 Cart</span>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-lg font-bold text-white">{salePrice}</p>
+                      {product.price !== salePrice && (
+                        <p className="text-sm text-gray-500 line-through">{product.price}</p>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400">Stock: {stockQuantity}</p>
                   </div>
-                  <div className="flex flex-col items-center p-1 rounded bg-gray-800">
-                    <span className="text-white text-base mb-1">{product.purchaseCount}</span>
-                    <span>🧾 Sold</span>
-                  </div>
-                </div>
-                
-                {/* Inventory Management */}
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-sm">
-                    <span className="text-gray-400">In Stock:</span>
-                    <span className={`ml-1 font-medium ${product.stockQuantity > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {product.stockQuantity}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleStockChange(product.id, -1)}
-                      disabled={product.stockQuantity === 0}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        product.stockQuantity === 0 
-                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
-                          : 'bg-red-600 text-white hover:bg-red-700'
-                      }`}
-                    >
-                      -
-                    </button>
-                    <button
-                      onClick={() => handleStockChange(product.id, 1)}
-                      className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center hover:bg-green-700"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Product Status Toggle */}
-                <div className="mt-4 flex items-center">
-                  <span className="text-sm text-gray-400 mr-2">Status:</span>
-                  <select
-                    value={product.status}
-                    onChange={(e) => handleStatusChange(product.id, e.target.value as 'active' | 'inactive' | 'draft')}
-                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white text-sm"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="draft">Draft</option>
-                  </select>
-                </div>
-                
-                {/* Actions */}
-                <div className="mt-4 flex justify-between">
-                  <Link href={`/admin/product/edit/${product.id}`} className="text-sm text-blue-400 hover:text-blue-300">
-                    Edit Details
-                  </Link>
-                  <button className="text-sm text-red-400 hover:text-red-300">
-                    Remove
-                  </button>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="col-span-full text-center py-10 text-gray-400">
             <p className="text-xl">No products found matching your filters.</p>

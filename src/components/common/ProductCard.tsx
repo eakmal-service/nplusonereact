@@ -43,6 +43,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Make sure we have a valid product detail page URL
   const productUrl = `/product/${product.id}`;
 
+  // Fallback image URL
+  const imageUrl = product.imageUrl || '/images/placeholder-product.jpg';
+
   return (
     <>
       <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition relative group">
@@ -50,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Link href={productUrl}>
           <div className="relative h-64 w-full">
             <Image
-              src={product.imageUrl}
+              src={imageUrl}
               alt={product.alt || product.title}
               fill
               className="object-cover"
