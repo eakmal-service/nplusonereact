@@ -1,19 +1,23 @@
 "use client";
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import '../globals.css';
+import AdminHeader from '@/admin/components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className={`${inter.className} min-h-screen bg-black text-white`}>
-      {children}
+    <div className="min-h-screen bg-black text-white">
+      <AdminHeader />
+      <main>
+        {children}
+      </main>
     </div>
   );
 } 
