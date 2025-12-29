@@ -13,12 +13,12 @@ export interface Product {
   alt: string;
   badge?: string;
   description?: string;
-  colors?: Array<{name: string, color: string}>;
-  colorOptions?: Array<{name: string, code: string}>;
+  colors?: Array<{ name: string, color: string }>;
+  colorOptions?: Array<{ name: string, code: string }>;
   sizes?: Array<string>;
   availableSizes?: Array<string>;
-  thumbnails?: Array<{url: string, alt: string}>;
-  images?: Array<{url: string, alt: string}>;
+  thumbnails?: Array<{ url: string, alt: string }>;
+  images?: Array<{ url: string, alt: string }>;
   category?: string;
   subcategory?: string;
   stockQuantity?: number;
@@ -41,11 +41,23 @@ export interface Product {
   washCare?: string;
   responsive?: boolean;
   browserCompatible?: boolean;
+  sizeChartHtml?: string;
+  fit?: string;
+  occasion?: string;
+  sku?: string;
+  barcode?: string;
+  videoUrl?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  tags?: string[];
+  sizeStock?: Record<string, number>; // Map of size -> stock quantity
 }
 
 // Category interface for category cards
 export interface Category {
   title: string;
+  id?: number;
+  name?: string;
   image: string;
   link: string;
   alt: string;
@@ -57,4 +69,50 @@ export interface CollectionItem {
   image: string;
   link: string;
   alt: string;
-} 
+}
+
+// Order Tracking Interfaces
+export interface TrackingEvent {
+  status: 'placed' | 'confirmed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  label: string;
+  message: string;
+  location?: string;
+  timestamp: string;
+  source: 'system' | 'admin' | 'courier';
+}
+
+export interface PaymentInfo {
+  method: string;
+  status: 'pending' | 'paid' | 'failed';
+  transaction_id?: string;
+}
+
+export interface CourierInfo {
+  name: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+}
+
+export interface ShippingAddress {
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+export interface Order {
+  id: string; // NPO-2025-XXXXXX technically, but DB uses UUID usually. User specified "NPO-..." format in JSON.
+  user_id?: string;
+  order_date: string;
+  payment: PaymentInfo;
+  order_status: string;
+  estimated_delivery?: string;
+  courier: CourierInfo;
+  shipping_address: ShippingAddress;
+  tracking_events: TrackingEvent[];
+  items?: any[]; // Simplified for now
+  total_amount?: number;
+}

@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     // Search through products
     const results = recommendedProducts.filter(product =>
       product.title.toLowerCase().includes(query) ||
-      product.description.toLowerCase().includes(query)
+      (product.description || '').toLowerCase().includes(query)
     ).slice(0, 5); // Limit to 5 results
 
     return NextResponse.json(results);

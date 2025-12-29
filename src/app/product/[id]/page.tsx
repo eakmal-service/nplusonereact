@@ -12,6 +12,8 @@ import { Product } from '@/types';
 import useSWR from 'swr';
 import { fetchProductById, fetchSimilarProducts, checkDeliveryAvailability } from '@/utils/api';
 import { getProductById, convertToTypeProduct } from '@/utils/productUtils';
+import ProductReviews from '@/components/reviews/ProductReviews';
+import SizeChart from '@/components/product/SizeChart';
 
 // SWR fetcher function
 const fetcher = async (url: string) => {
@@ -38,7 +40,7 @@ const ProductDetail = () => {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  
+
   // Data states
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -53,7 +55,7 @@ const ProductDetail = () => {
   const [productDeclarationOpen, setProductDeclarationOpen] = useState(false);
   const [sizeChartTab, setSizeChartTab] = useState('sizes');
   const [measurementUnit, setMeasurementUnit] = useState('in');
-  
+
   // State to hold admin-uploaded product (as fallback)
   const [adminProduct, setAdminProduct] = useState<Product | null>(null);
 
@@ -90,24 +92,24 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!currentProduct) return;
-    
+
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
-    
+
     addToCart(currentProduct, quantity, selectedSize);
     alert("Product added to cart successfully!");
   };
 
   const handleBuyNow = () => {
     if (!currentProduct) return;
-    
+
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
-    
+
     addToCart(currentProduct, quantity, selectedSize);
     router.push('/checkout');
   };
@@ -129,8 +131,8 @@ const ProductDetail = () => {
     if (pincode.length === 6 && /^\d+$/.test(pincode)) {
       // Use the API service
       const result = await checkDeliveryAvailability(pincode);
-      setDeliveryStatus(result.available 
-        ? "Delivery available to your location" 
+      setDeliveryStatus(result.available
+        ? "Delivery available to your location"
         : result.message);
     } else {
       setDeliveryStatus("Please enter a valid 6-digit pincode");
@@ -139,9 +141,9 @@ const ProductDetail = () => {
 
   const toggleWishlist = () => {
     if (!currentProduct) return;
-    
+
     const productId = currentProduct.id;
-    
+
     if (isInWishlist(productId)) {
       removeFromWishlist(productId);
     } else {
@@ -191,34 +193,34 @@ const ProductDetail = () => {
 
   // Create thumbnail array from product images
   const thumbnails = currentProduct?.images?.length > 0
-    ? currentProduct.images.map((img: { url: string; alt?: string }) => ({ 
-        url: img.url, 
-        alt: img.alt || currentProduct.title 
-      }))
+    ? currentProduct.images.map((img: { url: string; alt?: string }) => ({
+      url: img.url,
+      alt: img.alt || currentProduct.title
+    }))
     : currentProduct?.thumbnails?.length > 0
       ? currentProduct.thumbnails
       : currentProduct?.imageUrls?.length > 0
         ? currentProduct.imageUrls.map((url: string) => ({
-            url,
-            alt: currentProduct.alt || currentProduct.title
-          }))
+          url,
+          alt: currentProduct.alt || currentProduct.title
+        }))
         : [{ url: currentProduct?.image || currentProduct?.imageUrl, alt: currentProduct?.title }];
 
   return (
-    <div className="bg-black text-white">
+    <div className="bg-black text-silver">
       {/* Use the Header component from homepage */}
       <Header />
 
       <div className="bg-gray-900 py-3 shadow-sm mt-28">
         <div className="container mx-auto px-4">
           <div className="flex text-sm text-gray-400">
-            <Link href="/" className="hover:text-white">HOME</Link>
+            <Link href="/" className="hover:text-silver">HOME</Link>
             <span className="mx-2">/</span>
-            <Link href={`/${currentProduct?.category || 'products'}`} className="hover:text-white">
+            <Link href={`/${currentProduct?.category || 'products'}`} className="hover:text-silver">
               {(currentProduct?.category || 'PRODUCTS').toUpperCase().replace('-', ' ')}
             </Link>
             <span className="mx-2">/</span>
-            <span className="text-white font-medium">{currentProduct?.title}</span>
+            <span className="text-silver font-medium">{currentProduct?.title}</span>
           </div>
         </div>
       </div>
@@ -232,35 +234,35 @@ const ProductDetail = () => {
               {/* Thumbnails - Vertical carousel */}
               <div className="w-1/5 mr-4 max-h-[500px] overflow-y-auto flex flex-col items-center">
                 {thumbnails.map((thumb: { url: string; alt: string }, index: number) => (
-                  <div 
+                  <div
                     key={index}
                     className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
                     onClick={() => setSelectedImage(index)}
                   >
-                    <img 
-                      src={thumb.url} 
+                    <img
+                      src={thumb.url}
                       alt={`${thumb.alt || currentProduct?.title} thumbnail ${index + 1}`}
                       className="w-full h-auto cursor-pointer"
                     />
                   </div>
                 ))}
               </div>
-              
+
               {/* Main image with zoom */}
               <div className="w-4/5 relative overflow-hidden">
                 {currentProduct?.discount && (
-                  <div className="absolute top-0 left-0 z-10 px-4 py-1 text-xs text-white font-medium bg-red-600">
+                  <div className="absolute top-0 left-0 z-10 px-4 py-1 text-xs text-silver font-medium bg-red-600">
                     {currentProduct.discount}
                   </div>
                 )}
-                <div className="relative overflow-hidden cursor-zoom-in" 
+                <div className="relative overflow-hidden cursor-zoom-in"
                   style={{ height: '500px' }}
                   onMouseMove={(e) => {
                     const container = e.currentTarget;
                     const { left, top, width, height } = container.getBoundingClientRect();
                     const x = (e.clientX - left) / width;
                     const y = (e.clientY - top) / height;
-                    
+
                     const img = container.querySelector('img');
                     if (img) {
                       img.style.transformOrigin = `${x * 100}% ${y * 100}%`;
@@ -273,19 +275,19 @@ const ProductDetail = () => {
                     className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
                   />
                 </div>
-                
+
                 {/* Product action buttons */}
                 <div className="absolute top-2 right-2 flex flex-col space-y-2">
-                  <button 
+                  <button
                     onClick={toggleWishlist}
                     className={`${isInWishlist(currentProduct.id) ? 'bg-red-600' : 'bg-white'} p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all`}
                     aria-label={isInWishlist(currentProduct.id) ? "Remove from wishlist" : "Add to wishlist"}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isInWishlist(currentProduct.id) ? 'text-white' : 'text-gray-800'}`} fill={isInWishlist(currentProduct.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isInWishlist(currentProduct.id) ? 'text-silver' : 'text-gray-800'}`} fill={isInWishlist(currentProduct.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </button>
-                  <button 
+                  <button
                     onClick={handleShareClick}
                     className="bg-white p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all"
                     aria-label="Share"
@@ -298,16 +300,16 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Right side - Product details */}
           <div className="md:w-1/2 px-4">
-            <h1 className="text-2xl md:text-3xl font-semibold uppercase mb-3 text-white">{currentProduct?.title}</h1>
-            
+            <h1 className="text-2xl md:text-3xl font-semibold uppercase mb-3 text-silver">{currentProduct?.title}</h1>
+
             {/* Price section */}
             <div className="mb-6">
               <div className="flex items-center">
                 <p className="text-sm text-gray-400">MRP</p>
-                <span className="text-2xl font-bold ml-2 text-white">{currentProduct.salePrice}</span>
+                <span className="text-2xl font-bold ml-2 text-silver">{currentProduct.salePrice}</span>
                 {currentProduct.price && currentProduct.price !== currentProduct.salePrice && (
                   <span className="text-gray-500 line-through ml-3">{currentProduct.price}</span>
                 )}
@@ -320,7 +322,7 @@ const ProductDetail = () => {
 
             {/* Color selection */}
             <div className="mb-6">
-              <h3 className="font-medium mb-3 text-white">SELECT COLOR</h3>
+              <h3 className="font-medium mb-3 text-silver">SELECT COLOR</h3>
               <div className="flex space-x-3">
                 <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-silver flex items-center justify-center">
                   <div className="w-10 h-10 rounded-full bg-[#f8f4e3]"></div>
@@ -334,8 +336,8 @@ const ProductDetail = () => {
             {/* Size selection */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-medium text-white">SELECT SIZE</h3>
-                <button 
+                <h3 className="font-medium text-silver">SELECT SIZE</h3>
+                <button
                   className="text-silver underline text-sm flex items-center"
                   onClick={handleSizeChartClick}
                 >
@@ -349,11 +351,10 @@ const ProductDetail = () => {
                 {sizes.map((size: string) => (
                   <button
                     key={size}
-                    className={`w-10 h-10 flex items-center justify-center border rounded-full ${
-                      selectedSize === size 
-                        ? 'border-silver bg-silver text-black' 
-                        : 'border-gray-600 text-white hover:border-silver'
-                    }`}
+                    className={`w-10 h-10 flex items-center justify-center border rounded-full ${selectedSize === size
+                      ? 'border-silver bg-silver text-black'
+                      : 'border-gray-600 text-silver hover:border-silver'
+                      }`}
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -361,37 +362,37 @@ const ProductDetail = () => {
                 ))}
               </div>
             </div>
-            
+
             {/* Action buttons */}
             <div className="mb-6 grid grid-cols-2 gap-4">
-              <button 
+              <button
                 onClick={handleAddToCart}
                 className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium transition-all"
               >
                 ADD TO BAG
               </button>
-              <button 
+              <button
                 onClick={handleBuyNow}
-                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 font-medium transition-all"
+                className="bg-red-600 hover:bg-red-700 text-silver py-3 px-6 font-medium transition-all"
               >
                 BUY NOW
               </button>
             </div>
-            
+
             {/* Delivery section */}
             <div className="mb-6">
-              <h3 className="font-medium mb-3 text-white">DELIVERY</h3>
+              <h3 className="font-medium mb-3 text-silver">DELIVERY</h3>
               <div className="flex mb-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
-                  placeholder="Enter pincode" 
-                  className="flex-1 bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+                  placeholder="Enter pincode"
+                  className="flex-1 bg-gray-800 border border-gray-700 px-3 py-2 text-silver"
                 />
-                <button 
+                <button
                   onClick={handlePincodeCheck}
-                  className="ml-2 bg-transparent hover:bg-gray-700 text-white px-4 py-2 font-medium border border-gray-600 uppercase text-sm"
+                  className="ml-2 bg-transparent hover:bg-gray-700 text-silver px-4 py-2 font-medium border border-gray-600 uppercase text-sm"
                 >
                   CHECK
                 </button>
@@ -401,7 +402,7 @@ const ProductDetail = () => {
                   {deliveryStatus}
                 </p>
               )}
-              
+
               {/* Delivery features */}
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="flex items-center">
@@ -433,19 +434,19 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Detailed Product Information */}
       <div className="container mx-auto px-4 py-8">
         {/* Product Details Accordion */}
         <div className="border-t border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setProductDetailsOpen(!productDetailsOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-white">PRODUCT DETAILS</h3>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 text-gray-400 transition-transform ${productDetailsOpen ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <h3 className="font-medium text-lg text-silver">PRODUCT DETAILS</h3>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-5 w-5 text-gray-400 transition-transform ${productDetailsOpen ? 'transform rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -454,46 +455,46 @@ const ProductDetail = () => {
           </div>
           {productDetailsOpen && (
             <div className="pb-4">
-              <p className="text-gray-400 mb-4">
-                This off-white embroidered suit set, handpicked by Kriti Sanon, effortlessly blends modern elegance
-                with unparalleled comfort, making it the ideal choice for women who seek grace on every occasion.
-              </p>
-              
+              <div
+                className="text-gray-400 mb-4 prose prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: currentProduct?.description || 'No description available' }}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Top Style</span>
-                    <span className="text-white">{currentProduct?.topStyle}</span>
+                    <span className="text-silver">{currentProduct?.topStyle}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Top Pattern</span>
-                    <span className="text-white">{currentProduct?.topPattern}</span>
+                    <span className="text-silver">{currentProduct?.topPattern}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Bottom Fabric</span>
-                    <span className="text-white">{currentProduct?.bottomFabric}</span>
+                    <span className="text-silver">{currentProduct?.bottomFabric}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Fabric Dupatta/Stole</span>
-                    <span className="text-white">{currentProduct?.fabricDupattaStole}</span>
+                    <span className="text-silver">{currentProduct?.fabricDupattaStole}</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Neck/Neckline</span>
-                    <span className="text-white">{currentProduct?.neckline}</span>
+                    <span className="text-silver">{currentProduct?.neckline}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Sleeve Detail</span>
-                    <span className="text-white">{currentProduct?.sleeveDetail}</span>
+                    <span className="text-silver">{currentProduct?.sleeveDetail}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Lining Fabric</span>
-                    <span className="text-white">{currentProduct?.liningFabric}</span>
+                    <span className="text-silver">{currentProduct?.liningFabric}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-700">
                     <span className="font-medium text-gray-300">Fabric</span>
-                    <span className="text-white">{currentProduct?.fabric}</span>
+                    <span className="text-silver">{currentProduct?.fabric}</span>
                   </div>
                 </div>
               </div>
@@ -505,12 +506,12 @@ const ProductDetail = () => {
         <div className="border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setWashCareOpen(!washCareOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-white">WASH & CARE</h3>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 text-gray-400 transition-transform ${washCareOpen ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <h3 className="font-medium text-lg text-silver">WASH & CARE</h3>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-5 w-5 text-gray-400 transition-transform ${washCareOpen ? 'transform rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -530,12 +531,12 @@ const ProductDetail = () => {
         <div className="border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setDeliveryReturnsOpen(!deliveryReturnsOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-white">DELIVERY & RETURNS</h3>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 text-gray-400 transition-transform ${deliveryReturnsOpen ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <h3 className="font-medium text-lg text-silver">DELIVERY & RETURNS</h3>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-5 w-5 text-gray-400 transition-transform ${deliveryReturnsOpen ? 'transform rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -550,7 +551,7 @@ const ProductDetail = () => {
                 <li>Standard delivery: 3-5 business days</li>
                 <li>Express delivery: 1-2 business days (additional charges apply)</li>
               </ul>
-              
+
               <h4 className="font-medium mb-2 text-gray-300">Return Policy:</h4>
               <ul className="list-disc pl-5 text-gray-400 space-y-1">
                 <li>Easy 10-day returns</li>
@@ -566,12 +567,12 @@ const ProductDetail = () => {
         <div className="border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setProductDeclarationOpen(!productDeclarationOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-white">PRODUCT DECLARATION</h3>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 text-gray-400 transition-transform ${productDeclarationOpen ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <h3 className="font-medium text-lg text-silver">PRODUCT DECLARATION</h3>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-5 w-5 text-gray-400 transition-transform ${productDeclarationOpen ? 'transform rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -589,12 +590,12 @@ const ProductDetail = () => {
             </div>
           )}
         </div>
-        
+
         {/* Customer Support Section */}
         <div className="mt-8">
-          <h3 className="font-medium text-lg mb-4 text-white">HAVE A QUESTION? WE ARE HERE TO HELP!</h3>
+          <h3 className="font-medium text-lg mb-4 text-silver">HAVE A QUESTION? WE ARE HERE TO HELP!</h3>
           <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-8">
-            <p className="text-gray-400">We are available on <span className="font-semibold text-white">011-41583041</span>. Monday - Saturday from 9:30am - 6:30pm.</p>
+            <p className="text-gray-400">We are available on <span className="font-semibold text-silver">011-41583041</span>. Monday - Saturday from 9:30am - 6:30pm.</p>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -604,7 +605,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Similar Products */}
       <SimilarProducts products={similarProducts} />
 
@@ -614,7 +615,7 @@ const ProductDetail = () => {
           <div className="bg-gray-900 p-6 rounded-lg max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-white">Share This Product</h3>
-              <button 
+              <button
                 onClick={handleShareClose}
                 className="text-gray-400 hover:text-white"
               >
@@ -623,12 +624,12 @@ const ProductDetail = () => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="mb-4">
               <div className="flex items-center mb-4">
-                <img 
-                  src={currentProduct?.image} 
-                  alt={currentProduct?.title} 
+                <img
+                  src={currentProduct?.image}
+                  alt={currentProduct?.title}
                   className="w-20 h-20 object-cover mr-4"
                 />
                 <div>
@@ -637,7 +638,7 @@ const ProductDetail = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-center space-x-4">
               <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-transform hover:scale-110">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -655,7 +656,7 @@ const ProductDetail = () => {
                 </svg>
               </button>
               {/* Instagram share button */}
-              <button 
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   alert("Link copied for sharing on Instagram");
@@ -663,317 +664,30 @@ const ProductDetail = () => {
                 className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-2 rounded-full transition-transform hover:scale-110"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                 </svg>
               </button>
               {/* Telegram share button */}
-              <button 
-                onClick={() => {
-                  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(currentProduct?.title || 'Check out this product')}`;
-                  window.open(telegramUrl, '_blank');
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition-transform hover:scale-110"
+              <a
+                href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(currentProduct?.title || 'Check out this product')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full transition-transform hover:scale-110 cursor-pointer block"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+                  <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
                 </svg>
-              </button>
+              </a>
             </div>
           </div>
         </div>
       )}
 
       {/* Size Chart Modal */}
-      {showSizeChart && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 p-6 rounded-lg max-w-2xl w-full text-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">SIZE CHART</h3>
-              <button 
-                onClick={() => setShowSizeChart(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-400 mb-4">
-              Our Sizes fit the best for mentioned body measurements (not garment measurements)*<br/>
-              Tip: Biba sizes are to fit Indian Body.
-            </p>
-            
-            {/* Tabs */}
-            <div className="border-b border-gray-700 mb-4">
-              <div className="flex">
-                <button 
-                  className={`py-2 px-6 border-b-2 ${sizeChartTab === 'sizes' ? 'border-red-600 text-white font-medium' : 'border-transparent text-gray-400'}`}
-                  onClick={() => setSizeChartTab('sizes')}
-                >
-                  Size Chart
-                </button>
-                <button 
-                  className={`py-2 px-6 border-b-2 ${sizeChartTab === 'howToMeasure' ? 'border-red-600 text-white font-medium' : 'border-transparent text-gray-400'}`}
-                  onClick={() => setSizeChartTab('howToMeasure')}
-                >
-                  How to Measure
-                </button>
-              </div>
-            </div>
-            
-            {sizeChartTab === 'sizes' && (
-              <>
-                {/* Measurement Unit Toggle */}
-                <div className="flex mb-4 border border-gray-700 inline-flex rounded">
-                  <button 
-                    className={`py-1 px-4 ${measurementUnit === 'in' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
-                    onClick={() => setMeasurementUnit('in')}
-                  >
-                    IN
-                  </button>
-                  <button 
-                    className={`py-1 px-4 ${measurementUnit === 'cm' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
-                    onClick={() => setMeasurementUnit('cm')}
-                  >
-                    CM
-                  </button>
-                </div>
-                
-                {/* Size Chart Table */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm bg-gray-800">
-                    <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="py-3 px-4 text-left font-medium">Sizes</th>
-                        <th className="py-3 px-4 text-left font-medium">Standard Size</th>
-                        <th className="py-3 px-4 text-left font-medium">To Fit Bust</th>
-                        <th className="py-3 px-4 text-left font-medium">To Fit Waist</th>
-                        <th className="py-3 px-4 text-left font-medium">To Fit Hip</th>
-                        <th className="py-3 px-4 text-left font-medium">Front Length</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-gray-300">
-                      {measurementUnit === 'in' ? (
-                        <>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                32
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">S</td>
-                            <td className="py-3 px-4">32-33</td>
-                            <td className="py-3 px-4">28-29</td>
-                            <td className="py-3 px-4">36-37</td>
-                            <td className="py-3 px-4">35.0</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                34
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">M</td>
-                            <td className="py-3 px-4">34-35</td>
-                            <td className="py-3 px-4">30-31</td>
-                            <td className="py-3 px-4">38-39</td>
-                            <td className="py-3 px-4">36.0</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                36
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">L</td>
-                            <td className="py-3 px-4">36-37</td>
-                            <td className="py-3 px-4">32-33</td>
-                            <td className="py-3 px-4">40-41</td>
-                            <td className="py-3 px-4">36.0</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                38
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XL</td>
-                            <td className="py-3 px-4">38-39</td>
-                            <td className="py-3 px-4">34-35</td>
-                            <td className="py-3 px-4">42-43</td>
-                            <td className="py-3 px-4">37.0</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                40
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XXL</td>
-                            <td className="py-3 px-4">40-41</td>
-                            <td className="py-3 px-4">36-38</td>
-                            <td className="py-3 px-4">44-45</td>
-                            <td className="py-3 px-4">37.0</td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                42
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XXXL</td>
-                            <td className="py-3 px-4">42-43</td>
-                            <td className="py-3 px-4">40-41</td>
-                            <td className="py-3 px-4">47-48</td>
-                            <td className="py-3 px-4">38.0</td>
-                          </tr>
-                        </>
-                      ) : (
-                        <>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                32
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">S</td>
-                            <td className="py-3 px-4">81-84</td>
-                            <td className="py-3 px-4">71-74</td>
-                            <td className="py-3 px-4">91-94</td>
-                            <td className="py-3 px-4">89</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                34
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">M</td>
-                            <td className="py-3 px-4">86-89</td>
-                            <td className="py-3 px-4">76-79</td>
-                            <td className="py-3 px-4">97-99</td>
-                            <td className="py-3 px-4">91</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                36
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">L</td>
-                            <td className="py-3 px-4">91-94</td>
-                            <td className="py-3 px-4">81-84</td>
-                            <td className="py-3 px-4">102-104</td>
-                            <td className="py-3 px-4">91</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                38
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XL</td>
-                            <td className="py-3 px-4">97-99</td>
-                            <td className="py-3 px-4">86-89</td>
-                            <td className="py-3 px-4">107-109</td>
-                            <td className="py-3 px-4">94</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                40
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XXL</td>
-                            <td className="py-3 px-4">102-104</td>
-                            <td className="py-3 px-4">91-97</td>
-                            <td className="py-3 px-4">112-114</td>
-                            <td className="py-3 px-4">94</td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4">
-                              <label className="flex items-center">
-                                <input type="radio" name="size" className="mr-2" />
-                                42
-                              </label>
-                            </td>
-                            <td className="py-3 px-4">XXXL</td>
-                            <td className="py-3 px-4">107-109</td>
-                            <td className="py-3 px-4">102-104</td>
-                            <td className="py-3 px-4">119-122</td>
-                            <td className="py-3 px-4">97</td>
-                          </tr>
-                        </>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-xs text-gray-400 mt-2">*These measurements are indicative. Actual Size may differ.</p>
-                
-                <div className="mt-6 text-center">
-                  <button 
-                    className="bg-red-600 text-white py-2 px-8 rounded-sm hover:bg-red-700 transition-colors"
-                    onClick={() => setShowSizeChart(false)}
-                  >
-                    ADD TO BAG
-                  </button>
-                </div>
-              </>
-            )}
-            
-            {sizeChartTab === 'howToMeasure' && (
-              <div className="text-gray-300">
-                <div className="mb-8 flex justify-center">
-                  <img 
-                    src="/images/size-chart-diagram.png" 
-                    alt="How to measure diagram" 
-                    className="max-h-60"
-                    onError={(e) => {
-                      // Fallback if image doesn't exist
-                      e.currentTarget.src = "https://via.placeholder.com/300x200?text=Size+Chart+Diagram";
-                    }}
-                  />
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-bold uppercase mb-2 text-white">SHOULDER</h4>
-                    <p>Measure from the tip of one shoulder to the other.</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-bold uppercase mb-2 text-white">BUST</h4>
-                    <p>Place the measuring tape under your arms, wrapping around the fullest part of the bustline.</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-bold uppercase mb-2 text-white">WAIST</h4>
-                    <p>Measure around natural waist line, above the belly button along the slimmest part (without tightening the measuring tape)</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-bold uppercase mb-2 text-white">HIPS</h4>
-                    <p>Measure around the largest circumference at the hips.</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} />
+      {/* Reviews Section */}
+      {product && <ProductReviews productId={product.id.toString()} />}
+    </div >
   );
 };
 

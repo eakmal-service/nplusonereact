@@ -3,40 +3,52 @@ import { Category, CollectionItem, Product } from "../types";
 // Categories for the main category grid
 export const categories: Category[] = [
   {
-    title: 'TSHIRT',
-    image: '/images/categories/5.png',
-    link: '/tshirt-top',
-    alt: 'T-shirts'
+    id: 1,
+    name: 'SUIT SET',
+    title: 'SUIT SET',
+    image: '/images/categories/17670080328782.webp',
+    link: '/suit-set',
+    alt: 'Suit Sets'
   },
   {
-    title: 'TOP WEAR',
-    image: '/images/categories/1.png',
-    link: '/tshirt-top',
-    alt: 'Top Wear'
+    id: 2,
+    name: 'WESTERN DRESS',
+    title: 'WESTERN DRESS',
+    image: '/images/categories/17670078826332.webp',
+    link: '/western-dress',
+    alt: 'Western Dresses'
   },
   {
-    title: 'NIGHT PANT',
-    image: '/images/categories/2.png',
-    link: '/night-bottoms',
-    alt: 'Night Pants'
-  },
-  {
-    title: 'CHILD WEAR',
-    image: '/images/categories/6.png',
-    link: '/girls-wear',
-    alt: 'Child Wear'
-  },
-  {
-    title: 'CO-ORD SETS',
-    image: '/images/categories/3.png',
+    id: 3,
+    name: 'CO-ORD SET',
+    title: 'CO-ORD SET',
+    image: '/images/categories/17670079057732.webp',
     link: '/co-ord-sets',
     alt: 'Co-ord Sets'
   },
   {
-    title: 'LADIES NIGHT DRESS',
-    image: '/images/categories/4.png',
-    link: '/night-bottoms',
-    alt: 'Ladies Night Dress'
+    id: 4,
+    name: 'LEHENGA',
+    title: 'LEHENGA',
+    image: '/images/categories/17670079000862.webp',
+    link: '/lehenga',
+    alt: 'Lehengas'
+  },
+  {
+    id: 5,
+    name: 'INDI-WESTERN',
+    title: 'INDI-WESTERN',
+    image: '/images/categories/17670078974382.webp',
+    link: '/indi-western',
+    alt: 'Indi-Western'
+  },
+  {
+    id: 6,
+    name: 'UNSTICHED SET',
+    title: 'UNSTICHED SET',
+    image: '/images/categories/17670078888742.webp',
+    link: '/unstiched-set',
+    alt: 'Unstiched Sets'
   }
 ];
 
@@ -123,6 +135,7 @@ export const recommendedProducts: Product[] = [
     price: '₹5,995',
     link: '/product/2',
     alt: 'Pink Cotton Floral Strappy Straight Suit Set',
+    category: 'suit-set',
     description: 'Beautiful pink cotton suit set featuring floral prints and a comfortable strappy design.',
     colors: [
       { name: 'Pink-Floral', color: '#ffb6c1' }
@@ -142,6 +155,7 @@ export const recommendedProducts: Product[] = [
     price: '₹15,950',
     link: '/product/3',
     alt: 'Off-White Cotton Embroidered Flared Suit Set',
+    category: 'suit-set',
     description: 'Elegant off-white cotton suit with beautiful embroidery and a comfortable flared design.',
     colors: [
       { name: 'Off-White', color: '#f7f7f7' }
@@ -254,6 +268,152 @@ export const recommendedProducts: Product[] = [
       { url: '/products/8/female_Spr7_3.png.avif', alt: 'Side view' },
       { url: '/products/8/female_Spr7_4.png.avif', alt: 'Detail view' }
     ]
+  },
+  {
+    id: 9,
+    title: 'Rayon Slub 3-Piece Suit Set (D3P_1)',
+    image: '/products/D3P_1/3.png',
+    price: '₹325',
+    link: '/product/9',
+    alt: 'Rayon Slub 3-Piece Suit Set with Chanderi Dupatta',
+    description: 'Beautiful 3-piece suit set featuring Rayon Slub fabric for Top and Bottom, and a Chanderi Dupatta with Digital Print. Design No.: D3P_1.',
+    category: 'suit-set',
+    fabric: 'Rayon Slub',
+    colorOptions: [
+      { name: 'Black', code: '#000000' },
+      { name: 'Silver', code: '#C2C2C1' }
+    ],
+    fabricDupattaStole: 'Chanderi with Digital Print',
+    bottomFabric: 'Rayon Slub',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    thumbnails: [
+      { url: '/products/D3P_1/3.png', alt: 'Main View' },
+      { url: '/products/D3P_1/2.png', alt: 'Front View' },
+      { url: '/products/D3P_1/1.png', alt: 'Back View' },
+      { url: '/products/D3P_1/5.png', alt: 'Detail 1' },
+      { url: '/products/D3P_1/7.png', alt: 'Detail 2' },
+      { url: '/products/D3P_1/6.png', alt: 'Detail 3' }
+    ],
+    // Store images for compatibility
+    images: [
+      { url: '/products/D3P_1/3.png', alt: 'Main View' },
+      { url: '/products/D3P_1/2.png', alt: 'Front View' },
+      { url: '/products/D3P_1/1.png', alt: 'Back View' },
+      { url: '/products/D3P_1/5.png', alt: 'Detail 1' },
+      { url: '/products/D3P_1/7.png', alt: 'Detail 2' },
+      { url: '/products/D3P_1/6.png', alt: 'Detail 3' }
+    ],
+    sizeChartHtml: `
+<table class="min-w-full text-sm bg-gray-800 border-collapse mb-6">
+<thead>
+  <tr class="border-b border-gray-700">
+    <th class="py-3 px-4 text-left font-medium text-white">Top/Kurti Size</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">S</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">M</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">L</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">XL</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">XXL</th>
+  </tr>
+</thead>
+<tbody>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Bust (in)</td>
+    <td class="py-2 px-4 text-gray-300">36</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">40</td>
+    <td class="py-2 px-4 text-gray-300">42</td>
+    <td class="py-2 px-4 text-gray-300">44</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Waist (in)</td>
+    <td class="py-2 px-4 text-gray-300">34</td>
+    <td class="py-2 px-4 text-gray-300">36</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">40</td>
+    <td class="py-2 px-4 text-gray-300">42</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Hip (in)</td>
+    <td class="py-2 px-4 text-gray-300">39</td>
+    <td class="py-2 px-4 text-gray-300">41</td>
+    <td class="py-2 px-4 text-gray-300">43</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">47</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Shoulder (in)</td>
+    <td class="py-2 px-4 text-gray-300">14</td>
+    <td class="py-2 px-4 text-gray-300">14.5</td>
+    <td class="py-2 px-4 text-gray-300">15</td>
+    <td class="py-2 px-4 text-gray-300">15.5</td>
+    <td class="py-2 px-4 text-gray-300">16</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Length (in)</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+  </tr>
+</tbody>
+</table>
+
+<h4 class="font-bold text-white mb-2">Bottom (Pant / Palazzo)</h4>
+<table class="min-w-full text-sm bg-gray-800 border-collapse mb-6">
+<thead>
+  <tr class="border-b border-gray-700">
+    <th class="py-3 px-4 text-left font-medium text-white">Measurements (in)</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">S</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">M</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">L</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">XL</th>
+    <th class="py-3 px-4 text-left font-medium text-gray-300">XXL</th>
+  </tr>
+</thead>
+<tbody>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Waist Full Elastic</td>
+    <td class="py-2 px-4 text-gray-300">28</td>
+    <td class="py-2 px-4 text-gray-300">30</td>
+    <td class="py-2 px-4 text-gray-300">32</td>
+    <td class="py-2 px-4 text-gray-300">34</td>
+    <td class="py-2 px-4 text-gray-300">36</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Waist Half Elastic</td>
+    <td class="py-2 px-4 text-gray-300">30</td>
+    <td class="py-2 px-4 text-gray-300">32</td>
+    <td class="py-2 px-4 text-gray-300">34</td>
+    <td class="py-2 px-4 text-gray-300">36</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Hip</td>
+    <td class="py-2 px-4 text-gray-300">42</td>
+    <td class="py-2 px-4 text-gray-300">43</td>
+    <td class="py-2 px-4 text-gray-300">44</td>
+    <td class="py-2 px-4 text-gray-300">45</td>
+    <td class="py-2 px-4 text-gray-300">46</td>
+  </tr>
+  <tr class="border-b border-gray-700">
+    <td class="py-2 px-4 font-medium text-white">Bottom Length</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+    <td class="py-2 px-4 text-gray-300">38</td>
+  </tr>
+</tbody>
+</table>
+
+<div class="bg-gray-800 p-4 rounded border border-gray-700">
+  <h4 class="font-bold text-white mb-2">Dupatta Details</h4>
+  <p class="text-gray-300"><span class="font-medium text-white">Length:</span> Standard 2 meters</p>
+  <p class="text-gray-300"><span class="font-medium text-white">Width:</span> 24-32 inches</p>
+</div>
+    `
   }
 ];
 

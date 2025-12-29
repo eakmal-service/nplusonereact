@@ -8,9 +8,9 @@ import RecommendedProducts from './home/RecommendedProducts';
 import SectionTitle from './home/SectionTitle';
 import WelcomePopup from './WelcomePopup';
 import { Product } from '@/types';
-import { 
-  categories, 
-  collectionItems, 
+import {
+  categories,
+  collectionItems,
   recommendedProducts,
   sampleRecentlyViewed,
   shoppingGreetings
@@ -23,14 +23,43 @@ const CategoryCards = () => {
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [hasViewedProducts, setHasViewedProducts] = useState(false);
 
-  // Check for logged in user data and load recently viewed products
+  // CMS Content State
+  const [categoriesData, setCategoriesData] = useState(categories);
+  const [collectionsData, setCollectionsData] = useState(collectionItems);
+  const [bannerData, setBannerData] = useState({
+    image: "/images/Discount-2.png",
+    link: "/sales",
+    alt: "Special Discount Offers"
+  });
+  // For recommended products, we'll stick to mock data for now unless CMS provides full product objects
+  // Implementing full product fetch from IDs is out of scope for this quick task unless requested. 
+  // We'll use the static recommendedProducts list but allow it to be overriden if CMS sends matching structure.
+  const [recommendedData, setRecommendedData] = useState(recommendedProducts);
+
   useEffect(() => {
+    // Fetch CMS Content
+    const fetchContent = async () => {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.categories) setCategoriesData(data.categories);
+          if (data.collections) setCollectionsData(data.collections);
+          if (data.banner) setBannerData(data.banner);
+          if (data.recommended && Array.isArray(data.recommended)) setRecommendedData(data.recommended);
+        }
+      } catch (error) {
+        console.error('Failed to fetch CMS content:', error);
+      }
+    };
+    fetchContent();
+
     // This would check for user data from login system
     const loggedInUserName = localStorage.getItem('user_logged_in_name');
     if (loggedInUserName) {
       setUserName(loggedInUserName);
     }
-    
+
     // Load recently viewed products from localStorage
     if (typeof window !== 'undefined') {
       const storedRecentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
@@ -49,10 +78,10 @@ const CategoryCards = () => {
       do {
         newIndex = Math.floor(Math.random() * shoppingGreetings.length);
       } while (newIndex === greetingIndex && shoppingGreetings.length > 1);
-      
+
       setGreetingIndex(newIndex);
       setShowPopup(true);
-      
+
       // Hide popup after 3 seconds
       setTimeout(() => {
         setShowPopup(false);
@@ -64,28 +93,28 @@ const CategoryCards = () => {
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Category Explore Title */}
-        <SectionTitle title="Category Explore" />
-        
+        <SectionTitle title="Explore Category" />
+
         {/* Category Grid */}
-        <CategoryGrid categories={categories} />
-        
+        <CategoryGrid categories={categoriesData} />
+
         {/* Discount Banner */}
         <div className="px-2 sm:px-4">
-        <DiscountBanner />
+          <DiscountBanner image={bannerData.image} link={bannerData.link} alt={bannerData.alt} />
         </div>
-        
+
         {/* Explore Collection Title */}
         <SectionTitle title="Explore Collection" />
-        
+
         {/* Collection Slider */}
-        <CollectionSlider collectionItems={collectionItems} />
-        
+        <CollectionSlider collectionItems={collectionsData} />
+
         {/* Recommended Products Section */}
-        <RecommendedProducts products={recommendedProducts} />
+        <RecommendedProducts products={recommendedData} />
       </div>
 
       {/* Popup Message */}
-      <WelcomePopup 
+      <WelcomePopup
         userName={userName}
         greeting={shoppingGreetings[greetingIndex]}
         showPopup={showPopup && !!userName}

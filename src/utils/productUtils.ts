@@ -22,7 +22,7 @@ export interface Product {
   description?: string;
   sizes?: string[];
   colorName?: string;
-  colorOptions?: Array<{name: string, code: string}>;
+  colorOptions?: Array<{ name: string, code: string }>;
   material?: string;
   washCare?: string;
   alt?: string;
@@ -30,6 +30,7 @@ export interface Product {
   isGloballyVisible?: boolean;
   responsive?: boolean;
   browserCompatible?: boolean;
+  sizeChartHtml?: string;
 }
 
 // Convert from utils/productUtils Product to types/index Product for use with contexts
@@ -37,9 +38,9 @@ export const convertToTypeProduct = (product: any): any => {
   // Create thumbnails/images arrays from imageUrls if available, or fall back to single imageUrl
   const images = product.imageUrls && product.imageUrls.length > 0
     ? product.imageUrls.map((url: string) => ({
-        url,
-        alt: product.alt || product.title
-      }))
+      url,
+      alt: product.alt || product.title
+    }))
     : [{ url: product.imageUrl || product.image, alt: product.alt || product.title }];
 
   // Ensure we always have at least the main image in thumbnails/images
@@ -66,6 +67,7 @@ export const convertToTypeProduct = (product: any): any => {
     category: product.category || 'clothing',
     subcategory: product.subcategory || '',
     status: product.status || 'active',
+    sizeChartHtml: product.sizeChartHtml,
     colorOptions: product.colorOptions || [
       { name: 'Black', code: '#000000' },
       { name: 'White', code: '#FFFFFF' },
@@ -77,14 +79,47 @@ export const convertToTypeProduct = (product: any): any => {
 
 const STORAGE_KEY = 'nplusoneProducts';
 
+// Import mock data to seed/merge
+import { recommendedProducts } from '../data/mockData';
+
 /**
  * Get all products from localStorage
  */
 export const getAllProducts = (): Product[] => {
   if (typeof window === 'undefined') return [];
-  
+
   const productsJSON = localStorage.getItem(STORAGE_KEY);
-  return productsJSON ? JSON.parse(productsJSON) : [];
+  const storedProducts: Product[] = productsJSON ? JSON.parse(productsJSON) : [];
+
+  // Convert recommendedProducts to Product interface
+  const staticProducts: Product[] = recommendedProducts.map(p => ({
+    id: p.id,
+    title: p.title,
+    category: p.category || 'clothing',
+    subcategory: p.subcategory || '',
+    price: p.price,
+    salePrice: p.salePrice || p.price,
+    discount: p.discount || '',
+    imageUrl: p.image || p.imageUrl || '',
+    stockQuantity: p.stockQuantity ?? 10,
+    viewCount: 0,
+    cartCount: 0,
+    purchaseCount: 0,
+    dateAdded: new Date().toISOString(),
+    status: 'active',
+    description: p.description,
+    sizes: p.sizes,
+    imageUrls: p.images?.map(i => i.url) || (p.image ? [p.image] : []),
+    alt: p.alt,
+    colorOptions: p.colorOptions,
+    sizeChartHtml: p.sizeChartHtml
+  }));
+
+  // Filter out static products that are already in storage (by ID) to avoid duplicates if we save back to storage
+  const storedIds = new Set(storedProducts.map(p => p.id));
+  const newStaticProducts = staticProducts.filter(p => !storedIds.has(p.id));
+
+  return [...storedProducts, ...newStaticProducts];
 };
 
 /**
@@ -108,9 +143,9 @@ export const getProductsByCategory = (category: string): Product[] => {
  */
 export const getActiveProductsByCategory = (category: string): Product[] => {
   const products = getAllProducts();
-  return products.filter(product => 
-    product.category === category && 
-    product.status === 'active' && 
+  return products.filter(product =>
+    product.category === category &&
+    product.status === 'active' &&
     product.stockQuantity > 0
   );
 };
@@ -124,10 +159,10 @@ export const saveProduct = (product: Omit<Product, 'id'>): Product => {
     ...product,
     id: Date.now(),
   };
-  
+
   const updatedProducts = [newProduct, ...products];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProducts));
-  
+
   return newProduct;
 };
 
@@ -137,12 +172,12 @@ export const saveProduct = (product: Omit<Product, 'id'>): Product => {
 export const updateProduct = (product: Product): boolean => {
   const products = getAllProducts();
   const index = products.findIndex(p => p.id === product.id);
-  
+
   if (index === -1) return false;
-  
+
   products[index] = product;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  
+
   return true;
 };
 
@@ -152,9 +187,9 @@ export const updateProduct = (product: Product): boolean => {
 export const deleteProduct = (id: number): boolean => {
   const products = getAllProducts();
   const filteredProducts = products.filter(product => product.id !== id);
-  
+
   if (filteredProducts.length === products.length) return false;
-  
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredProducts));
   return true;
 };
@@ -165,12 +200,12 @@ export const deleteProduct = (id: number): boolean => {
 export const updateProductStatus = (id: number, status: 'active' | 'inactive' | 'draft'): boolean => {
   const products = getAllProducts();
   const index = products.findIndex(p => p.id === id);
-  
+
   if (index === -1) return false;
-  
+
   products[index].status = status;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  
+
   return true;
 };
 
@@ -180,11 +215,11 @@ export const updateProductStatus = (id: number, status: 'active' | 'inactive' | 
 export const updateProductStock = (id: number, newStock: number): boolean => {
   const products = getAllProducts();
   const index = products.findIndex(p => p.id === id);
-  
+
   if (index === -1) return false;
-  
+
   products[index].stockQuantity = Math.max(0, newStock);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  
+
   return true;
 }; 

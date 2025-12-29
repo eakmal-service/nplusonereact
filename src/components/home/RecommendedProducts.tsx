@@ -15,7 +15,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
   const [itemsPerView, setItemsPerView] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  
+
   // Adjust items per view based on screen size
   useEffect(() => {
     const handleResize = () => {
@@ -29,13 +29,13 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
         setItemsPerView(4);
       }
     };
-    
+
     // Set initial value
     handleResize();
-    
+
     // Add event listener
     window.addEventListener('resize', handleResize);
-    
+
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -44,23 +44,23 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
   if (!products || products.length === 0) {
     return null;
   }
-  
+
   // Calculate total pages
   const totalRecommendedPages = Math.ceil(products.length / itemsPerView);
-  
+
   // Navigate recommended products
   const nextRecommended = () => {
-    setRecommendedIndex((prevIndex) => 
+    setRecommendedIndex((prevIndex) =>
       prevIndex === totalRecommendedPages - 1 ? 0 : prevIndex + 1
     );
   };
 
   const prevRecommended = () => {
-    setRecommendedIndex((prevIndex) => 
+    setRecommendedIndex((prevIndex) =>
       prevIndex === 0 ? totalRecommendedPages - 1 : prevIndex - 1
     );
   };
-  
+
   // Get current recommended products
   const getCurrentRecommended = () => {
     const startIndex = recommendedIndex * itemsPerView;
@@ -82,10 +82,10 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
   return (
     <div className="mt-10 md:mt-16 mb-8">
       <SectionTitle title="Recommended for you" />
-      
+
       <div className="overflow-hidden relative px-6 sm:px-8 md:px-10">
         {/* Prev button */}
-        <button 
+        <button
           onClick={prevRecommended}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Previous recommended products"
@@ -94,7 +94,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        
+
         <div className="flex justify-center sm:justify-between items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
           {getCurrentRecommended().map((product) => (
             <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
@@ -107,7 +107,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   )}
                   <div className="relative overflow-hidden">
                     <div className="w-full">
-                      <img 
+                      <img
                         src={product.image}
                         alt={product.alt}
                         className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
@@ -117,9 +117,9 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                     <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>
                   </div>
                 </Link>
-                
+
                 {/* Quick View Button */}
-                <button 
+                <button
                   className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md"
                   onClick={(e) => openQuickView(e, product)}
                   aria-label="Quick view"
@@ -129,7 +129,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                     <circle cx="12" cy="12" r="3"></circle>
                   </svg>
                 </button>
-                
+
                 <div className="mt-2 flex items-start justify-between">
                   <Link href={`/product/${product.id}`} className="block flex-1">
                     <h4 className="text-xs sm:text-sm font-medium text-[#CDCDCD] line-clamp-1 hover:text-white">{product.title}</h4>
@@ -143,7 +143,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                       )}
                     </div>
                   </Link>
-                  <button 
+                  <button
                     className="text-gray-400 hover:text-red-500 transition-colors"
                     aria-label="Add to wishlist"
                     onClick={(e) => {
@@ -161,9 +161,9 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
             </div>
           ))}
         </div>
-        
+
         {/* Next button */}
-        <button 
+        <button
           onClick={nextRecommended}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Next recommended products"
@@ -172,16 +172,15 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
-        
+
         {/* Slider pagination */}
         <div className="flex justify-center mt-4 z-30 relative">
           {Array.from({ length: totalRecommendedPages }).map((_, idx) => (
             <button
               key={idx}
               onClick={() => setRecommendedIndex(idx)}
-              className={`mx-1 w-2 h-2 md:w-3 md:h-3 rounded-full ${
-                idx === recommendedIndex ? 'bg-orange-500' : 'bg-gray-300'
-              }`}
+              className={`mx-1 w-2 h-2 md:w-3 md:h-3 rounded-full ${idx === recommendedIndex ? 'bg-orange-500' : 'bg-gray-300'
+                }`}
               aria-label={`Go to recommended page ${idx + 1}`}
             />
           ))}
@@ -190,9 +189,9 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
 
       {/* Quick View Modal */}
       {selectedProduct && (
-        <QuickViewModal 
+        <QuickViewModal
           product={selectedProduct}
-          isOpen={isQuickViewOpen}
+
           onClose={closeQuickView}
         />
       )}

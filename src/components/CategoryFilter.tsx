@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import LoadingSpinner from './LoadingSpinner';
+import { Category } from '@/types';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -33,11 +34,10 @@ export default function CategoryFilter({ categories, loading, selectedCategory }
       <div className="space-y-2">
         <Link
           href={buildCategoryUrl()}
-          className={`block px-3 py-2 rounded-md transition-colors ${
-            !selectedCategory
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100'
-          }`}
+          className={`block px-3 py-2 rounded-md transition-colors ${!selectedCategory
+            ? 'bg-blue-500 text-white'
+            : 'hover:bg-gray-100'
+            }`}
         >
           All Products
         </Link>
@@ -45,11 +45,10 @@ export default function CategoryFilter({ categories, loading, selectedCategory }
           <Link
             key={category.id}
             href={buildCategoryUrl(category.id)}
-            className={`block px-3 py-2 rounded-md transition-colors ${
-              selectedCategory === category.id
-                ? 'bg-blue-500 text-white'
-                : 'hover:bg-gray-100'
-            }`}
+            className={`block px-3 py-2 rounded-md transition-colors ${selectedCategory === category.id
+              ? 'bg-blue-500 text-white'
+              : 'hover:bg-gray-100'
+              }`}
           >
             {category.name}
           </Link>

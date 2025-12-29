@@ -1,5 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Product } from '@/types';
 
 interface ProductCardProps {
   product: Product;
@@ -9,12 +10,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105"
+      className="group bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 block h-full"
     >
       <div className="relative aspect-square">
-        {product.image_id ? (
+        {product.image ? (
           <Image
-            src={`/images/products/${product.image_id}.jpg`}
+            src={product.image}
             alt={product.title}
             fill
             className="object-cover"
@@ -37,28 +38,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
       </div>
-      
+
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
           {product.title}
         </h3>
-        
+
         <p className="mt-2 text-sm text-gray-600 line-clamp-2">
           {product.description}
         </p>
-        
+
         <div className="mt-4 flex items-center justify-between">
           <span className="text-lg font-bold text-blue-600">
-            ${product.price.toFixed(2)}
+            {product.salePrice || product.price}
           </span>
-          
-          {product.stock_quantity > 0 ? (
+
+          {(product.stockQuantity || 0) > 0 ? (
             <span className="text-sm text-green-600">
-              In Stock ({product.stock_quantity})
+              In Stock ({product.stockQuantity})
             </span>
           ) : (
             <span className="text-sm text-red-600">
-              Out of Stock
+              {product.stockQuantity === 0 ? 'Out of Stock' : ''}
             </span>
           )}
         </div>

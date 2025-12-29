@@ -53,97 +53,36 @@ A modern, feature-rich e-commerce platform built for women's fashion retail, off
 ## 🛠 Tech Stack
 
 - **Frontend**
-  - Next.js 13.5.4 (React Framework)
-  - TypeScript for type safety
-  - Tailwind CSS for styling
-  - HeadlessUI for accessible components
-  - HeroIcons for icons
+  - **Next.js 14+** (App Router)
+  - **TypeScript** for type safety
+  - **Tailwind CSS** for styling
 
-- **Backend**
-  - Next.js API Routes
-  - JWT for authentication
-  - bcrypt for password hashing
-  - Nodemailer for emails
-
-- **Payment Processing**
-  - Stripe integration
-  - Secure payment handling
+- **Backend (BaaS)**
+  - **Supabase** for:
+    - **Database:** PostgreSQL (Products, Orders, Reviews, Profiles)
+    - **Auth:** Email/Password & Social Login
+    - **Storage:** Supabase Storage (Built-in Global CDN)
+    - **Real-time:** Live updates for Orders & Reviews
 
 - **State Management**
-  - SWR for data fetching and caching
-  - React Context for global state
+  - **React Context API** (`ProductContext`, `CartContext`)
+  - **SWR** (optional/legacy use)
 
-## 📦 Project Structure
+## 📦 System Architecture
+For a detailed breakdown of the database schema, storage policies, and workflows, please refer to the **[System Architecture Document](/.gemini/antigravity/brain/c3d500fc-7bb3-41a8-b5f6-f79dc99759f9/system_architecture.md)**.
 
-```
-src/
-├── app/                    # Next.js 13 App Router
-│   ├── account/           # User account pages
-│   ├── admin/            # Admin dashboard
-│   ├── api/              # API routes
-│   ├── cart/             # Shopping cart
-│   ├── product/          # Product pages
-│   └── ...
-├── components/            # Reusable components
-│   ├── admin/           # Admin components
-│   ├── checkout/        # Checkout components
-│   ├── common/          # Shared components
-│   └── home/            # Homepage components
-├── contexts/             # React contexts
-├── data/                # Mock data and constants
-├── types/               # TypeScript type definitions
-└── utils/               # Utility functions
-```
+## 🚀 Key Features
 
-## 🚀 Getting Started
+### ✅ Admin Panel
+- **Product Management:** Upload images to Cloud, Add/Edit/Delete products.
+- **Order Management:** Real-time incoming orders dashboard.
+- **Review System:** Moderate user reviews.
+- **Error Logs:** Real-time tracking of client-side errors.
 
-### Prerequisites
-- Node.js 16.x or higher
-- npm or yarn
-- A Stripe account for payments
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/NPlusOne.git
-cd NPlusOne
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
-Create a `.env.local` file with the following variables:
-```env
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLIC_KEY=your_stripe_public_key
-JWT_SECRET=your_jwt_secret
-```
-
-4. Run the development server:
-```bash
-npm run dev
-```
-
-The application will be available at http://localhost:3000
-
-### Alternative Ports
-To run on port 4000:
-```bash
-npm run dev:4000
-```
-
-## 🔒 Security Features
-
-- JWT-based authentication
-- Secure password hashing with bcrypt
-- HTTPS-only in production
-- Protected API routes
-- Role-based access control
-- Secure payment processing
+### ✅ Customer Experience
+- **Smart Checkout:** Address management, Coupons, Multiple Payment Methods (UPI, Card, COD).
+- **Performance:** Optimized image loading via CDN.
+- **User Accounts:** Order history and Profile management.
 
 ## 📱 Responsive Design
 

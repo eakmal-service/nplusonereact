@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStripe, useElements, PaymentElement } from '@stripe/stripe-js';
+import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 const CheckoutForm = () => {
   const stripe = useStripe();
