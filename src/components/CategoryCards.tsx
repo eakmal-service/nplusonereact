@@ -98,9 +98,16 @@ const CategoryCards = () => {
         {/* Category Grid */}
         <CategoryGrid categories={categoriesData} />
 
-        {/* Discount Banner */}
-        <div className="px-2 sm:px-4">
-          <DiscountBanner image={bannerData.image} link={bannerData.link} alt={bannerData.alt} />
+
+
+
+        {/* NPlusOne Category Banner */}
+        <div className="w-full mb-8 mt-12">
+          <img
+            src="/images/categories/NPlusOne.png"
+            alt="NPlusOne Collection"
+            className="w-full h-auto object-cover rounded-lg"
+          />
         </div>
 
         {/* Explore Collection Title */}

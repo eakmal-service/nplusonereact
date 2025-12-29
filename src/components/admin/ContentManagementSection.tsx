@@ -398,7 +398,22 @@ const ContentManagementSection = () => {
                                 <div className="space-y-4 max-w-md">
                                     <input placeholder="Link" value={content.banner?.link || ''} onChange={(e) => setContent(prev => ({ ...prev, banner: { ...prev.banner, link: e.target.value } }))} className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white" />
                                     <input placeholder="Alt Text" value={content.banner?.alt || ''} onChange={(e) => setContent(prev => ({ ...prev, banner: { ...prev.banner, alt: e.target.value } }))} className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white" />
-                                    <button onClick={() => saveContent('banner', content.banner)} className="px-4 py-2 bg-silver text-black rounded hover:bg-white font-bold" disabled={isSaving}>Save Banner</button>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => saveContent('banner', content.banner)} className="px-4 py-2 bg-silver text-black rounded hover:bg-white font-bold" disabled={isSaving}>Save Banner</button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to remove the banner?')) {
+                                                    const emptyBanner = { image: '', link: '', alt: '' };
+                                                    setContent(prev => ({ ...prev, banner: emptyBanner }));
+                                                    saveContent('banner', emptyBanner);
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-red-900/50 text-red-200 border border-red-800 rounded hover:bg-red-900"
+                                            disabled={isSaving}
+                                        >
+                                            Remove Banner
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}

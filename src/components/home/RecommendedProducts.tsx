@@ -83,7 +83,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
     <div className="mt-10 md:mt-16 mb-8">
       <SectionTitle title="Recommended for you" />
 
-      <div className="overflow-hidden relative px-6 sm:px-8 md:px-10">
+      <div className="overflow-hidden relative px-6 sm:px-8 md:px-10 mt-0">
         {/* Prev button */}
         <button
           onClick={prevRecommended}
