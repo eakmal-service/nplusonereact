@@ -221,7 +221,7 @@ const Header = () => {
 
       {/* Mobile/Tablet menu - hide only on xl screens */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#000000] border-t border-gray-700 fixed top-16 md:top-20 left-0 right-0 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-5rem)] overflow-y-auto">
+        <div className="xl:hidden bg-[#000000] border-t border-gray-700 fixed top-16 md:top-20 left-0 right-0 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-5rem)] overflow-y-auto z-[100]">
           <div className="px-4 pt-2 pb-4 space-y-1">
             {/* Search Bar */}
             <div className="mb-4">
