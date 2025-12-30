@@ -58,7 +58,9 @@ const HeroSlider = () => {
           if (Array.isArray(data) && data.length > 0) {
             // Merge mobile sources from defaultSlides if missing in fetched data
             const mergedData = data.map((slide: any, index: number) => {
-              if (!slide.mobileSrc && defaultSlides[index]?.mobileSrc) {
+              // FORCE UPDATE: Always use local mobileSrc to ensure new WebP images are used
+              // This overrides potential stale data from the database
+              if (defaultSlides[index]?.mobileSrc) {
                 return { ...slide, mobileSrc: defaultSlides[index].mobileSrc };
               }
               return slide;
