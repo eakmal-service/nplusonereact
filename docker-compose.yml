@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  web:
+    container_name: nplusone-web
+    build: .
+    restart: always
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
