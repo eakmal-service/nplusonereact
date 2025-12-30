@@ -36,7 +36,8 @@ const nextConfig = {
     port: "3000"
   },
   images: {
-    domains: ['localhost'],
+    unoptimized: true,
+    domains: ['localhost', 'qdjmhyeogbluqgtoatap.supabase.co'],
     remotePatterns: [
       {
         protocol: 'https',
