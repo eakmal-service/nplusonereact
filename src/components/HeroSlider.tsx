@@ -17,26 +17,32 @@ const HeroSlider = () => {
   const defaultSlides = [
     {
       desktopSrc: '/hero-slider-desktop/Slide-1.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-1.webp',
       alt: 'NPlusOne Fashion Collection',
     },
     {
       desktopSrc: '/hero-slider-desktop/Slide-2.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-2.webp',
       alt: 'Special Offer - 35% Off',
     },
     {
       desktopSrc: '/hero-slider-desktop/Slide-3.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-3.webp',
       alt: 'Stylish Designs',
     },
     {
       desktopSrc: '/hero-slider-desktop/Slide-4.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-4.webp',
       alt: 'Fashion Collection',
     },
     {
       desktopSrc: '/hero-slider-desktop/Slide-5.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-5.webp',
       alt: 'Slide 5',
     },
     {
       desktopSrc: '/hero-slider-desktop/Slide-6.webp',
+      mobileSrc: '/hero-slider-mobile/Slide-6.webp',
       alt: 'Slide 6',
     }
   ];
@@ -50,7 +56,14 @@ const HeroSlider = () => {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            setSlides(data);
+            // Merge mobile sources from defaultSlides if missing in fetched data
+            const mergedData = data.map((slide: any, index: number) => {
+              if (!slide.mobileSrc && defaultSlides[index]?.mobileSrc) {
+                return { ...slide, mobileSrc: defaultSlides[index].mobileSrc };
+              }
+              return slide;
+            });
+            setSlides(mergedData);
           }
         }
       } catch (error) {
@@ -181,10 +194,10 @@ const HeroSlider = () => {
   // Get the appropriate image source based on device type
   const getImageSource = (index: number) => {
     const slide = slides[index];
-    // Fallback to desktopSrc for all devices since specific mobile/tablet images weren't provided
-    // If future mobile images are added, logic can be updated here:
-    // if (deviceType === 'mobile' && slide.mobileSrc) return slide.mobileSrc;
-    // if (deviceType === 'tablet' && slide.tabletSrc) return slide.tabletSrc;
+    if (deviceType === 'mobile' && slide.mobileSrc) {
+      return slide.mobileSrc;
+    }
+    // Fallback to desktopSrc for other devices or if mobileSrc is missing
     return slide.desktopSrc;
   };
 
