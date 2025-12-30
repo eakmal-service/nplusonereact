@@ -38,9 +38,17 @@ async function deployToVPS() {
     console.log(`Project: ${PROJECT_NAME}`);
     console.log(`Source: ${REPO_URL}`);
 
+    // Prepare environment variables string (KEY=VALUE\nKEY=VALUE)
+    // Exclude HOSTINGER_API_TOKEN as it's for deployment only, but keep app vars
+    const envString = Object.entries(process.env)
+        .filter(([key]) => !['HOSTINGER_API_TOKEN', 'PATH', 'PWD', 'SHLVL', 'HOME', 'LOGNAME', '_'].includes(key))
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n');
+
     const payload = {
         project_name: PROJECT_NAME,
-        content: REPO_URL
+        content: REPO_URL,
+        environment: envString
     };
 
     try {
