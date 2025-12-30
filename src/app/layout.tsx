@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProductProvider } from '@/contexts/ProductContext';
 import { CartProvider } from '@/contexts/CartContext';
@@ -31,7 +30,6 @@ export default function RootLayout({
               <WishlistProvider>
                 <Header />
                 <main>{children}</main>
-                <Footer />
               </WishlistProvider>
             </CartProvider>
           </ProductProvider>

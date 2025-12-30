@@ -52,7 +52,7 @@ const Header = () => {
 
   // Cart and wishlist sections in desktop view
   const cartAndWishlistSection = (
-    <div className="hidden md:flex items-center space-x-4">
+    <div className="hidden xl:flex items-center space-x-4">
       <button
         onClick={openLoginModal}
         className="text-white hover:text-silver"
@@ -171,8 +171,8 @@ const Header = () => {
               </Link>
             </div>
 
-            {/* Mobile menu button */}
-            <div className="md:hidden">
+            {/* Mobile/Tablet menu button - hide only on xl screens */}
+            <div className="xl:hidden">
               <button
                 type="button"
                 className="text-white hover:text-gray-300 focus:outline-none"
@@ -191,8 +191,8 @@ const Header = () => {
               </button>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            {/* Desktop Navigation - show only on xl screens */}
+            <nav className="hidden xl:flex items-center space-x-6">
               <Link href="/suit-set" className="text-white hover:text-silver py-2 font-medium">
                 SUIT SET
               </Link>
@@ -213,16 +213,20 @@ const Header = () => {
               </Link>
             </nav>
 
-            {/* Right side icons - always visible */}
+            {/* Right side icons - show only on xl screens */}
             {cartAndWishlistSection}
           </div>
         </div>
       </header>
 
-      {/* Mobile menu */}
+      {/* Mobile/Tablet menu - hide only on xl screens */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#000000] border-t border-gray-700">
+        <div className="xl:hidden bg-[#000000] border-t border-gray-700 fixed top-16 md:top-20 left-0 right-0 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-5rem)] overflow-y-auto">
           <div className="px-4 pt-2 pb-4 space-y-1">
+            {/* Search Bar */}
+            <div className="mb-4">
+              <SearchBar />
+            </div>
             <Link href="/suit-set"
               className="block py-2 text-white hover:bg-silver rounded px-2"
               onClick={() => setMobileMenuOpen(false)}
