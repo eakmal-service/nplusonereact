@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
                 Karnataka, India
               </p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-semibold uppercase mb-2 text-[rgb(35,32,30)]">Registered Office Address:</h4>
               <p className="text-xs leading-relaxed">
@@ -103,9 +103,9 @@ const Footer: React.FC = () => {
               </svg>
             </a>
           </div>
-          
+
           <div className="text-center md:text-right text-[rgb(35,32,30)] my-3 md:my-0">© 2007-{new Date().getFullYear()} NPlusOne.com</div>
-          
+
           <div className="flex items-center justify-center md:justify-end">
             {/* Payment Method Icons */}
             <div className="flex flex-wrap gap-1.5 justify-center">
@@ -140,9 +140,6 @@ const Footer: React.FC = () => {
           </Link>
           <Link href="/help" className="hover:underline flex items-center">
             <span className="mr-1 md:mr-2">❔</span> Help Center
-          </Link>
-          <Link href="/admin/dashboard" className="hover:underline flex items-center bg-black text-white px-2 py-1 rounded-sm">
-            <span className="mr-1 md:mr-2">👤</span> Admin Panel
           </Link>
         </div>
       </div>
