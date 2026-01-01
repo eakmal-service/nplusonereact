@@ -1,108 +1,46 @@
 'use client';
 
-import { Fragment } from 'react';
-import { Menu, Transition } from '@headlessui/react';
-import { BellIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 export default function AdminHeader() {
   return (
-    <header className="bg-white shadow-sm">
-      <div className="flex items-center justify-between h-16 px-6">
-        {/* Search */}
-        <div className="flex-1 max-w-lg">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+    <header className="bg-black shadow-sm border-b border-gray-800">
+      <div className="container mx-auto px-4">
+        {/* 
+            Header Height:
+            - Increased to match the home screen's layout logic or at least accommodate the large logo without cutting it off.
+            - Home screen has h-16/h-20 but allows logo overlap. 
+            - Here, in a solid header, we should probably make the header taller OR float the logo.
+            - Let's make the header taller to fully contain the large logo: h-32/h-40 to match logo size.
+         */}
+        <div className="flex items-center justify-between h-32 md:h-48 relative">
 
-        {/* Right side */}
-        <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <button className="p-2 text-gray-600 hover:text-gray-900">
-            <BellIcon className="h-6 w-6" />
-          </button>
-
-          {/* Profile dropdown */}
-          <Menu as="div" className="relative">
-            <Menu.Button className="flex items-center space-x-3 focus:outline-none">
-              <img
-                src="https://ui-avatars.com/api/?name=Admin+User"
-                alt="Admin"
-                className="h-8 w-8 rounded-full"
+          {/* Logo & Welcome Message */}
+          <div className="flex items-center space-x-6 h-full">
+            {/* 
+                Logo Container: 
+                - w-32 h-32 to md:w-48 md:h-48
+             */}
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 flex-shrink-0">
+              <Image
+                src="/images/NPlusOne logo.svg"
+                alt="NPlusOne Logo"
+                fill
+                className="object-contain" // object-contain to keep aspect ratio
+                priority
               />
-              <span className="text-sm font-medium text-gray-700">Admin User</span>
-            </Menu.Button>
+            </div>
 
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <Menu.Item>
-                  {({ active }) => (
-                    <a
-                      href="#"
-                      className={`${
-                        active ? 'bg-gray-100' : ''
-                      } block px-4 py-2 text-sm text-gray-700`}
-                    >
-                      Your Profile
-                    </a>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <a
-                      href="#"
-                      className={`${
-                        active ? 'bg-gray-100' : ''
-                      } block px-4 py-2 text-sm text-gray-700`}
-                    >
-                      Settings
-                    </a>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <a
-                      href="#"
-                      className={`${
-                        active ? 'bg-gray-100' : ''
-                      } block px-4 py-2 text-sm text-gray-700`}
-                    >
-                      Sign out
-                    </a>
-                  )}
-                </Menu.Item>
-              </Menu.Items>
-            </Transition>
-          </Menu>
+            {/* Divider */}
+            <div className="hidden sm:block h-12 w-[1px] bg-gray-700"></div>
+
+            {/* Welcome Text */}
+            <h1 className="hidden sm:block text-2xl md:text-4xl font-bold text-gray-200 tracking-wide">
+              Welcome Admin
+            </h1>
+          </div>
         </div>
       </div>
     </header>
   );
-} 
+}

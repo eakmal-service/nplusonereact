@@ -35,9 +35,9 @@ const ContentManagementSection = () => {
             { name: 'SUIT SET', title: 'SUIT SET', image: '/images/categories/17670080328782.webp', link: '/suit-set' },
             { name: 'WESTERN DRESS', title: 'WESTERN DRESS', image: '/images/categories/17670078826332.webp', link: '/western-dress' },
             { name: 'CO-ORD SET', title: 'CO-ORD SET', image: '/images/categories/17670079057732.webp', link: '/co-ord-sets' },
-            { name: 'LEHENGA', title: 'LEHENGA', image: '/images/categories/17670079000862.webp', link: '/lehenga' },
+            { name: 'Kids', title: 'Kids', image: '/images/categories/17670079000862.webp', link: '/kids' },
             { name: 'INDI-WESTERN', title: 'INDI-WESTERN', image: '/images/categories/17670078974382.webp', link: '/indi-western' },
-            { name: 'UNSTICHED SET', title: 'UNSTICHED SET', image: '/images/categories/17670078888742.webp', link: '/unstiched-set' }
+            { name: 'man\'s', title: 'man\'s', image: '/images/categories/17670078888742.webp', link: '/mens' }
         ],
         banner: {
             image: '/images/Discount-2.png',

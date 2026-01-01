@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import LoginModal from './LoginModal';
 import CartPopup from './CartPopup';
 import { useCart } from '@/contexts/CartContext';
@@ -10,6 +11,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import SearchBar from './common/SearchBar';
 
 const Header = () => {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -18,6 +20,11 @@ const Header = () => {
 
   const { getCartCount } = useCart();
   const { wishlist } = useWishlist();
+
+  // Hide header on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -202,14 +209,14 @@ const Header = () => {
               <Link href="/co-ord-sets" className="text-white hover:text-silver py-2 font-medium">
                 CO-ORD SET
               </Link>
-              <Link href="/lehenga" className="text-white hover:text-silver py-2 font-medium">
-                LEHENGA
+              <Link href="/kids" className="text-white hover:text-silver py-2 font-medium">
+                Kids
               </Link>
               <Link href="/indi-western" className="text-white hover:text-silver py-2 font-medium">
                 INDI-WESTERN
               </Link>
-              <Link href="/unstiched-set" className="text-white hover:text-silver py-2 font-medium">
-                UNSTICHED SET
+              <Link href="/mens" className="text-white hover:text-silver py-2 font-medium">
+                man's
               </Link>
             </nav>
 
@@ -228,40 +235,40 @@ const Header = () => {
               <SearchBar />
             </div>
             <Link href="/suit-set"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
               SUIT SET
             </Link>
             <Link href="/western-dress"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
               WESTERN DRESS
             </Link>
             <Link href="/co-ord-sets"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
               CO-ORD SET
             </Link>
-            <Link href="/lehenga"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+            <Link href="/kids"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              LEHENGA
+              Kids
             </Link>
             <Link href="/indi-western"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
               INDI-WESTERN
             </Link>
-            <Link href="/unstiched-set"
-              className="block py-2 text-white hover:bg-silver rounded px-2"
+            <Link href="/mens"
+              className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              UNSTICHED SET
+              man's
             </Link>
 
             {/* Mobile icons */}

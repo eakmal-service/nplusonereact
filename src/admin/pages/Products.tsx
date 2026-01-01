@@ -44,13 +44,13 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">📋 Products</h1>
         <button
           onClick={() => setIsAddModalOpen(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-          Add Product
+          ➕ Add Product
         </button>
       </div>
 
@@ -61,22 +61,22 @@ export default function ProductsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
+                  🎁 Product
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
+                  📂 Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
+                  💵 Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
+                  📦 Stock
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  📊 Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  ⚙️ Actions
                 </th>
               </tr>
             </thead>
@@ -97,13 +97,12 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.status === 'In Stock'
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.status === 'In Stock'
                           ? 'bg-green-100 text-green-800'
                           : product.status === 'Out of Stock'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
                     >
                       {product.status}
                     </span>

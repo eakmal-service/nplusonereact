@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import { recommendedProducts } from '@/data/mockData';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request: Request) {
   try {
@@ -12,13 +16,31 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    // Search through products
-    const results = recommendedProducts.filter(product =>
-      product.title.toLowerCase().includes(query) ||
-      (product.description || '').toLowerCase().includes(query)
-    ).slice(0, 5); // Limit to 5 results
+    // Search through products using ILIKE
+    const { data: results, error } = await supabase
+      .from('products')
+      .select('*')
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+      .limit(5);
 
-    return NextResponse.json(results);
+    if (error) {
+      console.error('Search error:', error);
+      return NextResponse.json([], { status: 500 });
+    }
+
+    // Map to simple result format
+    const mappedResults = results.map(p => ({
+      id: p.id,
+      title: p.title,
+      image: p.image_url,
+      imageUrl: p.image_url,
+      price: p.price,
+      salePrice: p.sale_price,
+      link: `/product/${p.id}`,
+      alt: p.title
+    }));
+
+    return NextResponse.json(mappedResults);
   } catch (error) {
     console.error('Search error:', error);
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });

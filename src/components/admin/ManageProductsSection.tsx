@@ -7,11 +7,11 @@ const categories = [
   'Suit Set',
   'Western Dress',
   'Co-ord Sets',
-  'Lehenga',
+  'Kids',
   'Indi-Western',
-  'Unstiched Set'
+  'man\'s',
 ];
-const statuses = ['All Statuses', 'Active', 'Inactive', 'Draft'];
+const statuses = ['All Statuses', 'Active', 'Inactive'];
 const stockFilters = ['All Products', 'In Stock', 'Out of Stock'];
 const sortOptions = ['Newest First', 'Oldest First', 'Price Low to High', 'Price High to Low'];
 
@@ -127,7 +127,6 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
-                  <option value="draft">Draft</option>
                 </select>
                 <div className="ml-auto flex gap-2">
                   <button

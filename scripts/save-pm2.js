@@ -1,0 +1,1 @@
+const { Client } = require('ssh2'); const conn = new Client(); conn.on('ready', () => { conn.exec('pm2 save', (err, stream) => { if (err) throw err; stream.on('close', (code) => { console.log('PM2 Saved: ' + code); conn.end(); }); }); }).connect({ host: '72.61.229.171', port: 22, username: 'root', password: ')vbofQi/lHXSMqF?Nk8E' });

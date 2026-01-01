@@ -5,14 +5,14 @@ import Link from 'next/link';
 import CategoryProductsGrid from '../../components/common/CategoryProductsGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
-export default function UnstichedSetPage() {
-    const { getActiveProductsByCategory, isLoading } = useProducts();
-    const products = getActiveProductsByCategory('unstiched-set');
+export default function KidsPage() {
+    const { getActiveProductsByCategory } = useProducts();
+    const products = getActiveProductsByCategory('kids');
 
     return (
-        <div className="min-h-screen bg-custom-black text-white pt-24 pb-16">
+        <div className="bg-black min-h-screen pt-24 pb-12">
             <div className="container mx-auto px-4">
-                <h1 className="text-3xl font-bold mb-6 text-silver">Unstiched Set</h1>
+                <h1 className="text-3xl font-bold mb-6 text-silver">Kids</h1>
 
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64">

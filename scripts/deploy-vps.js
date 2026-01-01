@@ -16,7 +16,7 @@ const API_TOKEN = process.env.HOSTINGER_API_TOKEN;
 const VM_ID = '1149588'; // Hardcoded from verification
 const PROJECT_NAME = 'nplusone';
 const REPO_URL = 'https://github.com/eakmal-service/nplusonereact';
-const API_BASE_URL = 'https://api.hostinger.com';
+const API_BASE_URL = 'https://developers.hostinger.com';
 
 if (!API_TOKEN) {
     console.error('Error: HOSTINGER_API_TOKEN is required');

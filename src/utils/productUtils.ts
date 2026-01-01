@@ -80,46 +80,14 @@ export const convertToTypeProduct = (product: any): any => {
 const STORAGE_KEY = 'nplusoneProducts';
 
 // Import mock data to seed/merge
-import { recommendedProducts } from '../data/mockData';
-
-/**
- * Get all products from localStorage
- */
+// function getAllProducts
 export const getAllProducts = (): Product[] => {
   if (typeof window === 'undefined') return [];
 
   const productsJSON = localStorage.getItem(STORAGE_KEY);
   const storedProducts: Product[] = productsJSON ? JSON.parse(productsJSON) : [];
 
-  // Convert recommendedProducts to Product interface
-  const staticProducts: Product[] = recommendedProducts.map(p => ({
-    id: p.id,
-    title: p.title,
-    category: p.category || 'clothing',
-    subcategory: p.subcategory || '',
-    price: p.price,
-    salePrice: p.salePrice || p.price,
-    discount: p.discount || '',
-    imageUrl: p.image || p.imageUrl || '',
-    stockQuantity: p.stockQuantity ?? 10,
-    viewCount: 0,
-    cartCount: 0,
-    purchaseCount: 0,
-    dateAdded: new Date().toISOString(),
-    status: 'active',
-    description: p.description,
-    sizes: p.sizes,
-    imageUrls: p.images?.map(i => i.url) || (p.image ? [p.image] : []),
-    alt: p.alt,
-    colorOptions: p.colorOptions,
-    sizeChartHtml: p.sizeChartHtml
-  }));
-
-  // Filter out static products that are already in storage (by ID) to avoid duplicates if we save back to storage
-  const storedIds = new Set(storedProducts.map(p => p.id));
-  const newStaticProducts = staticProducts.filter(p => !storedIds.has(p.id));
-
-  return [...storedProducts, ...newStaticProducts];
+  return storedProducts;
 };
 
 /**

@@ -46,37 +46,14 @@ const AdminDashboard = () => {
   return (
     <div className="bg-black min-h-screen text-white pb-20">
       {/* Admin Header using homepage header styling */}
-      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 bg-black ${isScrolled ? 'shadow-lg' : ''
-        }`}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo - same position as homepage */}
-            <div className="flex-shrink-0">
-              <Link href="/">
-                <div className="w-44 h-24 sm:w-56 sm:h-28 md:w-64 md:h-32 relative">
-                  <Image
-                    src="/images/NPlusOne logo.svg"
-                    alt="NPlusOne Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
-            </div>
-
-            {/* Empty div to maintain flex spacing */}
-            <div></div>
-          </div>
-        </div>
-      </header>
+      {/* Header removed to use shared AdminHeader from layout */}
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 pt-24 mt-4">
+      <div className="container mx-auto px-4 py-6 mt-4">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar Navigation */}
           <aside className="md:w-64 bg-black p-4 rounded-lg h-fit border border-gray-800">
-            <h2 className="text-xl font-bold mb-6 text-silver border-b border-gray-700 pb-2">Dashboard</h2>
+            <h2 className="text-xl font-bold mb-6 text-silver border-b border-gray-700 pb-2">🏠 Dashboard</h2>
             <nav>
               <ul className="space-y-2">
                 <li>
@@ -87,7 +64,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                    {editingProduct ? '✏️ Edit Product' : '➕ Add New Product'}
                   </button>
                 </li>
                 <li>
@@ -98,7 +75,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Manage Products
+                    🛍️ Manage Products
                   </button>
                 </li>
                 <li>
@@ -109,7 +86,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Orders
+                    📦 Orders
                   </button>
                 </li>
                 <li>
@@ -120,7 +97,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Reviews
+                    ⭐ Reviews
                   </button>
                 </li>
                 <li>
@@ -131,7 +108,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Coupons
+                    🎫 Coupons
                   </button>
                 </li>
                 <li>
@@ -142,7 +119,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Customers
+                    👥 Customers
                   </button>
                 </li>
                 <li>
@@ -153,7 +130,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Settings
+                    ⚙️ Settings
                   </button>
                 </li>
                 <li>
@@ -164,7 +141,7 @@ const AdminDashboard = () => {
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                       }`}
                   >
-                    Website Content
+                    📝 Website Content
                   </button>
                 </li>
                 {/* System Errors Tab */}
@@ -176,7 +153,7 @@ const AdminDashboard = () => {
                       : 'text-red-400 hover:text-red-200 hover:bg-red-900/20'
                       }`}
                   >
-                    System Errors ⚠️
+                    ⚠️ System Errors
                   </button>
                 </li>
               </ul>
@@ -187,7 +164,7 @@ const AdminDashboard = () => {
           <div className="flex-1">
             {activeTab === 'addProduct' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">{editingProduct ? 'Edit Product' : 'Add New Product'}</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">{editingProduct ? '✏️ Edit Product' : '➕ Add New Product'}</h1>
                 <AddProductForm
                   initialData={editingProduct}
                   onCancel={() => {
@@ -201,21 +178,21 @@ const AdminDashboard = () => {
 
             {activeTab === 'manageProducts' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Manage Products</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">🛍️ Manage Products</h1>
                 <ManageProductsSection onEdit={handleEditProduct} />
               </div>
             )}
 
             {activeTab === 'orders' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Orders</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">📦 Orders</h1>
                 <OrdersSection />
               </div>
             )}
 
             {activeTab === 'reviews' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Reviews</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">⭐ Reviews</h1>
                 <ReviewsSection />
               </div>
             )}
@@ -228,7 +205,7 @@ const AdminDashboard = () => {
 
             {activeTab === 'customers' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Customers</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">👥 Customers</h1>
                 <div className="bg-black p-6 rounded-lg border border-gray-800">
                   <p className="text-gray-400">Customer management functionality will be added here.</p>
                 </div>
@@ -237,7 +214,7 @@ const AdminDashboard = () => {
 
             {activeTab === 'settings' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Settings</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">⚙️ Settings</h1>
                 <div className="bg-black p-6 rounded-lg border border-gray-800">
                   <p className="text-gray-400">Settings functionality will be added here.</p>
                 </div>
@@ -246,14 +223,14 @@ const AdminDashboard = () => {
 
             {activeTab === 'content' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-silver">Website Content</h1>
+                <h1 className="text-2xl font-bold mb-6 text-silver">📝 Website Content</h1>
                 <ContentManagementSection />
               </div>
             )}
 
             {activeTab === 'errors' && (
               <div>
-                <h1 className="text-2xl font-bold mb-6 text-red-500">System Error Management</h1>
+                <h1 className="text-2xl font-bold mb-6 text-red-500">⚠️ System Error Management</h1>
                 <ErrorLogsSection />
               </div>
             )}

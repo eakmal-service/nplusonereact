@@ -13,11 +13,11 @@ import {
 } from '@heroicons/react/24/outline';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-  { name: 'Products', href: '/admin/products', icon: ShoppingBagIcon },
-  { name: 'Orders', href: '/admin/orders', icon: ChartBarIcon },
-  { name: 'Customers', href: '/admin/customers', icon: UsersIcon },
-  { name: 'Settings', href: '/admin/settings', icon: CogIcon },
+  { name: '🏠 Dashboard', href: '/admin', icon: HomeIcon },
+  { name: '🛍️ Products', href: '/admin/products', icon: ShoppingBagIcon },
+  { name: '📦 Orders', href: '/admin/orders', icon: ChartBarIcon },
+  { name: '👥 Customers', href: '/admin/customers', icon: UsersIcon },
+  { name: '⚙️ Settings', href: '/admin/settings', icon: CogIcon },
 ];
 
 export default function AdminSidebar() {
@@ -43,11 +43,10 @@ export default function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                  isActive
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${isActive
                     ? 'bg-indigo-100 text-indigo-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
               >
                 <item.icon className="h-6 w-6" />
                 {!collapsed && <span className="ml-3">{item.name}</span>}

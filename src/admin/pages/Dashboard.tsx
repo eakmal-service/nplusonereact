@@ -10,25 +10,25 @@ import {
 
 const stats = [
   {
-    name: 'Total Revenue',
+    name: '💰 Total Revenue',
     value: '$45,231.89',
     change: '+20.1%',
     icon: CurrencyDollarIcon,
   },
   {
-    name: 'Total Orders',
+    name: '🛒 Total Orders',
     value: '2,338',
     change: '+15.3%',
     icon: ShoppingCartIcon,
   },
   {
-    name: 'Total Customers',
+    name: '🧑‍🤝‍🧑 Total Customers',
     value: '1,234',
     change: '+10.2%',
     icon: UserGroupIcon,
   },
   {
-    name: 'Conversion Rate',
+    name: '📈 Conversion Rate',
     value: '3.2%',
     change: '+5.4%',
     icon: ChartBarIcon,
@@ -69,7 +69,7 @@ const recentOrders = [
 export default function AdminDashboard() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">📊 Dashboard</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -89,9 +89,8 @@ export default function AdminDashboard() {
             <dd className="ml-16 flex items-baseline">
               <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
               <p
-                className={`ml-2 flex items-baseline text-sm font-semibold ${
-                  stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`ml-2 flex items-baseline text-sm font-semibold ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {stat.change}
               </p>
@@ -104,7 +103,7 @@ export default function AdminDashboard() {
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900">
-            Recent Orders
+            📝 Recent Orders
           </h3>
         </div>
         <div className="border-t border-gray-200">
@@ -113,16 +112,16 @@ export default function AdminDashboard() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                    👤 Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
+                    🎁 Product
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                    💵 Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    📊 Status
                   </th>
                 </tr>
               </thead>
@@ -140,13 +139,12 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          order.status === 'Delivered'
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 'Delivered'
                             ? 'bg-green-100 text-green-800'
                             : order.status === 'Processing'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
                       >
                         {order.status}
                       </span>
