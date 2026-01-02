@@ -12,11 +12,11 @@ export const categories: Category[] = [
   },
   {
     id: 2,
-    name: 'WESTERN DRESS',
-    title: 'WESTERN DRESS',
+    name: 'WESTERN WEAR',
+    title: 'WESTERN WEAR',
     image: '/images/categories/17670078826332.webp',
     link: '/western-dress',
-    alt: 'Western Dresses'
+    alt: 'Western Wear'
   },
   {
     id: 3,
@@ -28,25 +28,25 @@ export const categories: Category[] = [
   },
   {
     id: 4,
-    name: 'Kids',
-    title: 'Kids',
-    image: '/images/categories/17670079000862.webp', // Using old Lehenga image as placeholder
+    name: 'KID\'S WEAR',
+    title: 'KID\'S WEAR',
+    image: '/images/categories/dcnyqzoexbfsn6tpfmth.webp', // Using old Lehenga image as placeholder
     link: '/kids',
-    alt: 'Kids Collection'
+    alt: 'Kid\'s Wear'
   },
   {
     id: 5,
-    name: 'INDI-WESTERN',
-    title: 'INDI-WESTERN',
+    name: 'INDO-WESTERN',
+    title: 'INDO-WESTERN',
     image: '/images/categories/17670078974382.webp',
     link: '/indi-western',
-    alt: 'Indi-Western'
+    alt: 'Indo-Western'
   },
   {
     id: 6,
-    name: 'man\'s',
-    title: 'man\'s',
-    image: '/images/categories/17670078888742.webp', // Using old Unstitched image as placeholder
+    name: 'MAN\'S WEAR',
+    title: 'MAN\'S WEAR',
+    image: '/images/categories/tvpdbbyrrjmzjrxuwlwe.webp', // Using old Unstitched image as placeholder
     link: '/mens',
     alt: 'Men\'s Collection'
   }

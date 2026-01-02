@@ -5,11 +5,11 @@ import Link from 'next/link';
 const categories = [
   'All Categories',
   'Suit Set',
-  'Western Dress',
+  'Western Wear',
   'Co-ord Sets',
-  'Kids',
-  'Indi-Western',
-  'man\'s',
+  'KID\'S WEAR',
+  'Indo-Western',
+  'MAN\'S WEAR',
 ];
 const statuses = ['All Statuses', 'Active', 'Inactive'];
 const stockFilters = ['All Products', 'In Stock', 'Out of Stock'];

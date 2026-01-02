@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx next dev",
+    "dev:3001": "npx next dev -p 3001",
     "dev:4000": "npx next dev -p 4000",
     "build": "npx next build",
     "start": "npx next start",

@@ -16,11 +16,11 @@ const categoryHierarchy: CategoryNode[] = [
     label: 'Main Categories',
     children: [
       { id: 'suit-set', label: 'Suit Set', value: 'suit-set' },
-      { id: 'western-dress', label: 'Western Dress', value: 'western-dress' },
+      { id: 'western-dress', label: 'Western Wear', value: 'western-dress' },
       { id: 'co-ord-sets', label: 'Co-ord Sets', value: 'co-ord-sets' },
-      { id: 'kids', label: 'Kids', value: 'kids' },
-      { id: 'indi-western', label: 'Indi-Western', value: 'indi-western' },
-      { id: 'mens', label: "man's", value: 'mens' },
+      { id: 'kids', label: 'KID\'S WEAR', value: 'kids' },
+      { id: 'indi-western', label: 'Indo-Western', value: 'indi-western' },
+      { id: 'mens', label: "MAN'S WEAR", value: 'mens' },
     ]
   }
   // Add more top-level categories if needed (e.g. Men Fashion)

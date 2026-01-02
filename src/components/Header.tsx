@@ -204,19 +204,19 @@ const Header = () => {
                 SUIT SET
               </Link>
               <Link href="/western-dress" className="text-white hover:text-silver py-2 font-medium">
-                WESTERN DRESS
+                WESTERN WEAR
               </Link>
               <Link href="/co-ord-sets" className="text-white hover:text-silver py-2 font-medium">
                 CO-ORD SET
               </Link>
               <Link href="/kids" className="text-white hover:text-silver py-2 font-medium">
-                Kids
+                KID'S WEAR
               </Link>
               <Link href="/indi-western" className="text-white hover:text-silver py-2 font-medium">
-                INDI-WESTERN
+                INDO-WESTERN
               </Link>
               <Link href="/mens" className="text-white hover:text-silver py-2 font-medium">
-                man's
+                MAN'S WEAR
               </Link>
             </nav>
 
@@ -244,7 +244,7 @@ const Header = () => {
               className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              WESTERN DRESS
+              WESTERN WEAR
             </Link>
             <Link href="/co-ord-sets"
               className="block px-3 py-2 text-base font-medium hover:text-silver"
@@ -256,19 +256,19 @@ const Header = () => {
               className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Kids
+              KID'S WEAR
             </Link>
             <Link href="/indi-western"
               className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              INDI-WESTERN
+              INDO-WESTERN
             </Link>
             <Link href="/mens"
               className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              man's
+              MAN'S WEAR
             </Link>
 
             {/* Mobile icons */}
