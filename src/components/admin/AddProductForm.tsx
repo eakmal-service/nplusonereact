@@ -12,18 +12,59 @@ interface CategoryNode {
 
 const categoryHierarchy: CategoryNode[] = [
   {
-    id: 'main',
-    label: 'Main Categories',
+    id: 'women',
+    label: "WOMEN'S WEAR",
     children: [
-      { id: 'suit-set', label: 'Suit Set', value: 'suit-set' },
-      { id: 'western-dress', label: 'Western Wear', value: 'western-dress' },
-      { id: 'co-ord-sets', label: 'Co-ord Sets', value: 'co-ord-sets' },
-      { id: 'kids', label: 'KID\'S WEAR', value: 'kids' },
-      { id: 'indi-western', label: 'Indo-Western', value: 'indi-western' },
-      { id: 'mens', label: "MAN'S WEAR", value: 'mens' },
+      {
+        id: 'suit-set',
+        label: 'Suit Set',
+        value: 'suit-set',
+        children: [{ id: 'all-suit-set', label: 'All Suit Sets', value: 'suit-set' }]
+      },
+      {
+        id: 'western-dress',
+        label: 'Western Wear',
+        value: 'western-dress',
+        children: [{ id: 'all-western', label: 'All Western Wear', value: 'western-dress' }]
+      },
+      {
+        id: 'co-ord-sets',
+        label: 'Co-ord Sets',
+        value: 'co-ord-sets',
+        children: [{ id: 'all-coord', label: 'All Co-ord Sets', value: 'co-ord-sets' }]
+      },
+      {
+        id: 'indi-western',
+        label: 'Indo-Western',
+        value: 'indi-western',
+        children: [{ id: 'all-indi', label: 'All Indo-Western', value: 'indi-western' }]
+      },
+    ]
+  },
+  {
+    id: 'men',
+    label: "MEN'S WEAR",
+    children: [
+      {
+        id: 'mens',
+        label: "MAN'S WEAR",
+        value: 'mens',
+        children: [{ id: 'all-mens', label: "All Men's Wear", value: 'mens' }]
+      }
+    ]
+  },
+  {
+    id: 'kids',
+    label: "KID'S WEAR",
+    children: [
+      {
+        id: 'kids-cat',
+        label: "KID'S WEAR",
+        value: 'kids',
+        children: [{ id: 'all-kids', label: "All Kid's Wear", value: 'kids' }]
+      }
     ]
   }
-  // Add more top-level categories if needed (e.g. Men Fashion)
 ];
 
 const subcategories = [

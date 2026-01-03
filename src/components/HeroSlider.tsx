@@ -5,6 +5,25 @@ import React, { useEffect, useRef } from 'react';
 const HeroSlider = () => {
   const desktopVideoRef = useRef<HTMLVideoElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
+  const [heroContent, setHeroContent] = React.useState<any>(null);
+
+  // Fetch Hero Content
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const res = await fetch('/api/admin/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.hero && data.hero.length > 0) {
+            setHeroContent(data.hero[0]); // Use first slide
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch hero content", error);
+      }
+    };
+    fetchContent();
+  }, []);
 
   // Function to notify parent that slider is visible (keeping existing logic)
   useEffect(() => {
@@ -36,7 +55,13 @@ const HeroSlider = () => {
     if (mobileVideoRef.current) {
       mobileVideoRef.current.play().catch(e => console.log("Mobile video autoplay blocked", e));
     }
-  }, []);
+  }, [heroContent]); // Re-run when content loads
+
+  // Default fallback if no content loaded yet or error
+  const desktopSrc = heroContent?.videoSrc || heroContent?.desktopSrc || "/hero-slider-desktop/Desktop.mp4";
+  const mobileSrc = heroContent?.mobileVideoSrc || heroContent?.mobileSrc || "/hero-slider-mobile/mobile-video.mp4";
+  const isDesktopVideo = heroContent ? !!heroContent.videoSrc : true; // Default to video
+  const isMobileVideo = heroContent ? !!heroContent.mobileVideoSrc : true; // Default to video
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
@@ -50,41 +75,40 @@ const HeroSlider = () => {
         {/* Dark Overlay for better text visibility if needed */}
         <div className="absolute inset-0 bg-black/20 z-10 pointer-events-none"></div>
 
-        {/* 
-            Desktop Video 
-            Hidden on mobile (block md:hidden) 
-            We use separate video tags to allow the browser to prioritize loading 
-            based on display:none optimizations or media queries if we used source tags,
-            but separate elements with CSS display toggling is the user's requested approach
-            to ensure "directly load mobile image" (video in this case).
-        */}
+        {/* Desktop View */}
         <div className="relative w-full h-full hidden md:block">
-          <video
-            ref={desktopVideoRef}
-            className="absolute top-0 left-0 w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            src="/hero-slider-desktop/Desktop.mp4"
-          />
+          {isDesktopVideo ? (
+            <video
+              ref={desktopVideoRef}
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              src={desktopSrc}
+              key={desktopSrc} // Force re-render on src change
+            />
+          ) : (
+            <img src={desktopSrc} className="absolute top-0 left-0 w-full h-full object-cover" alt="Hero" />
+          )}
         </div>
 
-        {/* 
-            Mobile Video 
-            Visible only on mobile (block md:hidden)
-            Using object-cover to ensure it fills the screen without empty spaces
-        */}
+        {/* Mobile View */}
         <div className="relative w-full h-full block md:hidden">
-          <video
-            ref={mobileVideoRef}
-            className="absolute top-0 left-0 w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            src="/hero-slider-mobile/mobile-video.mp4"
-          />
+          {isMobileVideo ? (
+            <video
+              ref={mobileVideoRef}
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              src={mobileSrc}
+              key={mobileSrc} // Force re-render on src change
+            />
+          ) : (
+            <img src={mobileSrc} className="absolute top-0 left-0 w-full h-full object-cover" alt="Hero" />
+          )}
         </div>
       </div>
     </div>

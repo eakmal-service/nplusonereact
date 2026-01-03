@@ -121,15 +121,18 @@ const ContentManagementSection = () => {
 
     const renderHeroEditor = () => {
         const slides = content.hero || [];
+        // Local state for active tab per slide is tricky in a map, 
+        // so we'll use a globally active tab for the editor or just toggle inside each item.
+        // Let's use a simple toggle inside each item for better UX.
 
         const updateSlide = (index: number, field: string, value: string) => {
             const newSlides = [...slides];
             newSlides[index] = { ...newSlides[index], [field]: value };
-            setContent(prev => ({ ...prev, hero: newSlides })); // Optimistic update
+            setContent(prev => ({ ...prev, hero: newSlides }));
         };
 
         const addSlide = () => {
-            const newSlides = [...slides, { desktopSrc: '', alt: 'New Slide' }];
+            const newSlides = [...slides, { desktopSrc: '', mobileSrc: '', videoSrc: '', mobileVideoSrc: '', alt: 'New Slide' }];
             setContent(prev => ({ ...prev, hero: newSlides }));
         };
 
@@ -142,61 +145,14 @@ const ContentManagementSection = () => {
             <div className="space-y-6">
                 <Reorder.Group axis="y" values={slides} onReorder={(newOrder) => setContent(prev => ({ ...prev, hero: newOrder }))} className="space-y-4">
                     {slides.map((slide: any, index: number) => (
-                        <Reorder.Item key={slide.desktopSrc || index} value={slide} className="bg-gray-900 p-4 rounded border border-gray-700 flex flex-col gap-3 cursor-move relative">
-                            {/* Drag Handle Indicator */}
-                            <div className="absolute top-2 right-1/2 transform translate-x-1/2 w-8 h-1 bg-gray-700 rounded-full opacity-50 hover:opacity-100"></div>
-
-                            <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-semibold text-silver">Slide {index + 1}</h4>
-                                <button onClick={() => removeSlide(index)} className="text-red-500 text-sm hover:underline z-10 relative">Remove</button>
-                            </div>
-
-                            <div className="flex gap-4 items-start" onPointerDown={(e) => e.stopPropagation()}>
-                                {/* Image Preview & Upload */}
-                                <div className="w-1/3">
-                                    <div className="relative h-32 w-full bg-black border border-gray-700 rounded mb-2 overflow-hidden flex items-center justify-center">
-                                        {slide.desktopSrc ? (
-                                            <img src={slide.desktopSrc} alt="Preview" className="h-full object-contain" />
-                                        ) : (
-                                            <span className="text-gray-600 text-xs">No Image</span>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        className="text-xs text-gray-400"
-                                        onChange={async (e) => {
-                                            if (e.target.files?.[0]) {
-                                                const url = await handleImageUpload(e.target.files[0]);
-                                                if (url) updateSlide(index, 'desktopSrc', url);
-                                            }
-                                        }}
-                                    />
-                                    <p className="text-[10px] text-gray-500 mt-1">Rec: 1920x1080px</p>
-                                </div>
-
-                                {/* Fields */}
-                                <div className="w-2/3 space-y-3">
-                                    <div>
-                                        <label className="block text-xs text-gray-500 mb-1">Image URL</label>
-                                        <input
-                                            type="text"
-                                            value={slide.desktopSrc}
-                                            onChange={(e) => updateSlide(index, 'desktopSrc', e.target.value)}
-                                            className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-500 mb-1">Alt Text</label>
-                                        <input
-                                            type="text"
-                                            value={slide.alt || ''}
-                                            onChange={(e) => updateSlide(index, 'alt', e.target.value)}
-                                            className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </Reorder.Item>
+                        <SlideItem
+                            key={slide.desktopSrc || index}
+                            slide={slide}
+                            index={index}
+                            updateSlide={updateSlide}
+                            removeSlide={removeSlide}
+                            handleImageUpload={handleImageUpload}
+                        />
                     ))}
                 </Reorder.Group>
                 <div className="flex gap-2">
@@ -206,6 +162,118 @@ const ContentManagementSection = () => {
                     </button>
                 </div>
             </div>
+        );
+    };
+
+    // Sub-component for individual slide editing to manage its own tab state
+    const SlideItem = ({ slide, index, updateSlide, removeSlide, handleImageUpload }: any) => {
+        const [view, setView] = useState<'desktop' | 'mobile'>('desktop');
+
+        return (
+            <Reorder.Item value={slide} className="bg-gray-900 p-4 rounded border border-gray-700 flex flex-col gap-3 cursor-move relative">
+                {/* Drag Handle Indicator */}
+                <div className="absolute top-2 right-1/2 transform translate-x-1/2 w-8 h-1 bg-gray-700 rounded-full opacity-50 hover:opacity-100"></div>
+
+                <div className="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+                    <div className="flex gap-4 items-center">
+                        <h4 className="font-semibold text-silver">Slide {index + 1}</h4>
+                        <div className="flex bg-black rounded p-1">
+                            <button
+                                onClick={() => setView('desktop')}
+                                className={`px-3 py-1 text-xs rounded ${view === 'desktop' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                Desktop
+                            </button>
+                            <button
+                                onClick={() => setView('mobile')}
+                                className={`px-3 py-1 text-xs rounded ${view === 'mobile' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                Mobile
+                            </button>
+                        </div>
+                    </div>
+                    <button onClick={() => removeSlide(index)} className="text-red-500 text-sm hover:underline z-10 relative">Remove</button>
+                </div>
+
+                <div className="flex gap-4 items-start" onPointerDown={(e) => e.stopPropagation()}>
+                    {/* Preview Area */}
+                    <div className="w-1/3">
+                        <div className={`relative w-full bg-black border border-gray-700 rounded mb-2 overflow-hidden flex items-center justify-center ${view === 'desktop' ? 'h-32' : 'h-48 aspect-[9/16]'}`}>
+                            {/* Priority: Video -> Image */}
+                            {(view === 'desktop' ? slide.videoSrc : slide.mobileVideoSrc) ? (
+                                <video
+                                    src={view === 'desktop' ? slide.videoSrc : slide.mobileVideoSrc}
+                                    className="h-full w-full object-cover"
+                                    autoPlay muted loop playsInline
+                                />
+                            ) : (view === 'desktop' ? slide.desktopSrc : slide.mobileSrc) ? (
+                                <img
+                                    src={view === 'desktop' ? slide.desktopSrc : slide.mobileSrc}
+                                    alt="Preview"
+                                    className="h-full w-full object-contain"
+                                />
+                            ) : (
+                                <span className="text-gray-600 text-xs">No Content</span>
+                            )}
+                        </div>
+
+                        {/* Image Upload */}
+                        <div className="space-y-2">
+                            <div>
+                                <label className="text-[10px] text-gray-500 block">Upload Image ({view})</label>
+                                <input
+                                    type="file"
+                                    className="text-xs text-gray-400 w-full"
+                                    onChange={async (e) => {
+                                        if (e.target.files?.[0]) {
+                                            const url = await handleImageUpload(e.target.files[0]);
+                                            if (url) updateSlide(index, view === 'desktop' ? 'desktopSrc' : 'mobileSrc', url);
+                                        }
+                                    }}
+                                />
+                            </div>
+                            {/* Video Upload logic could go here, but usually video files are too big for simple inputs. URL input is better for now. */}
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-1">
+                            {view === 'desktop' ? 'Rec: 1920x1080px (Img) or MP4 URL' : 'Rec: 1080x1920px (Img) or MP4 URL'}
+                        </p>
+                    </div>
+
+                    {/* Fields */}
+                    <div className="w-2/3 space-y-3">
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-1">{view === 'desktop' ? 'Desktop' : 'Mobile'} Image URL</label>
+                            <input
+                                type="text"
+                                value={(view === 'desktop' ? slide.desktopSrc : slide.mobileSrc) || ''}
+                                onChange={(e) => updateSlide(index, view === 'desktop' ? 'desktopSrc' : 'mobileSrc', e.target.value)}
+                                className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                                placeholder={`https://.../${view}-image.jpg`}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-1">{view === 'desktop' ? 'Desktop' : 'Mobile'} Video URL (Optional)</label>
+                            <input
+                                type="text"
+                                value={(view === 'desktop' ? slide.videoSrc : slide.mobileVideoSrc) || ''}
+                                onChange={(e) => updateSlide(index, view === 'desktop' ? 'videoSrc' : 'mobileVideoSrc', e.target.value)}
+                                className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                                placeholder={`https://.../${view}-video.mp4`}
+                            />
+                            <p className="text-[10px] text-gray-600 mt-1">If provided, video will play instead of image.</p>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-1">Alt Text (Common)</label>
+                            <input
+                                type="text"
+                                value={slide.alt || ''}
+                                onChange={(e) => updateSlide(index, 'alt', e.target.value)}
+                                className="w-full bg-black border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Reorder.Item>
         );
     };
 
