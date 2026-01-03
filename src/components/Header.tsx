@@ -216,7 +216,7 @@ const Header = () => {
                 INDO-WESTERN
               </Link>
               <Link href="/mens" className="text-white hover:text-silver py-2 font-medium">
-                MAN'S WEAR
+                MEN'S WEAR
               </Link>
             </nav>
 
@@ -268,7 +268,7 @@ const Header = () => {
               className="block px-3 py-2 text-base font-medium hover:text-silver"
               onClick={() => setMobileMenuOpen(false)}
             >
-              MAN'S WEAR
+              MEN'S WEAR
             </Link>
 
             {/* Mobile icons */}

@@ -37,7 +37,7 @@ const ContentManagementSection = () => {
             { name: 'CO-ORD SET', title: 'CO-ORD SET', image: '/images/categories/17670079057732.webp', link: '/co-ord-sets' },
             { name: 'Kids', title: 'Kids', image: '/images/categories/17670079000862.webp', link: '/kids' },
             { name: 'INDI-WESTERN', title: 'INDI-WESTERN', image: '/images/categories/17670078974382.webp', link: '/indi-western' },
-            { name: 'man\'s', title: 'man\'s', image: '/images/categories/17670078888742.webp', link: '/mens' }
+            { name: 'MEN\'S WEAR', title: 'MEN\'S WEAR', image: '/images/categories/17670078888742.webp', link: '/mens' }
         ],
         banner: {
             image: '/images/Discount-2.png',

@@ -44,8 +44,8 @@ export const categories: Category[] = [
   },
   {
     id: 6,
-    name: 'MAN\'S WEAR',
-    title: 'MAN\'S WEAR',
+    name: 'MEN\'S WEAR',
+    title: 'MEN\'S WEAR',
     image: '/images/categories/tvpdbbyrrjmzjrxuwlwe.webp', // Using old Unstitched image as placeholder
     link: '/mens',
     alt: 'Men\'s Collection'

@@ -47,7 +47,7 @@ const categoryHierarchy: CategoryNode[] = [
     children: [
       {
         id: 'mens',
-        label: "MAN'S WEAR",
+        label: "MEN'S WEAR",
         value: 'mens',
         children: [{ id: 'all-mens', label: "All Men's Wear", value: 'mens' }]
       }
