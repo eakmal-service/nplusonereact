@@ -278,7 +278,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       const prodCat = (product.category || '').toLowerCase().replace(' ', '-');
       return prodCat === normalizedCategory &&
         product.status === 'active' &&
-        product.stockQuantity > 0;
+        (product.stockQuantity || 0) > 0;
     });
   };
 
