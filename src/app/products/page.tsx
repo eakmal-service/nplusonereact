@@ -55,7 +55,7 @@ export default function ProductsPage({
       if (cat) {
         // Match by normalized name (e.g. 'SUIT SET' -> 'suit-set')
         const productCat = (product.category || '').toLowerCase().replace(/ /g, '-');
-        const filterCat = cat.name.toLowerCase().replace(/ /g, '-');
+        const filterCat = (cat.name || '').toLowerCase().replace(/ /g, '-');
         return productCat === filterCat;
       }
     }
