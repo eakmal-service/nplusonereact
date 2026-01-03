@@ -6,7 +6,7 @@ import CategoryProductsGrid from '../../components/common/CategoryProductsGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
 export default function KidsPage() {
-    const { getActiveProductsByCategory } = useProducts();
+    const { getActiveProductsByCategory, isLoading } = useProducts();
     const products = getActiveProductsByCategory('kids');
 
     return (
