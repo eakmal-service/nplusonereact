@@ -12,6 +12,7 @@ export interface Product {
   link: string;
   alt: string;
   badge?: string;
+  discountBadgeColor?: string;
   description?: string;
   colors?: Array<{ name: string, color: string }>;
   colorOptions?: Array<{ name: string, code: string }>;
@@ -46,6 +47,17 @@ export interface Product {
   occasion?: string;
   sku?: string;
   barcode?: string;
+  // Deep details
+  brandName?: string;
+  styleCode?: string;
+  hsnCode?: string;
+  gstPercentage?: number;
+  workType?: string;
+  bottomType?: string;
+  setContains?: string;
+  productWeight?: string;
+  searchKeywords?: string;
+  sizeSkus?: Record<string, string>; // Size -> SKU ID map
   videoUrl?: string;
   metaTitle?: string;
   metaDescription?: string;

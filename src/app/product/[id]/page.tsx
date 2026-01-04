@@ -189,7 +189,7 @@ const ProductDetail = () => {
   }
 
   // Default sizes if not provided by API
-  const sizes = currentProduct?.availableSizes || ['32', '34', '36', '38', '40', '42'];
+  const sizes = currentProduct?.availableSizes || ['S', 'M', 'L', 'XL', 'XXL'];
 
   // Create thumbnail array from product images
   const thumbnails = currentProduct?.images?.length > 0
@@ -230,33 +230,27 @@ const ProductDetail = () => {
         <div className="flex flex-col md:flex-row -mx-4">
           {/* Left side - Product images */}
           <div className="md:w-1/2 px-4 mb-8 md:mb-0">
-            <div className="flex">
-              {/* Thumbnails - Vertical carousel */}
-              <div className="w-1/5 mr-4 max-h-[500px] overflow-y-auto flex flex-col items-center">
+            <div className="flex flex-col-reverse md:flex-row">
+              {/* Thumbnails - Horizontal scroll on mobile, Vertical on desktop */}
+              <div className="w-full md:w-1/5 md:mr-4 mt-4 md:mt-0 max-h-[500px] flex flex-row md:flex-col items-center overflow-x-auto md:overflow-y-auto md:overflow-x-hidden space-x-2 md:space-x-0">
                 {thumbnails.map((thumb: { url: string; alt: string }, index: number) => (
                   <div
                     key={index}
-                    className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
+                    className={`flex-shrink-0 w-20 md:w-full border-2 cursor-pointer transition-all duration-200 ${selectedImage === index ? 'border-silver' : 'border-gray-700'} md:mb-4`}
                     onClick={() => setSelectedImage(index)}
                   >
                     <img
                       src={thumb.url}
                       alt={`${thumb.alt || currentProduct?.title} thumbnail ${index + 1}`}
-                      className="w-full h-auto cursor-pointer"
+                      className="w-full h-auto object-cover"
                     />
                   </div>
                 ))}
               </div>
 
               {/* Main image with zoom */}
-              <div className="w-4/5 relative overflow-hidden">
-                {currentProduct?.discount && (
-                  <div className="absolute top-0 left-0 z-10 px-4 py-1 text-xs text-silver font-medium bg-red-600">
-                    {currentProduct.discount}
-                  </div>
-                )}
-                <div className="relative overflow-hidden cursor-zoom-in"
-                  style={{ height: '500px' }}
+              <div className="w-full md:w-4/5 relative flex justify-center items-center bg-gray-900" style={{ height: '500px' }}>
+                <div className="relative h-full w-auto overflow-hidden cursor-zoom-in"
                   onMouseMove={(e) => {
                     const container = e.currentTarget;
                     const { left, top, width, height } = container.getBoundingClientRect();
@@ -269,10 +263,18 @@ const ProductDetail = () => {
                     }
                   }}
                 >
+                  {(currentProduct?.badge || currentProduct?.discount) && (
+                    <div
+                      className="absolute top-0 left-0 z-20 px-3 py-1 text-white font-bold text-sm tracking-wide rounded-sm shadow-md"
+                      style={{ backgroundColor: currentProduct.discountBadgeColor || '#DC2626' }}
+                    >
+                      {currentProduct.badge || (currentProduct.discount.includes('%') ? currentProduct.discount : `${currentProduct.discount}% OFF`)}
+                    </div>
+                  )}
                   <img
                     src={thumbnails[selectedImage].url}
                     alt={thumbnails[selectedImage].alt || currentProduct?.title}
-                    className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
+                    className="h-full w-auto object-contain transition-transform duration-300 hover:scale-150"
                   />
                 </div>
 
@@ -309,29 +311,35 @@ const ProductDetail = () => {
             <div className="mb-6">
               <div className="flex items-center">
                 <p className="text-sm text-gray-400">MRP</p>
-                <span className="text-2xl font-bold ml-2 text-silver">{currentProduct.salePrice}</span>
+                <span className="text-4xl font-extrabold ml-2 text-silver">₹{currentProduct.salePrice}</span>
                 {currentProduct.price && currentProduct.price !== currentProduct.salePrice && (
-                  <span className="text-gray-500 line-through ml-3">{currentProduct.price}</span>
+                  <span className="text-gray-500 line-through ml-3 text-lg">₹{currentProduct.price}</span>
                 )}
                 {currentProduct.discount && (
-                  <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm">{currentProduct.discount}</span>
+                  <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm font-bold">{currentProduct.discount}</span>
                 )}
               </div>
               <p className="text-sm text-gray-400 mt-1">Inclusive of all taxes</p>
             </div>
 
             {/* Color selection */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-3 text-silver">SELECT COLOR</h3>
-              <div className="flex space-x-3">
-                <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-silver flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-[#f8f4e3]"></div>
-                </div>
-                <div className="flex flex-col justify-center">
-                  <p className="text-sm font-medium text-gray-300">Off-White</p>
+            {currentProduct?.colorOptions && currentProduct.colorOptions.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-medium mb-3 text-silver">SELECT COLOR</h3>
+                <div className="flex space-x-3">
+                  {currentProduct.colorOptions.map((color: any, index: number) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-silver flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full" style={{ backgroundColor: color.code }}></div>
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <p className="text-sm font-medium text-gray-300">{color.name}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Size selection */}
             <div className="mb-6">
@@ -351,8 +359,8 @@ const ProductDetail = () => {
                 {sizes.map((size: string) => (
                   <button
                     key={size}
-                    className={`w-10 h-10 flex items-center justify-center border rounded-full ${selectedSize === size
-                      ? 'border-silver bg-silver text-black'
+                    className={`w-12 h-12 flex items-center justify-center border rounded-full ${selectedSize === size
+                      ? 'border-silver bg-silver text-black font-bold'
                       : 'border-gray-600 text-silver hover:border-silver'
                       }`}
                     onClick={() => setSelectedSize(size)}
@@ -381,7 +389,10 @@ const ProductDetail = () => {
 
             {/* Delivery section */}
             <div className="mb-6">
-              <h3 className="font-medium mb-3 text-silver">DELIVERY</h3>
+              <h3 className="font-medium mb-3 text-silver flex items-center">
+                DELIVERY
+                <span className="ml-2 text-xs font-bold text-green-500 bg-green-900/30 px-2 py-0.5 rounded">FREE</span>
+              </h3>
               <div className="flex mb-3">
                 <input
                   type="text"
@@ -439,74 +450,90 @@ const ProductDetail = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Product Details Accordion */}
         <div className="border-t border-b border-gray-700">
-          <div className="py-4 cursor-pointer" onClick={() => setProductDetailsOpen(!productDetailsOpen)}>
+          <div className="py-4">
             <div className="flex justify-between items-center">
               <h3 className="font-medium text-lg text-silver">PRODUCT DETAILS</h3>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`h-5 w-5 text-gray-400 transition-transform ${productDetailsOpen ? 'transform rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </div>
           </div>
-          {productDetailsOpen && (
-            <div className="pb-4">
-              <div
-                className="text-gray-400 mb-4 prose prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: currentProduct?.description || 'No description available' }}
-              />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Top Style</span>
-                    <span className="text-silver">{currentProduct?.topStyle}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Top Pattern</span>
-                    <span className="text-silver">{currentProduct?.topPattern}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Bottom Fabric</span>
-                    <span className="text-silver">{currentProduct?.bottomFabric}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Fabric Dupatta/Stole</span>
-                    <span className="text-silver">{currentProduct?.fabricDupattaStole}</span>
-                  </div>
+          <div className="pb-4">
+            <div
+              className="text-gray-400 mb-4 prose prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: currentProduct?.description || 'No description available' }}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Brand Name</span>
+                  <span className="text-silver">{currentProduct?.brandName || 'Nplusone Fashion'}</span>
                 </div>
-                <div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Neck/Neckline</span>
-                    <span className="text-silver">{currentProduct?.neckline}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Sleeve Detail</span>
-                    <span className="text-silver">{currentProduct?.sleeveDetail}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Lining Fabric</span>
-                    <span className="text-silver">{currentProduct?.liningFabric}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-700">
-                    <span className="font-medium text-gray-300">Fabric</span>
-                    <span className="text-silver">{currentProduct?.fabric}</span>
-                  </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Style Code</span>
+                  <span className="text-silver">{currentProduct?.styleCode || currentProduct?.sku}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Product Weight</span>
+                  <span className="text-silver">{currentProduct?.productWeight}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Top Style</span>
+                  <span className="text-silver">{currentProduct?.topStyle}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Top Pattern</span>
+                  <span className="text-silver">{currentProduct?.topPattern}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Bottom Fabric</span>
+                  <span className="text-silver">{currentProduct?.bottomFabric}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Fabric Dupatta/Stole</span>
+                  <span className="text-silver">{currentProduct?.fabricDupattaStole}</span>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Set Contains</span>
+                  <span className="text-silver">{currentProduct?.setContains}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Work Type</span>
+                  <span className="text-silver">{currentProduct?.workType}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Neck/Neckline</span>
+                  <span className="text-silver">{currentProduct?.neckline}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Sleeve Detail</span>
+                  <span className="text-silver">{currentProduct?.sleeveDetail}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Lining Fabric</span>
+                  <span className="text-silver">{currentProduct?.liningFabric}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-700">
+                  <span className="font-medium text-gray-300">Fabric</span>
+                  <span className="text-silver">{currentProduct?.fabric}</span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Wash & Care Accordion */}
         <div className="border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setWashCareOpen(!washCareOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-silver">WASH & CARE</h3>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="font-medium text-lg text-silver">WASH & CARE</h3>
+              </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 text-gray-400 transition-transform ${washCareOpen ? 'transform rotate-180' : ''}`}
@@ -531,7 +558,13 @@ const ProductDetail = () => {
         <div className="border-b border-gray-700">
           <div className="py-4 cursor-pointer" onClick={() => setDeliveryReturnsOpen(!deliveryReturnsOpen)}>
             <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-silver">DELIVERY & RETURNS</h3>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 012-2v0a2 2 0 012 2m0 0a2 2 0 012 2v0a2 2 0 01-2-2m2 4H9m-2 0H5m14 0h2m-4-2a2 2 0 012-2v0a2 2 0 012 2m0 0a2 2 0 01-2 2v0a2 2 0 01-2-2" />
+                </svg>
+                <h3 className="font-medium text-lg text-silver">DELIVERY & RETURNS</h3>
+              </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 text-gray-400 transition-transform ${deliveryReturnsOpen ? 'transform rotate-180' : ''}`}
@@ -594,13 +627,37 @@ const ProductDetail = () => {
         {/* Customer Support Section */}
         <div className="mt-8">
           <h3 className="font-medium text-lg mb-4 text-silver">HAVE A QUESTION? WE ARE HERE TO HELP!</h3>
-          <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-8">
-            <p className="text-gray-400">We are available on <span className="font-semibold text-silver">011-41583041</span>. Monday - Saturday from 9:30am - 6:30pm.</p>
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex flex-col space-y-3">
+            {/* Phone */}
+            <div className="flex items-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span className="font-semibold text-silver">+91 8329208323</span>
+            </div>
+
+            {/* Days - Calendar Icon */}
+            <div className="flex items-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Monday - Sunday</span>
+            </div>
+
+            {/* Time - Clock Icon */}
+            <div className="flex items-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Call Time: 9:30am - 6:30pm</span>
+            </div>
+
+            {/* Email - Envelope Icon */}
+            <div className="flex items-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <span className="text-gray-400">Email us at <a href="mailto:customercare@bibaindia.com" className="text-blue-400 hover:underline">customercare@bibaindia.com</a></span>
+              <span>Email: <a href="mailto:nplusonefashion@gmail.com" className="text-blue-400 hover:underline">nplusonefashion@gmail.com</a></span>
             </div>
           </div>
         </div>

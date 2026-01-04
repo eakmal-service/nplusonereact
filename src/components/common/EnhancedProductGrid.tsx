@@ -228,7 +228,9 @@ const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: ini
                                     status: product.status || 'active',
                                     description: product.description,
                                     alt: product.alt || product.title,
-                                    availableSizes: product.sizes
+                                    availableSizes: product.sizes,
+                                    colorOptions: product.colorOptions,
+                                    rating: (product as any).rating
                                 }}
                             />
                         ))}

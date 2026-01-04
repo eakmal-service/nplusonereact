@@ -59,7 +59,8 @@ export const convertToTypeProduct = (product: any): any => {
     alt: product.alt || product.title,
     description: product.description || `${product.title} - ${product.category || ''} - ${product.subcategory || ''}`,
     // Add proper QuickView support
-    sizes: product.sizes || ['32', '34', '36', '38', '40', '42'],
+    // Add proper QuickView support
+    sizes: product.sizes || product.availableSizes || [],
     thumbnails: thumbnails,
     images: thumbnails,
     imageUrls: product.imageUrls, // Pass through original imageUrls
@@ -68,12 +69,7 @@ export const convertToTypeProduct = (product: any): any => {
     subcategory: product.subcategory || '',
     status: product.status || 'active',
     sizeChartHtml: product.sizeChartHtml,
-    colorOptions: product.colorOptions || [
-      { name: 'Black', code: '#000000' },
-      { name: 'White', code: '#FFFFFF' },
-      { name: 'Red', code: '#FF0000' },
-      { name: 'Blue', code: '#0000FF' },
-    ]
+    colorOptions: product.colorOptions || []
   };
 };
 

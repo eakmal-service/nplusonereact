@@ -112,6 +112,18 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     metaDescription: initialData?.metaDescription || '',
     tags: initialData?.tags?.join(', ') || '',
     sizeStock: (initialData?.sizeStock || {}) as Record<string, number>,
+    sizeSkus: (initialData?.sizeSkus || {}) as Record<string, string>,
+    badge: initialData?.badge || '',
+    discountBadgeColor: initialData?.discountBadgeColor || '#DC2626',
+    brandName: initialData?.brandName || 'Nplusone Fashion',
+    styleCode: initialData?.styleCode || '',
+    hsnCode: initialData?.hsnCode || '',
+    gstPercentage: initialData?.gstPercentage || 5,
+    workType: initialData?.workType || 'Embroidery',
+    bottomType: initialData?.bottomType || '',
+    setContains: initialData?.setContains || '',
+    productWeight: initialData?.productWeight || '',
+    searchKeywords: initialData?.searchKeywords || '',
   });
 
   const [addedColors, setAddedColors] = useState<{ name: string; color: string }[]>(
@@ -174,8 +186,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     setAttributes({ ...attributes, [e.target.name]: e.target.value });
   };
 
-  // Helper to update size stock table
-  const handleSizeDataChange = (size: string, field: 'price' | 'inventory' | 'enabled' | 'mrp' | 'salePrice', val: string | boolean) => {
+  // Helper to update size stock/sku table
+  const handleSizeDataChange = (size: string, field: 'price' | 'inventory' | 'enabled' | 'mrp' | 'salePrice' | 'sku', val: string | boolean) => {
     if (field === 'enabled') {
       const isEnabled = val as boolean;
       if (isEnabled) {
@@ -197,6 +209,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
       setForm(prev => ({
         ...prev,
         sizeStock: { ...prev.sizeStock, [size]: qty }
+      }));
+    } else if (field === 'sku') {
+      const skuVal = val as string;
+      setForm(prev => ({
+        ...prev,
+        sizeSkus: { ...prev.sizeSkus, [size]: skuVal }
       }));
     } else if (field === 'mrp' || field === 'salePrice') {
       // Ideally we'd store this in a separate map like sizePricing. 
@@ -317,6 +335,18 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
           sizeStock: form.sizeStock,
           stockQuantity: Object.values(form.sizeStock).reduce((a: number, b: unknown) => a + (Number(b) || 0), 0),
+          badge: form.badge,
+          discountBadgeColor: form.discountBadgeColor,
+          brandName: form.brandName,
+          styleCode: form.styleCode,
+          hsnCode: form.hsnCode,
+          gstPercentage: Number(form.gstPercentage),
+          workType: form.workType,
+          bottomType: form.bottomType,
+          setContains: form.setContains,
+          productWeight: form.productWeight,
+          searchKeywords: form.searchKeywords,
+          sizeSkus: form.sizeSkus,
 
           // New Attributes
           ...attributes,
@@ -347,7 +377,18 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               title: '', description: '', mrp: '', salePrice: '', category: '',
               subcategory: '', material: '', status: 'active', colorName: '',
               color: '#000000', sizes: [], images: [],
-              sku: '', barcode: '', videoUrl: '', metaTitle: '', metaDescription: '', tags: '', sizeStock: {}
+              sku: '', barcode: '', videoUrl: '', metaTitle: '', metaDescription: '', tags: '', sizeStock: {},
+              sizeSkus: {},
+              badge: '', discountBadgeColor: '#DC2626',
+              brandName: 'Nplusone Fashion',
+              styleCode: '',
+              hsnCode: '',
+              gstPercentage: 5,
+              workType: 'Embroidery',
+              bottomType: '',
+              setContains: '',
+              productWeight: '',
+              searchKeywords: ''
             });
             setAddedColors([]); // This will be removed
             setAttributes({
@@ -506,6 +547,32 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                 />
               </div>
 
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Badge Text (Optional)</label>
+                <input
+                  type="text" name="badge" value={form.badge} onChange={handleChange}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
+                  placeholder="e.g. New Arrival, Best Seller"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Badge Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color" name="discountBadgeColor" value={form.discountBadgeColor} onChange={handleChange}
+                    className="h-10 w-10 bg-gray-900 border border-gray-700 rounded cursor-pointer"
+                    disabled={isSubmitting}
+                  />
+                  <input
+                    type="text" name="discountBadgeColor" value={form.discountBadgeColor} onChange={handleChange}
+                    className="flex-1 bg-gray-900 border border-gray-700 rounded p-2 text-white"
+                    placeholder="#RRGGBB"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-sm mb-1">Description *</label>
                 <textarea
@@ -527,6 +594,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                   <tr>
                     <th className="px-4 py-3">Size</th>
                     <th className="px-4 py-3">Inventory</th>
+                    <th className="px-4 py-3">SKU ID</th>
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
@@ -551,6 +619,16 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                             value={form.sizeStock[size] || 0}
                             onChange={(e) => handleSizeDataChange(size, 'inventory', e.target.value)}
                             className="w-24 bg-gray-900 border border-gray-700 rounded p-1 text-white"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            disabled={!isEnabled || isSubmitting}
+                            value={form.sizeSkus[size] || ''}
+                            onChange={(e) => handleSizeDataChange(size, 'sku', e.target.value)}
+                            placeholder={`SKU-${size}`}
+                            className="w-32 bg-gray-900 border border-gray-700 rounded p-1 text-white text-xs"
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -592,6 +670,17 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                 <label className="block text-gray-400 text-sm mb-1">Selling Price (₹) *</label>
                 <input type="number" name="salePrice" value={form.salePrice} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3999" disabled={isSubmitting} />
                 {errors.salePrice && <div className="text-red-500 text-xs mt-1">{errors.salePrice}</div>}
+              </div>
+            </div>
+            {/* Compliance Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">HSN Code</label>
+                <input type="text" name="hsnCode" value={form.hsnCode} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 6204" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">GST %</label>
+                <input type="number" name="gstPercentage" value={form.gstPercentage} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 5" disabled={isSubmitting} />
               </div>
             </div>
 
@@ -641,6 +730,14 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Color *</label>
                 <input type="text" name="colorName" value={form.colorName} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. Navy Blue" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Brand Name</label>
+                <input type="text" name="brandName" value={form.brandName} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Style Code</label>
+                <input type="text" name="styleCode" value={form.styleCode} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Fabric *</label>
@@ -694,6 +791,26 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Wash Care</label>
                 <input type="text" name="washCare" value={attributes.washCare} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Work Type</label>
+                <input type="text" name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Bottom Type</label>
+                <input type="text" name="bottomType" value={form.bottomType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Set Contains</label>
+                <input type="text" name="setContains" value={form.setContains} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Product Weight</label>
+                <input type="text" name="productWeight" value={form.productWeight} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+              <div className="md:col-span-3">
+                <label className="block text-gray-400 text-sm mb-1">Search Keywords</label>
+                <input type="text" name="searchKeywords" value={form.searchKeywords} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3 PIECE DRESS, Party Wear" disabled={isSubmitting} />
               </div>
             </div>
           </div>

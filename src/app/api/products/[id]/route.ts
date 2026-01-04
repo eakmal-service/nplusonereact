@@ -16,7 +16,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
       .eq('id', productId)
       .single();
 
+    // If Supabase fetch failed or product not found, check additionalProducts
     if (error || !product) {
+      const { additionalProducts } = await import('@/data/additionalProducts');
+      const localProduct = additionalProducts.find(p => p.id.toString() === productId);
+
+      if (localProduct) {
+        return NextResponse.json(localProduct);
+      }
+
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }

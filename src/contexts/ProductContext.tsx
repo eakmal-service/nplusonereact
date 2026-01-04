@@ -47,8 +47,15 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Import local additional products
+      const { additionalProducts } = await import('@/data/additionalProducts');
+
       if (error) {
         console.error('Error fetching products:', error);
+        // Even if DB fails, show local products
+        // We'll need to map them to the same structure or ensure they adhere to Product type
+        // additionalProducts is already Product[], so we can just use it if DB fails
+        setProducts(additionalProducts);
       } else if (data) {
         // Map Supabase data to our Product interface
         const mappedProducts: Product[] = data.map((p: any) => ({
@@ -88,7 +95,10 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           washCare: p.wash_care,
           bottomFabric: p.bottom_fabric,
         }));
-        setProducts(mappedProducts);
+
+        // Merge with additional products
+        // We put additional products first or last? Let's put them first to be seen easily.
+        setProducts([...additionalProducts, ...mappedProducts]);
       }
     } catch (err) {
       console.error('Unexpected error fetching products:', err);

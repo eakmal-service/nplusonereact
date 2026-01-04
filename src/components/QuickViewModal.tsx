@@ -29,21 +29,21 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  
+
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       alert("Please select a size");
       return;
     }
-    
+
     addToCart(product, quantity, selectedSize);
     alert("Product added to cart successfully!");
     onClose();
   };
-  
+
   const toggleWishlist = () => {
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
@@ -51,7 +51,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
       addToWishlist(product);
     }
   };
-  
+
   // Navigate to previous image
   const prevImage = () => {
     setSelectedImage((prev) => (prev === 0 ? thumbnails.length - 1 : prev - 1));
@@ -61,29 +61,24 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
   const nextImage = () => {
     setSelectedImage((prev) => (prev === thumbnails.length - 1 ? 0 : prev + 1));
   };
-  
+
   // Default sizes if not provided by API
-  const sizes = product.sizes || product.availableSizes || ['32', '34', '36', '38', '40', '42'];
-  
+  const sizes = product.sizes || product.availableSizes || [];
+
   // Create thumbnail array from product images
-  const thumbnails: Thumbnail[] = product.thumbnails && product.thumbnails.length > 0 
-    ? product.thumbnails 
-    : product.images && product.images.length > 0 
-      ? product.images 
+  const thumbnails: Thumbnail[] = product.thumbnails && product.thumbnails.length > 0
+    ? product.thumbnails
+    : product.images && product.images.length > 0
+      ? product.images
       : (product as any).imageUrls && (product as any).imageUrls.length > 0
         ? (product as any).imageUrls.map((url: string) => ({
-            url,
-            alt: product.alt || product.title
-          }))
+          url,
+          alt: product.alt || product.title
+        }))
         : [{ url: product.image || (product as any).imageUrl, alt: product.title }];
 
   // Get color options if provided by the product, or use defaults
-  const colorOptions: ProductColor[] = product.colorOptions || [
-    { name: 'Black', code: '#000000' },
-    { name: 'White', code: '#FFFFFF' },
-    { name: 'Red', code: '#FF0000' },
-    { name: 'Blue', code: '#0000FF' },
-  ];
+  const colorOptions: ProductColor[] = product.colorOptions || [];
 
   // Set default selected color if not already selected
   React.useEffect(() => {
@@ -91,7 +86,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
       setSelectedColor(colorOptions[0].name);
     }
   }, [colorOptions, selectedColor]);
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-black text-white rounded-lg max-w-4xl w-full overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -102,7 +97,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
             </svg>
           </button>
         </div>
-        
+
         <div className="flex flex-col md:flex-row p-4 md:p-6 gap-6">
           {/* Left side - Product images */}
           <div className="md:w-1/2">
@@ -111,13 +106,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               {thumbnails.length > 1 && (
                 <div className="w-1/5 mr-4 max-h-[400px] overflow-y-auto flex flex-col items-center">
                   {thumbnails.map((thumb: Thumbnail, index: number) => (
-                    <div 
+                    <div
                       key={index}
                       className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
                       onClick={() => setSelectedImage(index)}
                     >
-                      <img 
-                        src={thumb.url} 
+                      <img
+                        src={thumb.url}
                         alt={`${thumb.alt || product.title} thumbnail ${index + 1}`}
                         className="w-full h-auto cursor-pointer"
                       />
@@ -125,7 +120,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                   ))}
                 </div>
               )}
-              
+
               {/* Main image */}
               <div className={`${thumbnails.length > 1 ? 'w-4/5' : 'w-full'} relative overflow-hidden`}>
                 {product.discount && (
@@ -140,17 +135,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                     className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
                   />
                 </div>
-                
+
                 {/* Image counter - Only show if there are multiple images */}
                 {thumbnails.length > 1 && (
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                     {selectedImage + 1} / {thumbnails.length}
                   </div>
                 )}
-                
+
                 {/* Product action buttons */}
                 <div className="absolute top-2 right-2 flex flex-col space-y-2">
-                  <button 
+                  <button
                     onClick={toggleWishlist}
                     className={`${isInWishlist(product.id) ? 'bg-red-600' : 'bg-white'} p-2 rounded-full shadow-md hover:bg-opacity-90 transition-all`}
                   >
@@ -162,11 +157,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               </div>
             </div>
           </div>
-          
+
           {/* Right side - Product details */}
           <div className="md:w-1/2">
             <h1 className="text-xl md:text-2xl font-semibold uppercase mb-3 text-white">{product.title}</h1>
-            
+
             {/* Price section */}
             <div className="mb-4">
               <div className="flex items-center">
@@ -184,7 +179,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               </div>
               <p className="text-sm text-gray-400 mt-1">Inclusive of all taxes</p>
             </div>
-            
+
             {/* Color selection */}
             <div className="mb-4">
               <h3 className="font-medium mb-2 text-white">SELECT COLOR</h3>
@@ -192,11 +187,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 {colorOptions.map((color, index) => (
                   <button
                     key={index}
-                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${
-                      selectedColor === color.name 
-                        ? 'border-silver' 
+                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${selectedColor === color.name
+                        ? 'border-silver'
                         : 'border-gray-600 hover:border-silver'
-                    }`}
+                      }`}
                     style={{ backgroundColor: color.code }}
                     onClick={() => setSelectedColor(color.name)}
                     title={color.name}
@@ -210,7 +204,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 ))}
               </div>
             </div>
-            
+
             {/* Size selection */}
             <div className="mb-4">
               <h3 className="font-medium mb-2 text-white">SELECT SIZE</h3>
@@ -218,11 +212,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 {sizes.map((size: string) => (
                   <button
                     key={size}
-                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${
-                      selectedSize === size 
-                        ? 'border-silver bg-silver text-black' 
+                    className={`w-9 h-9 flex items-center justify-center border rounded-full ${selectedSize === size
+                        ? 'border-silver bg-silver text-black'
                         : 'border-gray-600 text-white hover:border-silver'
-                    }`}
+                      }`}
                     onClick={() => setSelectedSize(size)}
                   >
                     {size}
@@ -230,24 +223,24 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 ))}
               </div>
             </div>
-            
+
             {/* View full details link */}
             <div className="mb-6">
               <Link href={`/product/${product.id}`} className="text-silver underline hover:text-white">
                 View Full Product Details
               </Link>
             </div>
-            
+
             {/* Action buttons */}
             <div className="grid grid-cols-2 gap-4">
-              <button 
+              <button
                 onClick={handleAddToCart}
                 className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium transition-all"
               >
                 ADD TO BAG
               </button>
-              <Link 
-                href={`/product/${product.id}`} 
+              <Link
+                href={`/product/${product.id}`}
                 className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 font-medium transition-all text-center"
               >
                 VIEW DETAILS

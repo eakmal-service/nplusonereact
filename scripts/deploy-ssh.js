@@ -36,7 +36,7 @@ const commands = [
     // Setup Directory
     'mkdir -p /var/www',
     // Clone or Pull
-    'if [ -d "/var/www/nplusone" ]; then cd /var/www/nplusone && git pull; else git clone https://github.com/eakmal-service/nplusonereact.git /var/www/nplusone; fi',
+    'if [ -d "/var/www/nplusone" ]; then cd /var/www/nplusone && git remote set-url origin https://github.com/eakmal-service/Nplus-final-.git && git pull; else git clone https://github.com/eakmal-service/Nplus-final-.git /var/www/nplusone; fi',
     'cd /var/www/nplusone',
     // Write .env.local (This is tricky via shell, using printf)
     `printf "${envContent.replace(/\n/g, '\\n').replace(/"/g, '\\"')}" > /var/www/nplusone/.env.local`,

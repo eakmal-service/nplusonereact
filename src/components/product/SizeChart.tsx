@@ -40,11 +40,11 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td className="p-3 border font-medium">S</td><td className="p-3 border">36</td><td className="p-3 border">34</td><td className="p-3 border">39</td><td className="p-3 border">14</td><td className="p-3 border">45</td></tr>
-                                    <tr><td className="p-3 border font-medium">M</td><td className="p-3 border">38</td><td className="p-3 border">36</td><td className="p-3 border">41</td><td className="p-3 border">14.5</td><td className="p-3 border">45</td></tr>
-                                    <tr><td className="p-3 border font-medium">L</td><td className="p-3 border">40</td><td className="p-3 border">38</td><td className="p-3 border">43</td><td className="p-3 border">15</td><td className="p-3 border">45</td></tr>
-                                    <tr><td className="p-3 border font-medium">XL</td><td className="p-3 border">42</td><td className="p-3 border">40</td><td className="p-3 border">45</td><td className="p-3 border">15.5</td><td className="p-3 border">45</td></tr>
-                                    <tr><td className="p-3 border font-medium">XXL</td><td className="p-3 border">44</td><td className="p-3 border">42</td><td className="p-3 border">47</td><td className="p-3 border">16</td><td className="p-3 border">45</td></tr>
+                                    <tr><td className="p-3 border font-medium">S</td><td className="p-3 border">36</td><td className="p-3 border">34</td><td className="p-3 border">39</td><td className="p-3 border">14</td><td className="p-3 border">41</td></tr>
+                                    <tr><td className="p-3 border font-medium">M</td><td className="p-3 border">38</td><td className="p-3 border">36</td><td className="p-3 border">41</td><td className="p-3 border">14.5</td><td className="p-3 border">41</td></tr>
+                                    <tr><td className="p-3 border font-medium">L</td><td className="p-3 border">40</td><td className="p-3 border">38</td><td className="p-3 border">43</td><td className="p-3 border">15</td><td className="p-3 border">41</td></tr>
+                                    <tr><td className="p-3 border font-medium">XL</td><td className="p-3 border">42</td><td className="p-3 border">40</td><td className="p-3 border">45</td><td className="p-3 border">15.5</td><td className="p-3 border">41</td></tr>
+                                    <tr><td className="p-3 border font-medium">XXL</td><td className="p-3 border">44</td><td className="p-3 border">42</td><td className="p-3 border">47</td><td className="p-3 border">16</td><td className="p-3 border">41</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -58,18 +58,18 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                                 <thead>
                                     <tr className="bg-gray-100">
                                         <th className="p-3 border">Size</th>
-                                        <th className="p-3 border">Waist (Full Elastic)</th>
-                                        <th className="p-3 border">Waist (Half Elastic)</th>
-                                        <th className="p-3 border">Hip</th>
-                                        <th className="p-3 border">Length</th>
+                                        <th className="p-3 border">Waist Full Elastic</th>
+                                        <th className="p-3 border">Waist Half Elastic</th>
+                                        <th className="p-3 border">Half Canvas</th>
+                                        <th className="p-3 border">Bottom Length</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td className="p-3 border font-medium">S</td><td className="p-3 border">28</td><td className="p-3 border">30</td><td className="p-3 border">38</td><td className="p-3 border">38</td></tr>
-                                    <tr><td className="p-3 border font-medium">M</td><td className="p-3 border">30</td><td className="p-3 border">32</td><td className="p-3 border">42</td><td className="p-3 border">38</td></tr>
-                                    <tr><td className="p-3 border font-medium">L</td><td className="p-3 border">32</td><td className="p-3 border">34</td><td className="p-3 border">43</td><td className="p-3 border">38</td></tr>
-                                    <tr><td className="p-3 border font-medium">XL</td><td className="p-3 border">34</td><td className="p-3 border">36</td><td className="p-3 border">44</td><td className="p-3 border">38</td></tr>
-                                    <tr><td className="p-3 border font-medium">XXL</td><td className="p-3 border">36</td><td className="p-3 border">38</td><td className="p-3 border">45</td><td className="p-3 border">38</td></tr>
+                                    <tr><td className="p-3 border font-medium">S</td><td className="p-3 border">28</td><td className="p-3 border">30</td><td className="p-3 border">16</td><td className="p-3 border">38</td></tr>
+                                    <tr><td className="p-3 border font-medium">M</td><td className="p-3 border">30</td><td className="p-3 border">32</td><td className="p-3 border">17</td><td className="p-3 border">38</td></tr>
+                                    <tr><td className="p-3 border font-medium">L</td><td className="p-3 border">32</td><td className="p-3 border">34</td><td className="p-3 border">18</td><td className="p-3 border">38</td></tr>
+                                    <tr><td className="p-3 border font-medium">XL</td><td className="p-3 border">34</td><td className="p-3 border">36</td><td className="p-3 border">19</td><td className="p-3 border">38</td></tr>
+                                    <tr><td className="p-3 border font-medium">XXL</td><td className="p-3 border">36</td><td className="p-3 border">38</td><td className="p-3 border">20</td><td className="p-3 border">38</td></tr>
                                 </tbody>
                             </table>
                         </div>
