@@ -54,16 +54,17 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Helper to convert DB path to Cloudinary URL
         const getImageUrl = (path: string | null) => {
           if (!path) return '';
-          return path; // DISABLED Cloudinary dependency for now
-          /*
-          if (path.startsWith('http')) return path; // Already absolute (e.g. from Admin upload)
 
-          // Convert legacy relative path: "products/D3P_1/1.webp" -> Cloudinary URL
-          // Cloudinary Public ID structure from script: "nplus/products/D3P_1/1"
-          const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
-          // Added f_auto,q_auto for optimization
-          return `https://res.cloudinary.com/douy8ujry/image/upload/f_auto,q_auto/nplus/${nameWithoutExt}`;
-          */
+          // If absolute URL, return as is
+          if (path.startsWith('http')) return path;
+
+          // If already starts with /, return as is
+          if (path.startsWith('/')) return path;
+
+          // Otherwise, assume relative path in public folder and prepend /
+          return `/${path}`;
+
+
         };
 
         // Map Supabase data to our Product interface
