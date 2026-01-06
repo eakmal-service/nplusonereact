@@ -25,9 +25,10 @@ interface ProductCardProps {
     rating?: number;
     colorOptions?: Array<{ name: string, code: string }>;
   };
+  priority?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
   const [showQuickView, setShowQuickView] = useState(false);
 
   // Only render if product is active
@@ -75,6 +76,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               src={product.imageUrl}
               alt={product.alt || product.title}
               fill
+              priority={priority}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover object-top hover:scale-105 transition-transform duration-500"
             />
             {product.discount && (
