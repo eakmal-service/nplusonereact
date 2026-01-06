@@ -58,7 +58,6 @@ async function getProduct(id: string): Promise<Product | null> {
       status: product.status,
       description: product.description,
       sizes: product.sizes || [],
-      colorName: product.main_color,
 
       // Detailed attributes mapping
       fit: product.fit_type,
