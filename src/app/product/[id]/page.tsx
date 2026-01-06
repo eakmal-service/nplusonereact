@@ -16,19 +16,22 @@ async function getProduct(id: string): Promise<Product | null> {
   const supabase = createClient();
 
   // 1. Fetch from Supabase
-  const { data: product, error } = await supabase
-    .from('products')
+  const { data: product, error } = await (supabase
+    .from('products') as any)
     .select('*')
     .eq('id', id)
     .single();
 
   if (product) {
-    // Helper to convert DB path to Cloudinary URL
+    // Helper to convert DB path to URL
     const getImageUrl = (path: string | null) => {
       if (!path) return '';
+      // If absolute URL, return as is
       if (path.startsWith('http')) return path;
-      const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
-      return `https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`;
+      // If already starts with /, return as is
+      if (path.startsWith('/')) return path;
+      // Otherwise, assume relative path in public folder and prepend /
+      return `/${path}`;
     };
 
     // Map Supabase data to Product interface
