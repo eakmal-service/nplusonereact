@@ -54,6 +54,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Helper to convert DB path to Cloudinary URL
         const getImageUrl = (path: string | null) => {
           if (!path) return '';
+          return path; // DISABLED Cloudinary dependency for now
+          /*
           if (path.startsWith('http')) return path; // Already absolute (e.g. from Admin upload)
 
           // Convert legacy relative path: "products/D3P_1/1.webp" -> Cloudinary URL
@@ -61,6 +63,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
           // Added f_auto,q_auto for optimization
           return `https://res.cloudinary.com/douy8ujry/image/upload/f_auto,q_auto/nplus/${nameWithoutExt}`;
+          */
         };
 
         // Map Supabase data to our Product interface

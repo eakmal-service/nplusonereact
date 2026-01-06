@@ -46,10 +46,13 @@ const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
   // Adding .mp4 extension for better browser compatibility
   // Helper to optimize Cloudinary URLs
   const optimizeUrl = (url: string) => {
+    return url; // DISABLED Cloudinary optimization for now
+    /*
     if (url.includes('cloudinary.com') && !url.includes('f_auto,q_auto')) {
       return url.replace('/upload/', '/upload/f_auto,q_auto/');
     }
     return url;
+    */
   };
 
   const defaultDesktop = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1/nplus/hero-slider-desktop/Desktop.mp4");
