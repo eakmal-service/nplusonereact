@@ -32,14 +32,15 @@ export async function POST(req: Request) {
 
             if (order_db_id) {
                 // 1. Update Order Status
-                const { data: updatedOrder, error: updateError } = await supabase
-                    .from('orders')
+                // Casting to any to avoid build error: Argument of type 'any' is not assignable to parameter of type 'never'
+                const { data: updatedOrder, error: updateError } = await (supabase
+                    .from('orders') as any)
                     .update({
                         status: 'PROCESSING',
                         payment_status: 'PAID',
                         payment_id: razorpay_payment_id,
                         payment_method: 'RAZORPAY'
-                    } as any)
+                    })
                     .eq('id', order_db_id)
                     .select()
                     .single();
