@@ -68,7 +68,7 @@ export default function ProductsPageClient({
     console.log(' DEBUG: Categories:', categories);
     if (initialProducts.length > 0) {
         console.log(' DEBUG: Sample Product Category:', initialProducts[0].category);
-        console.log(' DEBUG: All Product Categories:', [...new Set(initialProducts.map(p => p.category))]);
+        console.log(' DEBUG: All Product Categories:', Array.from(new Set(initialProducts.map(p => p.category))));
     }
 
     const filteredProducts = initialProducts.filter(product => {
