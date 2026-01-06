@@ -454,7 +454,7 @@ export const additionalProducts: Product[] = [
         id: 999012,
         title: "Elegant Lavender Rayon Set with Scalloped Hem",
         price: "1299",
-        salePrice: "611",
+        salePrice: "551",
         discount: "50% OFF",
         link: "/product/999012",
         alt: "Elegant Lavender Rayon Set with Scalloped Hem",
