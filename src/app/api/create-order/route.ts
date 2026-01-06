@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
+// Helper to parse price (handles both string and number)
+const parsePrice = (price: string | number | undefined): number => {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.]/g, ''));
+    return 0;
+};
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -55,7 +62,7 @@ export async function POST(req: Request) {
             product_id: item.product.id?.toString(),
             product_title: item.product.title,
             quantity: item.quantity,
-            price: parseFloat(item.product.salePrice?.replace(/[^0-9.]/g, '') || item.product.price?.replace(/[^0-9.]/g, '') || '0'),
+            price: parsePrice(item.product.salePrice || item.product.price),
             size: item.size,
             image_url: item.product.image || item.product.imageUrl
         }));
