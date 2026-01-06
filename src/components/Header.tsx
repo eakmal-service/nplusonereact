@@ -9,6 +9,7 @@ import CartPopup from './CartPopup';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import SearchBar from './common/SearchBar';
+import UserMenu from './navbar/UserMenu';
 
 const Header = () => {
   const pathname = usePathname();

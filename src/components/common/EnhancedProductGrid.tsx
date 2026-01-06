@@ -214,9 +214,10 @@ const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: ini
 
                 {filteredAndSortedProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredAndSortedProducts.map(product => (
+                        {filteredAndSortedProducts.map((product, index) => (
                             <ProductCard
                                 key={product.id}
+                                priority={index < 6} // Prioritize first 6 images (LCP)
                                 product={{
                                     id: product.id,
                                     title: product.title,

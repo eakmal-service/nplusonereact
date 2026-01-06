@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const MyFavorite: React.FC = () => {
+const MyFavorite = ({ favorites }: { favorites?: any[] }) => {
   // Image data with links to categories
   // Default favorites
   const defaultFavorites = [
@@ -30,24 +30,9 @@ const MyFavorite: React.FC = () => {
     }
   ];
 
-  const [favoriteImages, setFavoriteImages] = React.useState(defaultFavorites);
+  const favoriteImages = (favorites && favorites.length > 0) ? favorites : defaultFavorites;
 
-  React.useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        const res = await fetch('/api/admin/content?section_id=favorites');
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setFavoriteImages(data);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load favorites", err);
-      }
-    };
-    fetchFavorites();
-  }, []);
+  // React.useEffect removed - data passed via props
 
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -116,10 +101,11 @@ const MyFavorite: React.FC = () => {
                   relative rounded-lg overflow-hidden group
                   w-[200px] h-[330px] md:w-full md:h-[330px]
                 ">
-                  <img
-                    src={image.src}
+                  <Image
+                    src={image.src || '/placeholder.png'}
                     alt={image.alt}
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    className="object-contain transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                 </div>

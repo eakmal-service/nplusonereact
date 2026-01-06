@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
-import { uploadImage } from '@/utils/supabaseUpload';
+import { uploadImage } from '@/utils/uploadService';
 
 // --- Category Data Hierarchy ---
 interface CategoryNode {

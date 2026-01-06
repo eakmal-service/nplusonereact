@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CheckoutPage = () => {
     const { cart, getDiscountedTotal, clearCart, getCartTotal, discount, applyCoupon, removeCoupon, couponCode } = useCart();
@@ -13,6 +14,7 @@ const CheckoutPage = () => {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [orderPlaced, setOrderPlaced] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false); // New State for T&C
     const [error, setError] = useState<string | null>(null);
 
     // Checkout Steps State
@@ -41,7 +43,7 @@ const CheckoutPage = () => {
     useEffect(() => {
         if (user) {
             setCheckoutMode('logged_in');
-            setFormData(prev => ({ ...prev, email: user.email, name: user.name || '' }));
+            setFormData(prev => ({ ...prev, email: user.email || '', name: user.user_metadata?.full_name || '' }));
         }
     }, [user]);
 
@@ -83,11 +85,27 @@ const CheckoutPage = () => {
         setCouponMessage(null);
     };
 
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     const handlePlaceOrder = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!isFormValid()) {
             setError("Please fill in all required fields for shipping and payment.");
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        if (!termsAccepted) {
+            setError("Please agree to the Terms & Conditions to proceed.");
             window.scrollTo(0, 0);
             return;
         }
@@ -98,6 +116,7 @@ const CheckoutPage = () => {
         try {
             const finalTotal = getDiscountedTotal();
 
+            // 1. Create Pending Order in DB
             const response = await fetch('/api/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -105,20 +124,95 @@ const CheckoutPage = () => {
                     customer: formData,
                     items: cart,
                     total: finalTotal,
-                    status: 'Pending',
-                    paymentMethod: paymentMethod // Pass metadata
+                    status: 'PENDING',
+                    paymentMethod: paymentMethod
                 })
             });
 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to place order');
+                throw new Error(result.error || 'Failed to initialize order');
             }
 
-            setOrderPlaced(true);
-            clearCart();
-            router.push('/order-confirmation');
+            const orderDbId = result.orderId; // Assume API returns the created order ID
+
+            // 2. Handle Razorpay Payment
+            if (paymentMethod !== 'cod') {
+                const isLoaded = await loadRazorpay();
+                if (!isLoaded) {
+                    throw new Error('Razorpay SDK failed to load. Are you online?');
+                }
+
+                // Create Razorpay Order via API
+                const rpRes = await fetch('/api/payment/razorpay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: finalTotal,
+                        currency: 'INR',
+                        receipt: orderDbId
+                    }),
+                });
+
+                const rpOrder = await rpRes.json();
+                if (!rpRes.ok) throw new Error(rpOrder.error || 'Razorpay order creation failed');
+
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'test_key_id', // Add this to .env.local
+                    amount: rpOrder.amount,
+                    currency: rpOrder.currency,
+                    name: "NPlusOne Fashion",
+                    description: "Order Payment",
+                    order_id: rpOrder.id,
+                    handler: async function (response: any) {
+                        // Verify Payment
+                        const verifyRes = await fetch('/api/payment/razorpay/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                order_db_id: orderDbId
+                            }),
+                        });
+
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.success) {
+                            setOrderPlaced(true);
+                            clearCart();
+                            router.push(`/order-confirmation/${orderDbId}`);
+                        } else {
+                            setError("Payment verification failed. Please contact support.");
+                            setIsProcessing(false);
+                        }
+                    },
+                    prefill: {
+                        name: formData.name,
+                        email: formData.email,
+                        contact: user?.phone || '',
+                    },
+                    theme: {
+                        color: "#000000",
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setIsProcessing(false);
+                            // Optionally handle cancellation (order remains PENDING)
+                        }
+                    }
+                };
+
+                const paymentObject = new (window as any).Razorpay(options);
+                paymentObject.open();
+
+            } else {
+                // COD Flow
+                setOrderPlaced(true);
+                clearCart();
+                router.push(`/order-confirmation/${orderDbId}`);
+            }
 
         } catch (err: any) {
             console.error('Checkout Error:', err);
@@ -368,8 +462,13 @@ const CheckoutPage = () => {
                             <div className="space-y-4 mb-6 border-b border-gray-800 pb-6 max-h-60 overflow-y-auto pr-2">
                                 {cart.map((item) => (
                                     <div key={`${item.product.id}-${item.size}`} className="flex justify-between items-start gap-3">
-                                        <div className="w-12 h-12 bg-gray-800 rounded overflow-hidden flex-shrink-0">
-                                            <img src={item.product.image} className="w-full h-full object-cover" alt="" />
+                                        <div className="w-12 h-12 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
+                                            <Image
+                                                src={item.product.image || '/placeholder.png'}
+                                                fill
+                                                className="object-cover"
+                                                alt={item.product.title}
+                                            />
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-white line-clamp-2">{item.product.title}</p>
@@ -439,6 +538,23 @@ const CheckoutPage = () => {
                                     <span className="font-bold text-white">Total</span>
                                     <span className="font-bold text-white">₹{getDiscountedTotal().toFixed(2)}</span>
                                 </div>
+                            </div>
+
+                            <div className="mb-6 bg-black p-3 rounded border border-gray-800">
+                                <label className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                        className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-900 text-silver focus:ring-offset-gray-900 focus:ring-silver"
+                                    />
+                                    <div className="text-xs text-gray-400">
+                                        <span className="font-bold text-silver block mb-1">CHECKOUT POLICY SUMMARY</span>
+                                        By placing this order, you agree to our <Link href="/refund-policy" target="_blank" className="text-blue-400 hover:underline">Returns & Refunds Policy</Link>.
+                                        Eligible items may be returned or exchanged within 7 days.
+                                        <br /><span className="text-red-400 font-semibold">MADE TO ORDER designs are not returnable.</span>
+                                    </div>
+                                </label>
                             </div>
 
                             <button

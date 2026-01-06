@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { uploadImage } from '@/utils/supabaseUpload'; // Ensure this utility exists and accepts file
+import { uploadImage } from '@/utils/uploadService';
 import { Reorder } from "framer-motion";
 
 interface SectionContent {
@@ -108,7 +108,7 @@ const ContentManagementSection = () => {
     const handleImageUpload = async (file: File): Promise<string | null> => {
         try {
             const path = `cms/${Date.now()}_${file.name}`;
-            const publicUrl = await uploadImage(file, 'products', path); // Using existing 'products' bucket for now
+            const publicUrl = await uploadImage(file, 'product-images', path); // Using new 'product-images' bucket
             return publicUrl;
         } catch (error) {
             console.error("Upload failed", error);
@@ -207,10 +207,11 @@ const ContentManagementSection = () => {
                                     autoPlay muted loop playsInline
                                 />
                             ) : (view === 'desktop' ? slide.desktopSrc : slide.mobileSrc) ? (
-                                <img
-                                    src={view === 'desktop' ? slide.desktopSrc : slide.mobileSrc}
+                                <Image
+                                    src={(view === 'desktop' ? slide.desktopSrc : slide.mobileSrc) || '/placeholder.png'}
                                     alt="Preview"
-                                    className="h-full w-full object-contain"
+                                    fill
+                                    className="object-contain"
                                 />
                             ) : (
                                 <span className="text-gray-600 text-xs">No Content</span>
@@ -302,8 +303,8 @@ const ContentManagementSection = () => {
                             <h4 className="font-semibold text-silver mb-2">Item {index + 1}</h4>
                             {/* Image */}
                             <div className="mb-2" onPointerDown={(e) => e.stopPropagation()}>
-                                <div className="h-40 bg-black border border-gray-800 rounded mb-2 flex items-center justify-center overflow-hidden">
-                                    {fav.src ? <img src={fav.src} className="h-full object-contain" /> : <span className="text-gray-600">No Img</span>}
+                                <div className="h-40 bg-black border border-gray-800 rounded mb-2 flex items-center justify-center overflow-hidden relative">
+                                    {fav.src ? <Image src={fav.src || '/placeholder.png'} alt={fav.alt || "Favorite"} fill className="object-contain" /> : <span className="text-gray-600">No Img</span>}
                                 </div>
                                 <input type="file" className="text-xs text-gray-400" onChange={async (e) => {
                                     if (e.target.files?.[0]) {
@@ -373,8 +374,8 @@ const ContentManagementSection = () => {
                             {/* Image uploader for 'image' field if present */}
                             {fields.includes('image') && (
                                 <div className="w-32 shrink-0" onPointerDown={(e) => e.stopPropagation()}>
-                                    <div className="h-24 bg-black border border-gray-800 rounded mb-1 flex items-center justify-center overflow-hidden">
-                                        {item.image ? <img src={item.image} className="h-full object-contain" /> : <span className="text-gray-600 text-xs">No Img</span>}
+                                    <div className="h-24 bg-black border border-gray-800 rounded mb-1 flex items-center justify-center overflow-hidden relative">
+                                        {item.image ? <Image src={item.image || '/placeholder.png'} alt="Preview" fill className="object-contain" /> : <span className="text-gray-600 text-xs">No Img</span>}
                                     </div>
                                     <input type="file" className="text-[10px] text-gray-400 w-full" onChange={async (e) => {
                                         if (e.target.files?.[0]) {
@@ -454,7 +455,17 @@ const ContentManagementSection = () => {
                             <div className="bg-gray-900 p-4 rounded border border-gray-700">
                                 {/* Single Banner Editor */}
                                 <div className="mb-4">
-                                    <img src={content.banner?.image} className="max-w-sm border border-gray-800 rounded mb-2" />
+                                    {content.banner?.image && (
+                                        <Image
+                                            src={content.banner.image}
+                                            alt="Banner Preview"
+                                            width={0}
+                                            height={0}
+                                            sizes="100vw"
+                                            className="w-full h-auto border border-gray-800 rounded mb-2"
+                                            style={{ maxWidth: '24rem' }}
+                                        />
+                                    )}
                                     <input type="file" onChange={async (e) => {
                                         if (e.target.files?.[0]) {
                                             const url = await handleImageUpload(e.target.files[0]);

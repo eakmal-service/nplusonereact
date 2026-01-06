@@ -1,147 +1,81 @@
-# NPlusOne - Women's Fashion E-commerce Platform
+# NPlusOne Fashion E-commerce
 
-A modern, feature-rich e-commerce platform built for women's fashion retail, offering a seamless shopping experience with advanced features and secure payment processing.
+A modern, high-performance fashion e-commerce application built with Next.js 13 (App Router), Supabase, and Stripe.
 
-## 🚀 Features
+## 🚀 Recent Major Updates (Jan 2026)
+- **Server-Side Rendering (SSR)**: Product Listing and Detail pages now fetch data on the server for superior SEO and initial load performance.
+- **Image Optimization**: Fully migrated to `next/image` with `remotePatterns` for secure and optimized serving of assets from Supabase.
+- **Admin Panel Isolation**: Separated Admin data fetching logic to ensure the public storefront remains fast while the Admin Panel loads heavy data independently.
+- **Security**: Row Level Security (RLS) policies configured for secure database access.
 
-### Customer Features
-- **Product Browsing**
-  - Browse through various categories (Co-ord Sets, Girls Wear, Night Bottoms, T-shirts)
-  - Advanced search functionality
-  - Product filtering and sorting
-  - Similar product recommendations
+## 📊 Project Status & Feature Audit
 
-- **Shopping Experience**
-  - Secure shopping cart
-  - Wishlist functionality
-  - Size guide and product measurements
-  - Multiple product images with zoom capability
-  - Responsive design for mobile, tablet, and desktop
+### 🛍️ Categories & Data
+Currently, the application runs on a **Hybrid Data Model** (Supabase DB + Local Fallback).
 
-- **User Accounts**
-  - Personal account management
-  - Order history
-  - Saved addresses
-  - Wishlist synchronization
+| Category | Product Count | Status | Notes |
+|----------|:-------------:|:------:|-------|
+| **Suit Set** | ~18 | ✅ Active | Fully populated with images, descriptions, and variants. |
+| **Western Wear** | 0 | 🚧 Empty | Placeholder category. |
+| **Co-ord Set** | 0 | 🚧 Empty | Placeholder category. |
+| **Kid's Wear** | 0 | 🚧 Empty | Placeholder category. |
+| **Indo-Western** | 0 | 🚧 Empty | Placeholder category. |
+| **Men's Wear** | 0 | 🚧 Empty | Placeholder category. |
 
-- **Checkout Process**
-  - Secure payment integration with Stripe
-  - Multiple payment options
-  - Address validation
-  - Delivery status tracking
-  - Order confirmation emails
+> **Note**: Products are managed via the Admin Panel and stored in Supabase. Local fallbacks (`additionalProducts.ts`) exist for development but are being phased out in favor of real DB data.
 
-### Admin Features
-- **Product Management**
-  - Add/Edit/Delete products
-  - Manage product categories
-  - Upload product images
-  - Set pricing and discounts
-  - Inventory management
+### 🛠️ Features Functionality (Zara/H&M Style Analysis)
 
-- **Order Management**
-  - View and process orders
-  - Update order status
-  - Manage returns and refunds
-  - Generate order reports
+| Feature | Status | Implementation Details |
+|---------|:------:|------------------------|
+| **User Auth** | ✅ Working | Supabase Auth (Email/Video OTP login flow). |
+| **Payments** | ✅ Working | **Stripe** integration is fully set up in `/api/payment`. |
+| **Order Tracking** | ✅ Working | Custom tracking APIs (`/api/order/[id]/tracking`) implementing detailed courier status. |
+| **Admin Panel** | ✅ Working | comprehensive dashboard for Product Management, Order Processing, and Content Management (Hero Slider, banners). |
+| **Search & Filter** | ✅ Working | Fast filtering by Category, Price, and Search terms. |
+| **Wishlist & Cart** | ✅ Working | Persistent state management for shopping bag and favorites. |
+| **Product Zoom** | ✅ Working | High-quality image zoom on hover (Desktop) and modal view. |
+| **Mobile UX** | ✅ Working | Fully responsive design with mobile-optimized Hero Slider and Navigation. |
 
-- **User Management**
-  - Customer account management
-  - Admin user management
-  - Role-based access control
+## 💻 Tech Stack
+- **Framework**: Next.js 13.5 (App Router)
+- **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth
+- **Payments**: Stripe
+- **Styling**: Tailwind CSS
+- **State**: React Context + SWR
+- **Deployment**: VPS (Hostinger) with Docker
 
-## 🛠 Tech Stack
+## 🔧 Setup & Installation
 
-- **Frontend**
-  - **Next.js 14+** (App Router)
-  - **TypeScript** for type safety
-  - **Tailwind CSS** for styling
+1. **Environment Config**:
+   Ensure your `.env.local` has:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
+   STRIPE_SECRET_KEY=...
+   ```
 
-- **Backend (BaaS)**
-  - **Supabase** for:
-    - **Database:** PostgreSQL (Products, Orders, Reviews, Profiles)
-    - **Auth:** Email/Password & Social Login
-    - **Storage:** Supabase Storage (Built-in Global CDN)
-    - **Real-time:** Live updates for Orders & Reviews
+2. **Run Development Server**:
+   ```bash
+   npm install
+   npx next dev -p 3001
+   ```
 
-- **State Management**
-  - **React Context API** (`ProductContext`, `CartContext`)
-  - **SWR** (optional/legacy use)
+3. **Build for Production**:
+   ```bash
+   npm run build
+   npm start
+   ```
 
-## 📦 System Architecture
-For a detailed breakdown of the database schema, storage policies, and workflows, please refer to the **[System Architecture Document](/.gemini/antigravity/brain/c3d500fc-7bb3-41a8-b5f6-f79dc99759f9/system_architecture.md)**.
+## 📂 Key Directory Structure
+- `src/app`: App Router pages (Server Components).
+- `src/components`: Reusable UI components.
+- `src/contexts`: Global state (Cart, Wishlist).
+- `src/lib`: Supabase and Stripe clients.
+- `src/types`: TypeScript interfaces (`Product`, `Order`, etc.).
 
-## 🚀 Key Features
-
-### ✅ Admin Panel
-- **Product Management:** Upload images to Cloud, Add/Edit/Delete products.
-- **Order Management:** Real-time incoming orders dashboard.
-- **Review System:** Moderate user reviews.
-- **Error Logs:** Real-time tracking of client-side errors.
-
-### ✅ Customer Experience
-- **Smart Checkout:** Address management, Coupons, Multiple Payment Methods (UPI, Card, COD).
-- **Performance:** Optimized image loading via CDN.
-- **User Accounts:** Order history and Profile management.
-
-## 📱 Responsive Design
-
-The platform is fully responsive with optimized views for:
-- Mobile devices
-- Tablets
-- Desktop computers
-
-## 🔄 State Management
-
-- SWR for server state
-- React Context for client state
-- Optimistic updates for better UX
-- Cached data management
-
-## 🌐 API Routes
-
-- `/api/auth/*` - Authentication endpoints
-- `/api/products/*` - Product management
-- `/api/payment/*` - Payment processing
-- `/api/delivery/*` - Delivery status
-- `/api/search/*` - Search functionality
-
-## 🧪 Development Features
-
-- TypeScript for type safety
-- ESLint for code quality
-- Modern JavaScript features
-- Hot module replacement
-- Fast refresh in development
-
-## 📈 Performance Optimization
-
-- Image optimization
-- Code splitting
-- Route pre-fetching
-- Static page generation where possible
-- API route optimization
-
-## 🔜 Future Enhancements
-
-- [ ] Enhanced admin dashboard
-- [ ] Advanced analytics
-- [ ] Multiple language support
-- [ ] Advanced search filters
-- [ ] Customer reviews system
-- [ ] Social media integration
-- [ ] Bulk product management
-- [ ] Advanced inventory tracking
-- [ ] Email marketing integration
-
-## 📄 License
-
-This project is licensed under the ISC License.
-
-## 👥 Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
-
-## 📞 Support
-
-For support, please email [support@nplusone.com](mailto:support@nplusone.com) or open an issue in the GitHub repository. 
+---
+*Documentation updated on Jan 5, 2026.*

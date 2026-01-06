@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import CategoryGrid from './home/CategoryGrid';
-import CollectionSlider from './home/CollectionSlider';
 import DiscountBanner from './home/DiscountBanner';
 import RecommendedProducts from './home/RecommendedProducts';
 import SectionTitle from './home/SectionTitle';
@@ -16,43 +15,35 @@ import {
   shoppingGreetings
 } from '@/data/mockData';
 
-const CategoryCards = () => {
+import Image from 'next/image';
+
+
+interface CategoryCardsProps {
+  categories?: any[];
+  collections?: any[];
+  banner?: any;
+  recommended?: any[];
+}
+
+const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections, banner: cmsBanner, recommended: cmsRecommended }: CategoryCardsProps) => {
   const [showPopup, setShowPopup] = useState(false);
   const [greetingIndex, setGreetingIndex] = useState(0);
   const [userName, setUserName] = useState("");
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [hasViewedProducts, setHasViewedProducts] = useState(false);
 
-  // CMS Content State
-  const [categoriesData, setCategoriesData] = useState(categories);
-  const [collectionsData, setCollectionsData] = useState(collectionItems);
-  const [bannerData, setBannerData] = useState({
+  // Use props if available, otherwise fallback to mock data
+  const categoriesData = cmsCategories || categories;
+  const collectionsData = cmsCollections || collectionItems;
+  const bannerData = cmsBanner || {
     image: "/images/Discount-2.png",
     link: "/sales",
     alt: "Special Discount Offers"
-  });
-  // For recommended products, we'll stick to mock data for now unless CMS provides full product objects
-  // Implementing full product fetch from IDs is out of scope for this quick task unless requested. 
-  // We'll use the static recommendedProducts list but allow it to be overriden if CMS sends matching structure.
-  const [recommendedData, setRecommendedData] = useState(recommendedProducts);
+  };
+  const recommendedData = cmsRecommended || recommendedProducts;
 
   useEffect(() => {
-    // Fetch CMS Content
-    const fetchContent = async () => {
-      try {
-        const res = await fetch('/api/admin/content');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.categories) setCategoriesData(data.categories);
-          if (data.collections) setCollectionsData(data.collections);
-          if (data.banner) setBannerData(data.banner);
-          if (data.recommended && Array.isArray(data.recommended)) setRecommendedData(data.recommended);
-        }
-      } catch (error) {
-        console.error('Failed to fetch CMS content:', error);
-      }
-    };
-    fetchContent();
+    // Fetch logic removed - passed as props
 
     // This would check for user data from login system
     const loggedInUserName = localStorage.getItem('user_logged_in_name');
@@ -102,22 +93,24 @@ const CategoryCards = () => {
 
 
         {/* NPlusOne Category Banner */}
-        <div className="w-full mb-8 mt-12">
-          <img
+        <div className="w-full mb-8 mt-12 relative">
+          <Image
             src="/images/categories/NPlusOne.png"
             alt="NPlusOne Collection"
+            width={1200}
+            height={600}
             className="w-full h-auto object-cover rounded-lg"
+            priority
           />
         </div>
 
-        {/* Explore Collection Title */}
-        <SectionTitle title="Explore Collection" />
-
-        {/* Collection Slider */}
-        <CollectionSlider collectionItems={collectionsData} />
-
-        {/* Recommended Products Section */}
-        <RecommendedProducts products={recommendedData} />
+        {/* Recently Viewed Products Section */}
+        {hasViewedProducts && recentlyViewed.length > 0 && (
+          <RecommendedProducts
+            products={recentlyViewed}
+            title="Recently Viewed"
+          />
+        )}
       </div>
 
       {/* Popup Message */}

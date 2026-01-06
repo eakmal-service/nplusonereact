@@ -35,7 +35,7 @@ const ProductContext = createContext<ProductContextType>({
 // Provider component
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch products from Supabase
   const refreshProducts = async () => {
@@ -47,58 +47,75 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Import local additional products
-      const { additionalProducts } = await import('@/data/additionalProducts');
-
       if (error) {
         console.error('Error fetching products:', error);
-        // Even if DB fails, show local products
-        // We'll need to map them to the same structure or ensure they adhere to Product type
-        // additionalProducts is already Product[], so we can just use it if DB fails
-        setProducts(additionalProducts);
+        setProducts([]);
       } else if (data) {
+        // Helper to convert DB path to Cloudinary URL
+        const getImageUrl = (path: string | null) => {
+          if (!path) return '';
+          if (path.startsWith('http')) return path; // Already absolute (e.g. from Admin upload)
+
+          // Convert legacy relative path: "products/D3P_1/1.webp" -> Cloudinary URL
+          // Cloudinary Public ID structure from script: "nplus/products/D3P_1/1"
+          const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
+          // Added f_auto,q_auto for optimization
+          return `https://res.cloudinary.com/douy8ujry/image/upload/f_auto,q_auto/nplus/${nameWithoutExt}`;
+        };
+
         // Map Supabase data to our Product interface
         const mappedProducts: Product[] = data.map((p: any) => ({
           id: p.id,
           title: p.title,
+          brandName: p.brand_name,
+          styleCode: p.style_code,
           category: p.category,
           subcategory: p.subcategory,
           price: p.price,
           salePrice: p.sale_price,
           discount: p.discount ? `${p.discount}` : undefined,
-          image: p.image_url,
-          imageUrl: p.image_url,
-          imageUrls: p.images || [],
+          image: getImageUrl(p.image_url),
+          imageUrl: getImageUrl(p.image_url),
+          imageUrls: (p.image_urls || p.images || []).map((img: string) => getImageUrl(img)),
           link: `/product/${p.id}`,
-          alt: p.title,
+          alt: p.alt_text || p.title,
           stockQuantity: p.stock_quantity,
           viewCount: p.view_count || 0,
           cartCount: 0,
-          purchaseCount: 0,
+          purchaseCount: p.purchase_count || 0,
           dateAdded: p.created_at,
           status: p.status,
           description: p.description,
           sizes: p.sizes || [],
-          colorName: p.color_name,
-          fit: p.fit,
-          occasion: p.occasion,
-          fabric: p.material || p.fabric,
-          colorOptions: p.color_name ? [{ name: p.color_name, code: '#000000' }] : [],
+          colorName: p.main_color || p.color_name,
+          // Mapping Detailed Specs
+          fabric: p.fabric || p.material,
+          workType: p.work_type,
+          neckline: p.neck_design || p.neckline,
+          sleeveDetail: p.sleeve_length || p.sleeve_detail,
+          fit: p.fit_type || p.fit,
+          bottomType: p.bottom_type,
+          setContains: p.set_contains,
+          productWeight: p.product_weight,
+          washCare: p.wash_care,
+          searchKeywords: Array.isArray(p.search_keywords) ? p.search_keywords.join(', ') : p.search_keywords,
+
+          sizeSkus: p.sku_map,
+          hsnCode: p.hsn_code,
+          gstPercentage: p.gst_percentage,
+
+          colorOptions: p.color_options || (p.main_color ? [{ name: p.main_color, code: '#000000' }] : []),
           isAdminUploaded: true,
-          // Detailed attributes mapping
+
+          // Legacy/Fallback mapping
           topStyle: p.top_style,
-          neckline: p.neckline,
           topPattern: p.top_pattern,
-          sleeveDetail: p.sleeve_detail,
           fabricDupattaStole: p.fabric_dupatta_stole,
           liningFabric: p.lining_fabric,
-          washCare: p.wash_care,
           bottomFabric: p.bottom_fabric,
         }));
 
-        // Merge with additional products
-        // We put additional products first or last? Let's put them first to be seen easily.
-        setProducts([...additionalProducts, ...mappedProducts]);
+        setProducts(mappedProducts);
       }
     } catch (err) {
       console.error('Unexpected error fetching products:', err);
@@ -108,6 +125,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   useEffect(() => {
+    // Automatically fetch products on mount to ensure data availability
     refreshProducts();
 
     // Real-time subscription
@@ -283,12 +301,33 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Get active products by category
   const getActiveProductsByCategory = (category: string) => {
-    const normalizedCategory = category.toLowerCase().replace(' ', '-');
+    // Normalize input category: "suit set" -> "suit-set"
+    const normalizedCategory = category.toLowerCase().trim().replace(/\s+/g, '-');
+
+    // Debug filtering
+    const allMatches = products.filter(p => {
+      const prodCat = (p.category || '').toLowerCase().trim().replace(/\s+/g, '-');
+      return prodCat === normalizedCategory;
+    });
+
+    console.log(`[ProductContext] Filtering for category: "${category}" (norm: "${normalizedCategory}")`);
+    console.log(`[ProductContext] Total products in context: ${products.length}`);
+    console.log(`[ProductContext] Found ${allMatches.length} matches by name BEFORE status checks.`);
+
     return products.filter(product => {
-      const prodCat = (product.category || '').toLowerCase().replace(' ', '-');
-      return prodCat === normalizedCategory &&
-        product.status === 'active' &&
-        (product.stockQuantity || 0) > 0;
+      const prodCat = (product.category || '').toLowerCase().trim().replace(/\s+/g, '-');
+      // Relaxed matching - check if it INCLUDES the category to handle "Women's Suit Set" matching "Suit Set" if needed
+      // But for now, strict equality on normalized string is best.
+
+      const isMatch = prodCat === normalizedCategory;
+      const isActive = product.status === 'active';
+      const hasStock = (product.stockQuantity || 0) > 0;
+
+      if (isMatch && (!isActive || !hasStock)) {
+        console.log(`[ProductContext] Skipped "${product.title}" - Status: ${product.status}, Stock: ${product.stockQuantity}`);
+      }
+
+      return isMatch && isActive && hasStock;
     });
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash';
+import Image from 'next/image';
 
 interface SearchResult {
   id: number;
@@ -85,11 +86,14 @@ const SearchBar = () => {
               onClick={() => handleResultClick(result.id)}
               className="flex items-center p-4 cursor-pointer hover:bg-gray-50"
             >
-              <img
-                src={result.image}
-                alt={result.title}
-                className="w-12 h-12 object-cover rounded"
-              />
+              <div className="relative w-12 h-12 flex-shrink-0">
+                <Image
+                  src={result.image || '/placeholder.png'}
+                  alt={result.title}
+                  fill
+                  className="object-cover rounded"
+                />
+              </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-900">{result.title}</p>
                 <p className="text-sm text-gray-500">${result.price}</p>

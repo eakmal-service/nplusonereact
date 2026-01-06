@@ -1,3 +1,4 @@
+
 import { Category, CollectionItem, Product } from "../types";
 
 // Categories for the main category grid
@@ -6,7 +7,7 @@ export const categories: Category[] = [
     id: 1,
     name: 'SUIT SET',
     title: 'SUIT SET',
-    image: '/images/categories/17670080328782.webp',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670080328782',
     link: '/suit-set',
     alt: 'Suit Sets'
   },
@@ -14,7 +15,7 @@ export const categories: Category[] = [
     id: 2,
     name: 'WESTERN WEAR',
     title: 'WESTERN WEAR',
-    image: '/images/categories/17670078826332.webp',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670078826332',
     link: '/western-dress',
     alt: 'Western Wear'
   },
@@ -22,7 +23,7 @@ export const categories: Category[] = [
     id: 3,
     name: 'CO-ORD SET',
     title: 'CO-ORD SET',
-    image: '/images/categories/17670079057732.webp',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670079057732',
     link: '/co-ord-sets',
     alt: 'Co-ord Sets'
   },
@@ -30,7 +31,7 @@ export const categories: Category[] = [
     id: 4,
     name: 'KID\'S WEAR',
     title: 'KID\'S WEAR',
-    image: '/images/categories/dcnyqzoexbfsn6tpfmth.webp', // Using old Lehenga image as placeholder
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/dcnyqzoexbfsn6tpfmth',
     link: '/kids',
     alt: 'Kid\'s Wear'
   },
@@ -38,7 +39,7 @@ export const categories: Category[] = [
     id: 5,
     name: 'INDO-WESTERN',
     title: 'INDO-WESTERN',
-    image: '/images/categories/17670078974382.webp',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670078974382',
     link: '/indi-western',
     alt: 'Indo-Western'
   },
@@ -46,7 +47,7 @@ export const categories: Category[] = [
     id: 6,
     name: 'MEN\'S WEAR',
     title: 'MEN\'S WEAR',
-    image: '/images/categories/tvpdbbyrrjmzjrxuwlwe.webp', // Using old Unstitched image as placeholder
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/tvpdbbyrrjmzjrxuwlwe',
     link: '/mens',
     alt: 'Men\'s Collection'
   }
@@ -56,49 +57,49 @@ export const categories: Category[] = [
 export const collectionItems: CollectionItem[] = [
   {
     title: 'DENIMWEAR',
-    image: '/images/collections/1.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/1',
     link: '/night-bottoms',
     alt: 'Denimwear Collection'
   },
   {
     title: 'INDIGO CHRONICALS',
-    image: '/images/collections/2.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/2',
     link: '/tshirt-top',
     alt: 'Indigo Chronicals Collection'
   },
   {
     title: 'EVERYDAY GRACE',
-    image: '/images/collections/3.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/3',
     link: '/co-ord-sets',
     alt: 'Everyday Grace Collection'
   },
   {
     title: 'ONLINE EXCLUSIVE',
-    image: '/images/collections/4.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/4',
     link: '/tshirt-top',
     alt: 'Online Exclusive Collection'
   },
   {
     title: 'Short Kurta',
-    image: '/images/collections/5.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/5',
     link: '/co-ord-sets',
     alt: 'Short Kurta Collection'
   },
   {
     title: 'CASUAL CHIC',
-    image: '/images/collections/6.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/6',
     link: '/tshirt-top',
     alt: 'Casual Chic Collection'
   },
   {
     title: 'SUMMER VIBES',
-    image: '/images/collections/7.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/7',
     link: '/tshirt-top',
     alt: 'Summer Vibes Collection'
   },
   {
     title: 'ETHNIC FUSION',
-    image: '/images/collections/8.png',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/collections/8',
     link: '/co-ord-sets',
     alt: 'Ethnic Fusion Collection'
   }
@@ -120,4 +121,4 @@ export const shoppingGreetings = [
   "Find your perfect fashion match today!",
   "Exclusive deals waiting in your cart!",
   "Shop the season's hottest trends now!"
-]; 
+];

@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Product } from '@/types';
 import QuickViewModal from '../QuickViewModal';
 import SectionTitle from './SectionTitle';
 
 interface RecommendedProductsProps {
   products: Product[];
+  title?: string;
 }
 
-const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = [] }) => {
+const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = [], title = "Recommended for you" }) => {
   const [recommendedIndex, setRecommendedIndex] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -81,7 +83,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
 
   return (
     <div className="mt-10 md:mt-16 mb-8">
-      <SectionTitle title="Recommended for you" />
+      <SectionTitle title={title} />
 
       <div className="overflow-hidden relative px-6 sm:px-8 md:px-10 mt-0">
         {/* Prev button */}
@@ -107,11 +109,15 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   )}
                   <div className="relative overflow-hidden">
                     <div className="w-full">
-                      <img
-                        src={product.image}
-                        alt={product.alt}
+                      <Image
+                        src={product.image || '/placeholder.png'}
+                        alt={product.alt || product.title}
+                        width={0}
+                        height={0}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
                         role="image"
+                        style={{ width: '100%', height: 'auto' }}
                       />
                     </div>
                     <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>

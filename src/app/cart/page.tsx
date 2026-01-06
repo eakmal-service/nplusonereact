@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 
@@ -74,11 +75,12 @@ const CartPage = () => {
                       className="grid grid-cols-1 md:grid-cols-12 items-center py-6 border-b border-gray-800"
                     >
                       <div className="col-span-6 flex items-center mb-4 md:mb-0">
-                        <div className="w-20 h-20 flex-shrink-0 bg-gray-800 rounded overflow-hidden mr-4">
-                          <img
-                            src={item.product.image}
+                        <div className="w-20 h-20 flex-shrink-0 bg-gray-800 rounded overflow-hidden mr-4 relative">
+                          <Image
+                            src={item.product.image || '/placeholder.png'}
                             alt={item.product.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                         <div>

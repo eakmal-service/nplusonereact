@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 
 interface CartPopupProps {
@@ -10,13 +11,13 @@ interface CartPopupProps {
 
 const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
   const { cart, getCartTotal } = useCart();
-  
+
   if (!isVisible) return null;
-  
+
   return (
     <div className="absolute top-full right-0 mt-2 w-80 bg-gray-900 shadow-xl rounded-md p-4 z-50">
       <h3 className="text-white font-bold text-lg mb-4">Shopping Cart</h3>
-      
+
       {cart.length === 0 ? (
         <p className="text-gray-400 mb-4">Your cart is empty.</p>
       ) : (
@@ -24,11 +25,12 @@ const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
           <div className="max-h-60 overflow-y-auto mb-4">
             {cart.map((item) => (
               <div key={`${item.product.id}-${item.size}`} className="flex items-center py-2 border-b border-gray-800">
-                <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-800 rounded overflow-hidden">
-                  <img 
-                    src={item.product.image} 
-                    alt={item.product.title} 
-                    className="w-full h-full object-cover"
+                <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-800 rounded overflow-hidden relative">
+                  <Image
+                    src={item.product.image || '/placeholder.png'}
+                    alt={item.product.title}
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex-grow">
@@ -47,12 +49,12 @@ const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
               </div>
             ))}
           </div>
-          
+
           <div className="flex justify-between items-center mb-4 border-t border-gray-800 pt-3">
             <span className="text-white">Subtotal:</span>
             <span className="text-white font-bold">₹{getCartTotal().toFixed(2)}</span>
           </div>
-          
+
           <div className="flex flex-col gap-2">
             <Link href="/cart" className="bg-white text-black py-2 px-4 rounded text-center text-sm font-medium hover:bg-gray-200 transition">
               View Cart

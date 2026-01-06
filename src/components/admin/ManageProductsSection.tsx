@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const categories = [
   'All Categories',
@@ -20,13 +21,24 @@ interface ManageProductsSectionProps {
 }
 
 const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit }) => {
-  const { products, removeProduct, updateStatus } = useProducts();
+  const { products, removeProduct, updateStatus, refreshProducts } = useProducts();
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All Categories');
   const [status, setStatus] = useState('All Statuses');
   const [stock, setStock] = useState('All Products');
   const [sort, setSort] = useState('Newest First');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch products on mount for Admin Panel
+  React.useEffect(() => {
+    const fetchAdminProducts = async () => {
+      setIsLoading(true);
+      await refreshProducts();
+      setIsLoading(false);
+    };
+    fetchAdminProducts();
+  }, []);
 
   // Helper to parse price string to number
   const parsePrice = (priceStr: string | undefined): number => {
@@ -90,7 +102,12 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                 <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">{p.discount} OFF</span>
               )}
               {p.imageUrl ? (
-                <img src={p.imageUrl} alt={p.title} className="h-full object-contain" />
+                <Image
+                  src={p.imageUrl || '/placeholder.png'}
+                  alt={p.title}
+                  fill
+                  className="object-contain"
+                />
               ) : (
                 <span className="text-gray-400 text-2xl">🖼️</span>
               )}

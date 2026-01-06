@@ -111,10 +111,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                       className={`mb-4 border-2 w-full ${selectedImage === index ? 'border-silver' : 'border-gray-700'}`}
                       onClick={() => setSelectedImage(index)}
                     >
-                      <img
-                        src={thumb.url}
+                      <Image
+                        src={thumb.url || '/placeholder.png'}
                         alt={`${thumb.alt || product.title} thumbnail ${index + 1}`}
-                        className="w-full h-auto cursor-pointer"
+                        width={100}
+                        height={100}
+                        className="w-full h-auto cursor-pointer object-cover"
                       />
                     </div>
                   ))}
@@ -129,10 +131,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                   </div>
                 )}
                 <div className="relative overflow-hidden cursor-zoom-in" style={{ height: '400px' }}>
-                  <img
-                    src={thumbnails[selectedImage].url}
+                  <Image
+                    src={thumbnails[selectedImage].url || '/placeholder.png'}
                     alt={thumbnails[selectedImage].alt || product.title}
-                    className="absolute inset-0 w-full h-full object-contain transition-transform duration-300 hover:scale-150"
+                    fill
+                    className="object-contain transition-transform duration-300 hover:scale-150"
                   />
                 </div>
 
@@ -188,8 +191,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                   <button
                     key={index}
                     className={`w-9 h-9 flex items-center justify-center border rounded-full ${selectedColor === color.name
-                        ? 'border-silver'
-                        : 'border-gray-600 hover:border-silver'
+                      ? 'border-silver'
+                      : 'border-gray-600 hover:border-silver'
                       }`}
                     style={{ backgroundColor: color.code }}
                     onClick={() => setSelectedColor(color.name)}
@@ -213,8 +216,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                   <button
                     key={size}
                     className={`w-9 h-9 flex items-center justify-center border rounded-full ${selectedSize === size
-                        ? 'border-silver bg-silver text-black'
-                        : 'border-gray-600 text-white hover:border-silver'
+                      ? 'border-silver bg-silver text-black'
+                      : 'border-gray-600 text-white hover:border-silver'
                       }`}
                     onClick={() => setSelectedSize(size)}
                   >

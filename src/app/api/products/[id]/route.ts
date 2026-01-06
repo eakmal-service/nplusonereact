@@ -35,6 +35,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const enrichedProduct = {
       id: product.id,
       title: product.title,
+      brandName: product.brand_name,
+      styleCode: product.style_code,
       image: product.image_url,
       imageUrl: product.image_url,
       price: product.price,
@@ -45,7 +47,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       stockQuantity: product.stock_quantity,
       status: product.status,
       link: `/product/${product.id}`,
-      alt: product.title,
+      alt: product.alt_text || product.title,
       description: product.description,
 
       // UI-specific fields
@@ -55,22 +57,36 @@ export async function GET(request: Request, { params }: { params: { id: string }
       browserCompatible: true,
 
       // Product details
-      topStyle: 'Flared', // Default or fetch if exists
-      topPattern: 'Embroidered',
-      bottomFabric: product.material || 'Cotton',
-      fabricDupattaStole: product.material || 'Cotton',
-      neckline: 'Round Neck',
-      sleeveDetail: '3/4 Sleeves',
-      liningFabric: 'Cotton',
-      fabric: product.material || 'Cotton',
-      washCare: 'Hand wash or machine wash in cold water. Do not bleach. Dry in shade. Medium iron. Do not dry clean.',
-      sizeChartHtml: product.size_chart_html, // Assuming this might be added later
+      fabric: product.fabric || product.material,
+      workType: product.work_type,
+      neckline: product.neck_design || product.neckline || 'Round Neck',
+      sleeveDetail: product.sleeve_length || product.sleeve_detail || '3/4 Sleeves',
+      fit: product.fit_type || product.fit || 'Straight',
+      bottomType: product.bottom_type,
+      setContains: product.set_contains,
+      productWeight: product.product_weight,
+      washCare: product.wash_care,
+      searchKeywords: Array.isArray(product.search_keywords) ? product.search_keywords.join(', ') : product.search_keywords,
+
+      hsnCode: product.hsn_code,
+      gstPercentage: product.gst_percentage,
+      sizeSkus: product.sku_map,
+
+      topStyle: product.top_style || 'Flared',
+      topPattern: product.top_pattern || 'Embroidered',
+      bottomFabric: product.bottom_fabric || 'Rayon',
+      fabricDupattaStole: product.fabric_dupatta_stole || 'Chanderi',
+      liningFabric: product.lining_fabric || 'Cotton',
+      sizeChartHtml: product.size_chart_html,
 
       // Size and images
       availableSizes: product.sizes || ['S', 'M', 'L', 'XL', 'XXL'],
-      images: (product.images || []).map((url: string) => ({ url, alt: product.title })),
-      thumbnails: (product.images || []).map((url: string) => ({ url, alt: product.title })),
-      imageUrls: product.images || [product.image_url]
+      sizes: product.sizes || ['S', 'M', 'L', 'XL', 'XXL'],
+      colorOptions: product.color_options || [],
+
+      images: (product.image_urls || product.images || []).map((url: string) => ({ url, alt: product.title })),
+      thumbnails: (product.image_urls || product.images || []).map((url: string) => ({ url, alt: product.title })),
+      imageUrls: product.image_urls || product.images || [product.image_url]
     };
 
     return NextResponse.json(enrichedProduct);

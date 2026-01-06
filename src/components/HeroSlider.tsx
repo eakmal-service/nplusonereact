@@ -1,29 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
+import Image from 'next/image';
 
-const HeroSlider = () => {
+const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
   const desktopVideoRef = useRef<HTMLVideoElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
-  const [heroContent, setHeroContent] = React.useState<any>(null);
+  // const [heroContent, setHeroContent] = React.useState<any>(null); // Removed state
 
-  // Fetch Hero Content
-  useEffect(() => {
-    const fetchContent = async () => {
-      try {
-        const res = await fetch('/api/admin/content');
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.hero && data.hero.length > 0) {
-            setHeroContent(data.hero[0]); // Use first slide
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch hero content", error);
-      }
-    };
-    fetchContent();
-  }, []);
+  // Fetch logic removed - content passed as prop
 
   // Function to notify parent that slider is visible (keeping existing logic)
   useEffect(() => {
@@ -58,10 +43,39 @@ const HeroSlider = () => {
   }, [heroContent]); // Re-run when content loads
 
   // Default fallback if no content loaded yet or error
-  const desktopSrc = heroContent?.videoSrc || heroContent?.desktopSrc || "/hero-slider-desktop/Desktop.mp4";
-  const mobileSrc = heroContent?.mobileVideoSrc || heroContent?.mobileSrc || "/hero-slider-mobile/mobile-video.mp4";
-  const isDesktopVideo = heroContent ? !!heroContent.videoSrc : true; // Default to video
-  const isMobileVideo = heroContent ? !!heroContent.mobileVideoSrc : true; // Default to video
+  // Adding .mp4 extension for better browser compatibility
+  // Helper to optimize Cloudinary URLs
+  const optimizeUrl = (url: string) => {
+    if (url.includes('cloudinary.com') && !url.includes('f_auto,q_auto')) {
+      return url.replace('/upload/', '/upload/f_auto,q_auto/');
+    }
+    return url;
+  };
+
+  const defaultDesktop = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1/nplus/hero-slider-desktop/Desktop.mp4");
+  const defaultMobile = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1/nplus/hero-slider-mobile/mobile-video.mp4");
+
+  // Helper to ensure valid URL or fallback
+  const getValidSrc = (src: string | undefined, defaultSrc: string) => {
+    const validSrc = (src && src.trim().length > 0) ? src : defaultSrc;
+    return optimizeUrl(validSrc);
+  };
+
+  const desktopSrc = getValidSrc(heroContent?.videoSrc || heroContent?.desktopSrc, defaultDesktop);
+  const mobileSrc = getValidSrc(heroContent?.mobileVideoSrc || heroContent?.mobileSrc, defaultMobile);
+
+  // Determine if content is video or image
+  // If we fell back to default, it is a video (defaultDesktop ends in .mp4)
+  // If explicit videoSrc is present and valid, it's a video
+  // If explicit desktopSrc is present and valid (and no videoSrc), it's an image
+  const isVideoSrcFn = (vid: string | undefined, img: string | undefined) => {
+    if (vid && vid.trim().length > 0) return true;
+    if (img && img.trim().length > 0) return false;
+    return true; // Default to video if nothing is provided
+  }
+
+  const isDesktopVideo = isVideoSrcFn(heroContent?.videoSrc, heroContent?.desktopSrc);
+  const isMobileVideo = isVideoSrcFn(heroContent?.mobileVideoSrc, heroContent?.mobileSrc);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
@@ -85,11 +99,18 @@ const HeroSlider = () => {
               muted
               loop
               playsInline
+              preload="auto"
               src={desktopSrc}
               key={desktopSrc} // Force re-render on src change
             />
           ) : (
-            <img src={desktopSrc} className="absolute top-0 left-0 w-full h-full object-cover" alt="Hero" />
+            <Image
+              src={desktopSrc}
+              alt="Hero"
+              fill
+              className="object-cover"
+              priority
+            />
           )}
         </div>
 
@@ -103,11 +124,18 @@ const HeroSlider = () => {
               muted
               loop
               playsInline
+              preload="auto"
               src={mobileSrc}
               key={mobileSrc} // Force re-render on src change
             />
           ) : (
-            <img src={mobileSrc} className="absolute top-0 left-0 w-full h-full object-cover" alt="Hero" />
+            <Image
+              src={mobileSrc}
+              alt="Hero"
+              fill
+              className="object-cover"
+              priority
+            />
           )}
         </div>
       </div>
