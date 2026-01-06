@@ -217,6 +217,7 @@ const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: ini
                         {filteredAndSortedProducts.map((product, index) => (
                             <ProductCard
                                 key={product.id}
+                                priority={index < 6}
                                 product={{
                                     id: product.id,
                                     title: product.title,
