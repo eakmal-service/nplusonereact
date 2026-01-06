@@ -6,6 +6,10 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabaseServer';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
+import { Database } from '@/types/supabase';
+
+type Order = Database['public']['Tables']['orders']['Row'];
+
 interface Props {
     params: { id: string };
 }
@@ -15,8 +19,8 @@ async function getOrder(id: string) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: order, error } = await supabase
-        .from('orders')
+    const { data: order, error } = await (supabase
+        .from('orders') as any)
         .select('*')
         .eq('id', id)
         .single();
@@ -35,8 +39,8 @@ async function getOrder(id: string) {
     // If order.user_id is null (Guest Checkout), anyone with the UUID link can view it (Standard Pattern)
 
     // Fetch Items
-    const { data: items } = await supabase
-        .from('order_items')
+    const { data: items } = await (supabase
+        .from('order_items') as any)
         .select('product_name, quantity, price_per_unit, selected_size, image_url')
         .eq('order_id', id);
 
