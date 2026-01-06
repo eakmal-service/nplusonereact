@@ -7,7 +7,11 @@ import { ShoppingBagIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export const revalidate = 0; // Ensure dynamic data on every load
 
-async function getOrders() {
+import { Database } from '@/types/supabase';
+
+type Order = Database['public']['Tables']['orders']['Row'];
+
+async function getOrders(): Promise<Order[]> {
     const supabase = createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
