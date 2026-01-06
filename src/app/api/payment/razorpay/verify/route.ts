@@ -50,29 +50,29 @@ export async function POST(req: Request) {
                     // Critical: Payment verified but DB update failed. Log this!
                 } else if (updatedOrder) {
                     // 2. Fetch Order Items for Inventory Update & Email
-                    const { data: orderItems } = await supabase
-                        .from('order_items')
+                    const { data: orderItems } = await (supabase
+                        .from('order_items') as any)
                         .select('*, product:products(title, price, image_url)')
                         .eq('order_id', order_db_id);
 
                     if (orderItems && orderItems.length > 0) {
                         // 3. Update Inventory (Decrement Stock)
-                        for (const item of orderItems) {
+                        for (const item of (orderItems as any[])) {
                             if (item.product_id) {
                                 // RPC call would be safer for atomic updates, but for now standard update:
                                 // "Safety: Ensure stock doesn't go below zero."
                                 // Fetch current stock first
-                                const { data: currentProduct } = await supabase
-                                    .from('products')
+                                const { data: currentProduct } = await (supabase
+                                    .from('products') as any)
                                     .select('stock_quantity')
                                     .eq('id', item.product_id)
                                     .single();
 
                                 if (currentProduct && currentProduct.stock_quantity !== null) {
                                     const newStock = Math.max(0, currentProduct.stock_quantity - item.quantity);
-                                    await supabase
-                                        .from('products')
-                                        .update({ stock_quantity: newStock } as any)
+                                    await (supabase
+                                        .from('products') as any)
+                                        .update({ stock_quantity: newStock })
                                         .eq('id', item.product_id);
                                 }
                             }
