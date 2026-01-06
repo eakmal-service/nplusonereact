@@ -26,6 +26,13 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Helper function to safely parse price (handles both string and number)
+const parsePrice = (price: string | number | undefined): number => {
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.]/g, ''));
+  return 0;
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
@@ -92,8 +99,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => {
-      // Remove currency symbols and convert to number
-      const price = parseFloat(item.product.price.replace(/[^0-9.]/g, ''));
+      const price = parsePrice(item.product.price);
       return total + (price * item.quantity);
     }, 0);
   };

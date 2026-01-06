@@ -9,6 +9,13 @@ interface CartPopupProps {
   isVisible: boolean;
 }
 
+// Helper to parse price (handles both string and number)
+const parsePrice = (price: string | number | undefined): number => {
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.]/g, ''));
+  return 0;
+};
+
 const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
   const { cart, getCartTotal } = useCart();
 
@@ -40,9 +47,9 @@ const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
                     <span>Qty: {item.quantity}</span>
                   </div>
                   <div className="flex justify-between items-center mt-1">
-                    <span className="text-white text-sm">{item.product.price}</span>
+                    <span className="text-white text-sm">₹{parsePrice(item.product.price)}</span>
                     <span className="text-white text-xs">
-                      Subtotal: ₹{(parseFloat(item.product.price.replace(/[^0-9.]/g, '')) * item.quantity).toFixed(2)}
+                      Subtotal: ₹{(parsePrice(item.product.price) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 </div>

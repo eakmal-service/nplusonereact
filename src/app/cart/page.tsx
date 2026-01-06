@@ -6,6 +6,13 @@ import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 
+// Helper to parse price (handles both string and number)
+const parsePrice = (price: string | number | undefined): number => {
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.]/g, ''));
+  return 0;
+};
+
 const CartPage = () => {
   const {
     cart,
@@ -66,7 +73,7 @@ const CartPage = () => {
                 </div>
 
                 {cart.map((item) => {
-                  const itemPrice = parseFloat(item.product.price.replace(/[^0-9.]/g, ''));
+                  const itemPrice = parsePrice(item.product.price);
                   const itemTotal = itemPrice * item.quantity;
 
                   return (
@@ -100,7 +107,7 @@ const CartPage = () => {
                       </div>
 
                       <div className="col-span-2 text-center text-white mb-4 md:mb-0">
-                        {item.product.price}
+                        ₹{itemPrice}
                       </div>
 
                       <div className="col-span-2 flex justify-center mb-4 md:mb-0">
