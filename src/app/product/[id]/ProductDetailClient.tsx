@@ -153,6 +153,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                                                 src={thumb.url}
                                                 alt={`${thumb.alt || product?.title} thumbnail ${index + 1}`}
                                                 fill
+                                                sizes="80px"
                                                 className="object-cover"
                                             />
                                         </div>
@@ -187,6 +188,9 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                                         src={thumbnails && thumbnails[selectedImage] ? thumbnails[selectedImage].url : '/placeholder.png'}
                                         alt={(thumbnails && thumbnails[selectedImage] ? thumbnails[selectedImage].alt : product?.title) || ''}
                                         fill
+                                        priority={selectedImage === 0}
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        quality={90}
                                         className="object-contain transition-transform duration-300 group-hover:scale-150"
                                     />
                                 </div>
