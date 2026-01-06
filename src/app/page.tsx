@@ -14,20 +14,20 @@ export default async function HomePage() {
 
   // 1. Fetch CMS Content (Hero, Categories, Collections, Banners)
   // We fetch 'website_content' where section_id IN (...)
-  const { data: contentData } = await supabase
-    .from('website_content')
+  const { data: contentData } = await (supabase
+    .from('website_content') as any)
     .select('section_id, content')
     .in('section_id', ['home_hero', 'categories', 'collections', 'home_banner', 'favorites'])
 
   // Parse content into a map
   const contentMap: Record<string, any> = {};
-  contentData?.forEach(item => {
+  (contentData as any[])?.forEach((item: any) => {
     contentMap[item.section_id] = item.content;
   });
 
   // 2. Fetch New Arrivals (Latest 8 active products)
-  const { data: productsData } = await supabase
-    .from('products')
+  const { data: productsData } = await (supabase
+    .from('products') as any)
     .select('*')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
@@ -37,9 +37,12 @@ export default async function HomePage() {
   // Note: We use a helper similar to ProductContext but adapted for Server
   const getImageUrl = (path: string | null) => {
     if (!path) return '';
+    // If absolute URL, return as is
     if (path.startsWith('http')) return path;
-    const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
-    return `https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`;
+    // If already starts with /, return as is
+    if (path.startsWith('/')) return path;
+    // Otherwise, assume relative path in public folder and prepend /
+    return `/${path}`;
   };
 
   const newArrivals: Product[] = (productsData || []).map((p: any) => ({
