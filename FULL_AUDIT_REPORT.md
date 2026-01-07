@@ -1,113 +1,110 @@
-
-# Technical Audit Report: nplusonefashion
+# Technical Audit Report: NPlusOne Fashion
 
 ## 1. Project Identity & Architecture
 - **Framework:** Next.js 13.5.4 (App Router enabled).
-- **Runtime Environment:** Node.js (v22.x+ recommended based on devDependencies).
-- **Language:** TypeScript (v5.8.3) & JavaScript mixed.
+- **Runtime Environment:** Node.js v20 (VPS).
+- **Language:** TypeScript (v5.x) & JavaScript.
 - **Styling:** Tailwind CSS (v3.4.1) with PostCSS and Autoprefixer.
-- **UI Libraries:** Headless UI (`@headlessui/react`), Heroicons.
-- **State Management:** React Context (`AuthContext`, `ProductContext`, `CartContext`), SWR (`swr`) for data fetching.
+- **State Management:** React Context (`AuthContext`, `CartContext`), SWR (`swr`) for data fetching.
 
 ### **Configuration Analysis (`next.config.js`)**
-- **Output Mode:** `standalone` (Optimized for Docker/VPS deployment).
-| Item                  | Category | Status        | Notes                                                 |
-| :-------------------- | :------- | :------------ | :---------------------------------------------------- |
-| 4. Image Optimization | Global   | **RESOLVED**  | All images served via Cloudinary `f_auto,q_auto`.     |
-| 5. Build Stability    | Infra    | **RESOLVED**  | Fixed Type Error in CMS. Build passes.                |
-  - **Security Warning:** `dangerouslyAllowSVG: true` is enabled.
-  - **CSP:** Strict Content Security Policy configured for images (`default-src 'self'`).
+- **Output Mode:** `standalone` (Optimized for Docker/VPS micro-server deployment).
+- **Image Optimization:** 
+  - `sharp` installed for production optimization.
+  - Cloudinary `f_auto,q_auto` used for all remote assets.
+  - Remote patterns configured for Supabase and Cloudinary.
+- **Security:** Strict CSP headers configured in `next.config.js`.
 
 ---
 
-## 2. Frontend Structure (`src/app`)
- The project follows the **Next.js App Router** convention.
+## 2. Infrastructure & Deployment (VPS)
+**Target:** Hostinger VPS (Ubuntu 24.04).
+**Domain:** `nplusonefashion.com`.
 
-### **Main Routes**
-- `/` - **Home Page** (Client Component, contains `HeroSlider`, `CategoryCards`).
-- `/products/[id]` - **Product Details** (Dynamic Route).
-- `/cart` - **Shopping Cart**.
-- `/checkout` - **Checkout Flow**.
-- `/account` - **User Profile/Orders** (Protected).
-- `/admin` - **Admin Dashboard** (Protected).
-- **Category Pages:** `/suit-set`, `/western-dress`, `/co-ord-sets`, `/kids`, `/indi-western`, `/mens`, `/night-bottoms`, `/tshirt-top`.
+### **Deployment Pipeline (`scripts/deploy-ssh.js`)**
+A custom Node.js script handles the entire CI/CD process via SSH:
+1.  **Transport:** Connects to VPS via `ssh2`.
+2.  **Environment:** Automatically parses local `.env.local` and injects it into the server environment.
+3.  **Build Process:**
+    - Pulls latest code from GitHub (`eakmal-service/Nplus-final-`).
+    - Installs dependencies (including `sharp`).
+    - Runs `npm run build`.
+    - **Crucial Step:** Copies `.env.local` to `.next/standalone/.env.local` for runtime access.
+4.  **Process Management:** Uses **PM2** (`nplusone`) to manage the `node server.js` process on port 3000.
+5.  **Reverse Proxy:** **Caddy** handles SSL (HTTPS) and proxies port 443 -> 3000.
+
+---
+
+## 3. Frontend Structure (`src/app`)
+The project follows the **Next.js App Router** convention.
+
+### **Key Routes**
+- `/` - **Home Page** (HeroSlider, CategoryCards, NewArrivals).
+- `/products/[id]` - **Product Details** (Dynamic, SEO optimized).
+- `/cart` - **Shopping Cart** (Local storage persistence).
+- `/checkout` - **Checkout Flow** (Guest/Login modes, COD & Razorpay).
+- `/account` - **User Dashboard** (Orders, Tracking, Profile).
+- `/admin` - **Admin Panel** (Protected, Force-Dynamic Rendering).
+  - `/admin/dashboard`: Stats & Quick Actions.
+  - `/admin/products`: CRUD operations.
+  - `/admin/orders`: Order management.
 
 ### **Component Architecture**
-- **Client vs Server:** Heavy reliance on `"use client"` directives (e.g., `ProductContext`, `AuthContext`). Most data fetching happens client-side via `useEffect` in Contexts or SWR, rather than Server Components fetching data directly.
-- **Images:** Uses `next/image` extensively. 
-  - **Migration Note:** Migration to **Cloudinary** is complete. `next.config.js` is correctly configured to optimize these images.
+- **Interactive Layers:** Heavy usage of Client Components (`"use client"`) for UI interactivity (Filtering, Search, Modals).
+- **Admin Fixes:** Admin pages implemented with `export const dynamic = 'force-dynamic'` to bypass static generation build errors on the VPS.
 
 ---
 
-## 3. Backend & Database Schema
+## 4. Backend & Database Schema
 **Database Provider:** Supabase (PostgreSQL).
-**Schema Definition:** Based on `supabase_schema.sql` and `admin_setup.sql`.
+**Admin Access:** `src/lib/supabaseAdmin.ts` uses `SUPABASE_SERVICE_ROLE_KEY` for privileged operations (Order creation, user management).
 
 ### **Core Tables**
-1. **`profiles`**
-   - Links to `auth.users` (1:1).
-   - Stores: `full_name`, `email`, `phone_number`, `is_admin`, `address` details.
-2. **`products`**
-   - **Rich Schema:** `title`, `price`, `sale_price`, `stock_quantity`.
-   - **Categories:** `category` (ENUM), `subcategory`.
-   - **Details:** `fabric`, `neck_design`, `fit_type`, `hsn_code`, `gst_percentage`.
-   - **Media:** `image_url` (thumbnail), `image_urls` (gallery), `video_url`.
-   - **Logic:** `is_admin_uploaded`, `status` ('active'/'draft').
-3. **`orders` & `order_items`**
-   - Tracks `subtotal`, `tax`, `shipping`, `total_amount`, `status`, `payment_status`.
-   - Links to `profiles` and `products`.
-4. **`cart_items`**
-   - Server-side cart storage linking `user_id` and `product_id`.
-5. **`content_banners` (CMS)**
-   - Manages dynamic sliders/banners (`image_url_desktop`, `image_url_mobile`).
-6. **`coupons`**
-   - Discount logic (`PERCENTAGE`, `FIXED_AMOUNT`), `min_order_value`, `usage_limit`.
+1.  **`profiles`**: User data linked to Auth ID.
+2.  **`products`**: Rich product catalog with categories, deep details, and Cloudinary image URLs.
+3.  **`orders`**: 
+    - Statuses: `PENDING`, `PAID`, `SHIPPED`, `DELIVERED`, `CANCELLED`.
+    - Payment Methods: `COD`, `RAZORPAY`.
+4.  **`order_items`**: Line items linked to orders.
+5.  **`coupons`**: Discount engine (`FIXED` or `PERCENTAGE`).
 
 ---
 
-## 4. Auth & Security
-**Authentication Provider:** Supabase Auth (GoTrue).
+## 5. Payments & Checkout
+**Primary Provider:** **Razorpay**.
 
 ### **Implementation Details**
-- **Context:** `src/contexts/AuthContext.tsx` manages global auth state (`user`, `session`).
-- **Methods:** Supports Password Login (`signInWithPassword`) and OTP Login (`signInWithOtp`).
-- **Middleware:** **PRESENT (`src/middleware.ts`).**
-  - **Protection:** Protects `/admin` and `/account` routes server-side using `@supabase/ssr`.
-  - **Logic:** Intercepts requests, checks for valid session cookie, verifies admin status for `/admin` routes, and redirects unauthorized users before page load.
-- **RLS (Row Level Security):** Enabled on all tables.
-  - **Profiles:** Users view/edit own. Admins view all.
-  - **Products:** Public read. Admins write.
-  - **Orders:** Users view own. Admins view all.
+- **Checkout Flow (`/checkout`):**
+  - **COD:** Direct order creation with status `PENDING`.
+  - **Online:** 
+    1. Creates internal order.
+    2. Calls `/api/payment/razorpay` to generate Razorpay Order ID.
+    3. Opens Razorpay Modal.
+    4. Verifies signature via `/api/payment/razorpay/verify`.
+    5. Updates order status to `PAID` upon success.
+- **Validation:** Robust form validation includes phone number checks and required fields.
+- **Debugging:** Detailed error logging implemented in `handlePlaceOrder` to catch payment initialization failures.
 
 ---
 
-## 5. Storage Logic
-**Migration Status:** Transitioned from Supabase Storage -> **Cloudinary**.
+## 6. Features & Enhancements (New)
+### **Order History 2.0 (`/account/orders`)**
+- **Search:** Filter orders by Order ID or Product Name.
+- **Time Filters:** Last 30 days, 3 months, 6 months, 2024, etc.
+- **Tracking:** "Track Order" button opens a simplified tracking modal (Integration ready).
 
-### **Current Implementation**
-### **Current Implementation**
-- **Upload Utility:** `src/utils/uploadService.ts` handles uploads cleanly via internal API proxy.
-  - **Dynamic Organization:** Automatically sorts uploads into `nplusone-fashion/Products images/{Category}/{SubCategory}/{HSN}`.
-  - **Asset Types:** Segregated folders for `Hero`, `My Fav`, `Category`, and `Banner` images.
-- **Refactoring:** The legacy "patched" `supabaseUpload.ts` has been removed. All admin components now import the dedicated `uploadService`.
-- **Migration Status:**
-  - **Database Migration:** Completed. 100% of products (18/18) migrated from local `public/` paths to secure Cloudinary URLs.
-  - **Folder Structure:** Organized hierarchy implemented (`nplusone-fashion/`).
-- **Frontend Display:**
-  - **Optimization:** `src/utils/imageUtils.ts` (`optimizeCloudinaryUrl`) ensures all images are served with `f_auto,q_auto`.
-  - **Performance:** `HeroSlider`, `CategoryCards`, and `NewArrivals` use `priority` and `eager` loading strategies.
+### **Recently Viewed Products**
+- **Logic:** Persisted in `localStorage`.
+- **UI:** Horizontal scroll layout, fixed alignment issue (now `justify-start`) to ensure proper rendering for low item counts.
 
 ---
 
-## 6. Integrations & External Services
-- **Stripe:** Payment processing (`@stripe/stripe-js`).
-- **Nodemailer:** Email services (likely for order confirmation/OTP).
-- **Cloudinary:** Media asset management and optimization.
-- **Hostinger:** Deployment target (VPS).
-
-## 7. Critical Action Items (Status Update)
-1.  **Next Config Update:** **[RESOLVED]** `res.cloudinary.com` added to `next.config.js`.
-2.  **Middleware:** **[RESOLVED]** `src/middleware.ts` created and active.
-3.  **Refactoring:** **[RESOLVED]** Upload service refactored with strict typing and folder structure.
-4.  **Cloudinary Migration:** **[COMPLETED]** All local product images migrated to Cloudinary.
-5.  **Image Optimization:** **[COMPLETED]** LCP optimizations (`eager`, `priority`) applied to Home Page.
+## 7. Critical Status Log
+| Component | Issue | Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **Deployment** | CI/CD | **STABLE** | SSH Script + Standalone Build working perfectly. |
+| **API** | Env Vars | **FIXED** | `.env.local` explicitly copied to standalone dir. |
+| **Images** | Optimization | **FIXED** | `sharp` installed on VPS. |
+| **Checkout** | Error Handling | **IMPROVED** | Granular logging added for debugging. |
+| **Admin** | Build Error | **FIXED** | Applied `force-dynamic` to Admin pages. |
+| **UI** | Layouts | **POLISHED** | Recently Viewed alignment fixed. |

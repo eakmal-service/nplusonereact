@@ -73,7 +73,7 @@ const InvoiceTemplate: React.FC<InvoiceProps> = ({ order, items, user }) => {
             {/* 1. Header with Logo & Title */}
             <div className="flex justify-between items-center mb-0">
                 {/* Logo */}
-                <div className="relative w-[600px] h-[200px] flex-shrink-0">
+                <div className="relative w-[300px] h-[120px] flex-shrink-0">
                     <Image
                         src="/images/NPlusOne logo.svg"
                         alt="NPlusOne Fashion"
