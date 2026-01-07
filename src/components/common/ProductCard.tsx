@@ -7,7 +7,7 @@ import QuickViewModal from '../QuickViewModal';
 import { convertToTypeProduct } from '@/utils/productUtils';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { toast } from 'react-hot-toast'; // Assuming react-hot-toast or similar is used, or console fallback
+// import { toast } from 'react-hot-toast'; // Removed to fix build error
 
 interface ProductCardProps {
   product: {
@@ -69,7 +69,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
     // Optional: visual feedback
     // toast.success('Added to cart'); 
-    alert("Added to Cart!"); // Simple fallback if toast not setup
+    alert("Added to Cart!"); // Simple fallback
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
