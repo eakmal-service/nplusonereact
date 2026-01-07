@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import QuickViewModal from '../QuickViewModal';
 import { convertToTypeProduct } from '@/utils/productUtils';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { toast } from 'react-hot-toast'; // Assuming react-hot-toast or similar is used, or console fallback
 
 interface ProductCardProps {
   product: {
@@ -30,9 +33,13 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
   const [showQuickView, setShowQuickView] = useState(false);
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   // Only render if product is active
   if (product.status !== 'active') return null;
+
+  const isInWishlistState = isInWishlist(product.id);
 
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,6 +49,39 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
   const closeQuickView = () => {
     setShowQuickView(false);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (product.stockQuantity === 0) return;
+
+    // Default to first size or 'One Size' if not specified
+    // Ideally open QuickView if sizes are needed, but for direct add:
+    const defaultSize = product.availableSizes && product.availableSizes.length > 0
+      ? product.availableSizes[0]
+      : 'One Size';
+
+    // Convert to full Product type for Context
+    const fullProduct = convertToTypeProduct(product);
+    addToCart(fullProduct, 1, defaultSize);
+
+    // Optional: visual feedback
+    // toast.success('Added to cart'); 
+    alert("Added to Cart!"); // Simple fallback if toast not setup
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const fullProduct = convertToTypeProduct(product);
+    if (isInWishlistState) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(fullProduct);
+    }
   };
 
   // Helper to render stars
@@ -55,7 +95,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
         {[...Array(fullStars)].map((_, i) => (
           <span key={`full-${i}`} className="text-yellow-400 text-sm">★</span>
         ))}
-        {hasHalfStar && <span className="text-yellow-400 text-sm">☆</span>} {/* Simplified half star representation or use SVG if preferred, here using standard char for simplicity or would need SVG */}
+        {hasHalfStar && <span className="text-yellow-400 text-sm">☆</span>}
         {[...Array(emptyStars)].map((_, i) => (
           <span key={`empty-${i}`} className="text-gray-600 text-sm">★</span>
         ))}
@@ -127,6 +167,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
           {/* Add to Cart Button */}
           <div className="mt-3">
             <button
+              onClick={handleAddToCart}
               className="w-full bg-silver hover:bg-gray-300 text-black font-medium py-2 rounded transition"
               disabled={product.stockQuantity === 0}
             >
@@ -136,12 +177,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
           {/* Wishlist Button */}
           <button
-            className="mt-2 w-full border border-gray-600 hover:border-silver text-silver hover:text-white font-medium py-2 rounded transition flex items-center justify-center"
+            onClick={handleWishlist}
+            className={`mt-2 w-full border ${isInWishlistState ? 'border-red-500 text-red-500' : 'border-gray-600 text-silver'} hover:border-silver hover:text-white font-medium py-2 rounded transition flex items-center justify-center`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-1 ${isInWishlistState ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-            Add to Wishlist
+            {isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
           </button>
         </div>
       </div>
