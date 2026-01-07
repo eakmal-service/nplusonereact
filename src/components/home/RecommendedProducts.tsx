@@ -98,7 +98,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
           </svg>
         </button>
 
-        <div className="flex justify-center sm:justify-between items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
+        <div className="flex justify-center sm:justify-start items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
           {getCurrentRecommended().map((product) => (
             <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
               <div className="relative">

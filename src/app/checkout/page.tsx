@@ -213,8 +213,12 @@ const CheckoutPage = () => {
             }
 
         } catch (err: any) {
-            console.error('Checkout Error:', err);
-            setError(err.message || "Something went wrong while placing your order.");
+            console.error('Checkout Error Full:', err);
+            console.error('Error Name:', err.name);
+            console.error('Error Message:', err.message);
+            if (err.stack) console.error('Error Stack:', err.stack);
+
+            setError(`Error: ${err.name} - ${err.message}` || "Something went wrong while placing your order.");
             setIsProcessing(false);
             window.scrollTo(0, 0);
         }
