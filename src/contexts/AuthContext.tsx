@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<{ error: any }>;
+  signup: (email: string, password: string, options: { data: { phone?: string; full_name?: string } }) => Promise<{ data: any; error: any }>;
   loginWithOtp: (email: string) => Promise<{ error: any }>;
   verifyOtp: (email: string, token: string, type: 'email' | 'recovery') => Promise<{ error: any; data: { session: Session | null; user: User | null } }>;
   logout: () => Promise<void>;
@@ -115,11 +116,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
+  const signup = async (email: string, password: string, options: { data: { phone?: string; full_name?: string } }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options,
+    });
+    return { data, error };
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       session,
       login,
+      signup,
       loginWithOtp,
       verifyOtp,
       logout,

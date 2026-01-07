@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 import { Product } from '@/types';
 import QuickViewModal from '../QuickViewModal';
 import SectionTitle from './SectionTitle';
@@ -110,11 +111,13 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   <div className="relative overflow-hidden">
                     <div className="w-full">
                       <Image
-                        src={product.image || '/placeholder.png'}
+                        src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
                         alt={product.alt || product.title}
                         width={0}
                         height={0}
                         priority={true}
+                        loading="eager"
+                        quality={90}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
                         role="image"

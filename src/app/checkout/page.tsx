@@ -7,19 +7,23 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import Script from 'next/script'; // Import Script
+
 const CheckoutPage = () => {
+    // ... context hooks ...
     const { cart, getDiscountedTotal, clearCart, getCartTotal, discount, applyCoupon, removeCoupon, couponCode } = useCart();
     const { user, login } = useAuth();
     const router = useRouter();
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [orderPlaced, setOrderPlaced] = useState(false);
-    const [termsAccepted, setTermsAccepted] = useState(false); // New State for T&C
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false); // Track script load
 
     // Checkout Steps State
     const [checkoutMode, setCheckoutMode] = useState<'guest' | 'login' | 'logged_in'>('guest');
-    const [paymentMethod, setPaymentMethod] = useState('card'); // card, upi, netbanking, wallet, cod
+    const [paymentMethod, setPaymentMethod] = useState('card');
 
     // Coupon State
     const [localCoupon, setLocalCoupon] = useState('');
@@ -29,27 +33,31 @@ const CheckoutPage = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phoneNumber: '', // Added Phone Number
         address: '',
         city: '',
         zip: '',
-        // Card Details
         cardNumber: '',
         expiry: '',
         cvc: '',
-        // UPI
         upiId: '',
     });
 
     useEffect(() => {
         if (user) {
             setCheckoutMode('logged_in');
-            setFormData(prev => ({ ...prev, email: user.email || '', name: user.user_metadata?.full_name || '' }));
+            setFormData(prev => ({
+                ...prev,
+                email: user.email || '',
+                name: user.user_metadata?.full_name || '',
+                phoneNumber: user.phone || '' // Prefill if available
+            }));
         }
     }, [user]);
 
     // Validations
     const isFormValid = () => {
-        const basic = formData.name && formData.email && formData.address && formData.city && formData.zip;
+        const basic = formData.name && formData.email && formData.phoneNumber && formData.address && formData.city && formData.zip;
         if (!basic) return false;
 
         if (paymentMethod === 'card') {
@@ -58,7 +66,6 @@ const CheckoutPage = () => {
         if (paymentMethod === 'upi') {
             return formData.upiId;
         }
-        if (paymentMethod === 'test') return true;
         return true;
     };
 
@@ -83,16 +90,6 @@ const CheckoutPage = () => {
         removeCoupon();
         setLocalCoupon('');
         setCouponMessage(null);
-    };
-
-    const loadRazorpay = () => {
-        return new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.body.appendChild(script);
-        });
     };
 
     const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -135,13 +132,15 @@ const CheckoutPage = () => {
                 throw new Error(result.error || 'Failed to initialize order');
             }
 
-            const orderDbId = result.orderId; // Assume API returns the created order ID
+            const orderDbId = result.orderId;
 
             // 2. Handle Razorpay Payment
             if (paymentMethod !== 'cod') {
-                const isLoaded = await loadRazorpay();
-                if (!isLoaded) {
-                    throw new Error('Razorpay SDK failed to load. Are you online?');
+                if (!isRazorpayLoaded) {
+                    // Fallback check
+                    if (typeof (window as any).Razorpay === 'undefined') {
+                        throw new Error('Payment gateway failed to load. Please refresh and try again.');
+                    }
                 }
 
                 // Create Razorpay Order via API
@@ -159,7 +158,7 @@ const CheckoutPage = () => {
                 if (!rpRes.ok) throw new Error(rpOrder.error || 'Razorpay order creation failed');
 
                 const options = {
-                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'test_key_id', // Add this to .env.local
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'test_key_id',
                     amount: rpOrder.amount,
                     currency: rpOrder.currency,
                     name: "NPlusOne Fashion",
@@ -199,7 +198,6 @@ const CheckoutPage = () => {
                     modal: {
                         ondismiss: function () {
                             setIsProcessing(false);
-                            // Optionally handle cancellation (order remains PENDING)
                         }
                     }
                 };
@@ -233,9 +231,17 @@ const CheckoutPage = () => {
 
     return (
         <div className="bg-black min-h-screen text-white">
+            <Script
+                id="razorpay-checkout-js"
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                onLoad={() => setIsRazorpayLoaded(true)}
+                onError={() => setError('Failed to load payment gateway. Please check your connection.')}
+            />
+
             <div className="h-16"></div>
 
             <div className="container mx-auto px-4 py-12 max-w-6xl">
+                {/* ... rest of the JSX remains similar, just make sure to keep the closing tags ... */}
                 <h1 className="text-3xl font-bold mb-8 text-silver">Checkout</h1>
 
                 {error && (
@@ -244,7 +250,19 @@ const CheckoutPage = () => {
                     </div>
                 )}
 
+                {/* Main Content Layout */}
                 <div className="flex flex-col lg:flex-row gap-12">
+                    {/* ... Content ... */}
+
+                    {/* Re-rendering the content to ensure it matches the original structure minus the layout changes I might duplicate if not careful. 
+                       Since this is a partial replace, I need to be careful. 
+                       Actually, the tool asks for "ReplacementContent" for a range.
+                       I have selected a LARGE range (StartLine 10 to EndLine 589 basically covers everything).
+                       I will paste the FULL file content with my changes to be safe, assuming I have the full content in my context.
+                       
+                       Wait, I should only replace the TOP part and the BOTTOM part if I can, but since the logic is intertwined (state, handlePlaceOrder), I'll do a full rewrite of the component body to be safe and clean.
+                    */}
+
                     {/* Left Column */}
                     <div className="lg:w-2/3 space-y-8">
 
@@ -298,7 +316,7 @@ const CheckoutPage = () => {
                                             placeholder="John Doe"
                                         />
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="col-span-2 md:col-span-1">
                                         <label className="block text-gray-400 text-sm mb-2">Email Address *</label>
                                         <input
                                             name="email"
@@ -306,6 +324,16 @@ const CheckoutPage = () => {
                                             onChange={handleInputChange}
                                             className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
                                             placeholder="john@example.com"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-gray-400 text-sm mb-2">Phone Number *</label>
+                                        <input
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                            placeholder="+91 98765 43210"
                                         />
                                     </div>
                                     <div className="col-span-2">
@@ -351,7 +379,7 @@ const CheckoutPage = () => {
                                 </h2>
 
                                 <div className="flex flex-wrap gap-2 mb-6">
-                                    {['card', 'upi', 'netbanking', 'wallet', 'cod', 'test'].map((method) => (
+                                    {['card', 'upi', 'netbanking', 'wallet', 'cod'].map((method) => (
                                         <button
                                             key={method}
                                             onClick={() => setPaymentMethod(method)}
@@ -365,7 +393,6 @@ const CheckoutPage = () => {
                                             {method === 'netbanking' && 'Net Banking'}
                                             {method === 'wallet' && 'Wallets'}
                                             {method === 'cod' && 'Cash on Delivery'}
-                                            {method === 'test' && '🧪 Test Payment'}
                                         </button>
                                     ))}
                                 </div>
@@ -440,13 +467,6 @@ const CheckoutPage = () => {
                                     {paymentMethod === 'cod' && (
                                         <div className="text-gray-400 text-center py-4">
                                             <p>Pay with cash upon delivery. Additional charges may apply.</p>
-                                        </div>
-                                    )}
-
-                                    {paymentMethod === 'test' && (
-                                        <div className="text-yellow-400 text-center py-4 bg-yellow-900/20 rounded border border-yellow-800">
-                                            <p className="font-bold">🧪 Test Payment Mode</p>
-                                            <p className="text-sm opacity-80 mt-1">Order will be placed immediately for tracking system verification. No real payment required.</p>
                                         </div>
                                     )}
                                 </div>

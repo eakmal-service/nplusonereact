@@ -18,32 +18,27 @@ export async function POST(req: Request) {
             .from('orders')
             .insert([
                 {
-                    customer_name: customer.name,
-                    customer_email: customer.email,
-                    shipping_address: customer,
+                    // user_id: Should ideally be passed if logged in. For now, guest orders might have null user_id?
+                    // But schema has user_id REFERENCES profiles. If guest, maybe null is allowed?
+                    // Schema: user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL
+                    // It IS nullable.
+
                     total_amount: total,
-                    status: 'Pending', // Initial status
-                    // New Tracking Fields
-                    payment_info: {
-                        method: 'COD', // Defaulting to COD for now as per previous flow, or pass from body
-                        status: 'pending'
+                    subtotal: total, // Simplified for now, or calculate from items/tax
+                    tax_total: 0, // Placeholder or passed from frontend
+                    shipping_cost: 0, // Placeholder
+                    status: 'PENDING',
+                    payment_status: status === 'paid' ? 'PAID' : 'PENDING', // Map frontend status to DB enum/text
+                    payment_method: 'COD', // Default or passed
+                    shipping_address: {
+                        fullName: customer.name,
+                        email: customer.email,
+                        ...customer
                     },
-                    courier_info: {
-                        name: 'Not Assigned',
-                        tracking_number: null,
-                        tracking_url: null
-                    },
-                    tracking_events: [
-                        {
-                            status: "placed",
-                            label: "Order Placed",
-                            message: "Your order has been placed successfully",
-                            location: "Online Store",
-                            timestamp: new Date().toISOString(),
-                            source: "system"
-                        }
-                    ],
-                    order_date: new Date().toISOString()
+                    // Remove non-existent fields:
+                    // customer_name, customer_email (inside shipping_address now)
+                    // payment_info (use payment_status/method)
+                    // courier_info, tracking_events (not in schema)
                 }
             ])
             .select()
@@ -59,12 +54,15 @@ export async function POST(req: Request) {
         // 2. Create Order Items
         const orderItems = items.map((item: any) => ({
             order_id: orderId,
-            product_id: item.product.id?.toString(),
-            product_title: item.product.title,
+            product_id: item.product.id, // Ensure this is UUID
+            product_name: item.product.title, // Schema: product_name
             quantity: item.quantity,
-            price: parsePrice(item.product.salePrice || item.product.price),
-            size: item.size,
-            image_url: item.product.image || item.product.imageUrl
+            price_per_unit: parsePrice(item.product.salePrice || item.product.price), // Schema: price_per_unit
+            selected_size: item.size, // Schema: selected_size
+            selected_color: item.color || null, // Schema: selected_color
+            // image_url is NOT in default order_items schema provided in supabase_schema.sql?
+            // "151: CREATE TABLE public.order_items (... 155: product_name TEXT NOT NULL ...)"
+            // No image_url column in snippet.
         }));
 
         const { error: itemsError } = await supabaseAdmin

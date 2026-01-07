@@ -41,7 +41,16 @@ async function getOrder(id: string) {
     // Fetch Items
     const { data: items } = await (supabase
         .from('order_items') as any)
-        .select('product_name, quantity, price_per_unit, selected_size, image_url')
+        .select(`
+            product_name, 
+            quantity, 
+            price_per_unit, 
+            selected_size, 
+            selected_color, 
+            products (
+                image_url
+            )
+        `)
         .eq('order_id', id);
 
     return { order, items: items || [], user };
@@ -71,14 +80,8 @@ export default async function OrderConfirmationPage({ params }: Props) {
         ? JSON.parse(order.shipping_address)
         : order.shipping_address;
 
-    // Estimated Delivery: +5 to 7 days
-    const deliveryStart = new Date();
-    deliveryStart.setDate(deliveryStart.getDate() + 5);
-    const deliveryEnd = new Date();
-    deliveryEnd.setDate(deliveryEnd.getDate() + 7);
-
-    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-    const deliveryDateString = `${deliveryStart.toLocaleDateString('en-US', options)} - ${deliveryEnd.toLocaleDateString('en-US', options)}`;
+    // Estimated Delivery Text
+    const deliveryText = "Estimated Delivery within 7 days";
 
     return (
         <div className="min-h-screen bg-black text-white pt-24 pb-12">
@@ -112,12 +115,12 @@ export default async function OrderConfirmationPage({ params }: Props) {
                                 <span className="text-gray-400">Payment Status</span>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${order.payment_status === 'PAID' ? 'bg-green-900/50 text-green-400 border border-green-800' : 'bg-yellow-900/50 text-yellow-400 border border-yellow-800'
                                     }`}>
-                                    {order.payment_status?.toUpperCase() || 'PENDING'}
+                                    {order.payment_method?.toLowerCase() === 'cod' ? 'COD' : (order.payment_status?.toUpperCase() || 'PENDING')}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Estimated Delivery</span>
-                                <span className="text-white font-medium">{deliveryDateString}</span>
+                                <span className="text-white font-medium">{deliveryText}</span>
                             </div>
                         </div>
 
@@ -129,7 +132,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
                                     <div key={idx} className="flex gap-4">
                                         <div className="w-20 h-24 bg-gray-800 rounded overflow-hidden relative flex-shrink-0">
                                             <Image
-                                                src={item.image_url || '/placeholder.png'}
+                                                src={item.products?.image_url || '/placeholder.png'}
                                                 alt={item.product_name}
                                                 fill
                                                 className="object-cover"
@@ -137,7 +140,11 @@ export default async function OrderConfirmationPage({ params }: Props) {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-medium text-white line-clamp-2">{item.product_name}</h3>
-                                            <p className="text-sm text-gray-400 mt-1">Size: {item.selected_size} | Qty: {item.quantity}</p>
+                                            <div className="text-sm text-gray-400 mt-1 space-y-1">
+                                                <p>Size: {item.selected_size}</p>
+                                                {item.selected_color && <p>Color: {item.selected_color}</p>}
+                                                <p>Qty: {item.quantity}</p>
+                                            </div>
                                             <p className="text-sm font-semibold text-silver mt-2">₹{item.price_per_unit}</p>
                                         </div>
                                     </div>
@@ -180,8 +187,22 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
                         {/* Actions */}
                         <div className="space-y-3">
+                            <Link
+                                href={`/orders/${order.id}/invoice`}
+                                target="_blank"
+                                className="block w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 text-center py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10 9 9 9 8 9" />
+                                </svg>
+                                Download Invoice
+                            </Link>
                             <Link href="/account/orders" className="block w-full bg-gray-800 hover:bg-gray-700 text-white text-center py-3 rounded-lg font-medium transition-colors">
-                                Track Order
+                                Track My Orders
                             </Link>
                             <Link href="/" className="block w-full bg-white hover:bg-gray-200 text-black text-center py-3 rounded-lg font-bold transition-colors">
                                 Continue Shopping

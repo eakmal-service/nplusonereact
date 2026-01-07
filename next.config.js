@@ -25,7 +25,7 @@ const nextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src * data: blob:; media-src *; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com; frame-ancestors 'none';",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src * data: blob:; media-src *; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://lumberjack.razorpay.com https://api.razorpay.com; frame-src https://api.razorpay.com; frame-ancestors 'none';",
           },
         ],
       },

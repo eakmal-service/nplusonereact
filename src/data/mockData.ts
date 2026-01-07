@@ -7,7 +7,7 @@ export const categories: Category[] = [
     id: 1,
     name: 'SUIT SET',
     title: 'SUIT SET',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670080328782',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777428/nplusone-fashion/Category%20images/17670080328782.webp',
     link: '/suit-set',
     alt: 'Suit Sets'
   },
@@ -15,7 +15,7 @@ export const categories: Category[] = [
     id: 2,
     name: 'WESTERN WEAR',
     title: 'WESTERN WEAR',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670078826332',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777422/nplusone-fashion/Category%20images/17670078826332.webp',
     link: '/western-dress',
     alt: 'Western Wear'
   },
@@ -23,7 +23,7 @@ export const categories: Category[] = [
     id: 3,
     name: 'CO-ORD SET',
     title: 'CO-ORD SET',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670079057732',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777427/nplusone-fashion/Category%20images/17670079057732.webp',
     link: '/co-ord-sets',
     alt: 'Co-ord Sets'
   },
@@ -31,7 +31,7 @@ export const categories: Category[] = [
     id: 4,
     name: 'KID\'S WEAR',
     title: 'KID\'S WEAR',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/dcnyqzoexbfsn6tpfmth',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777429/nplusone-fashion/Category%20images/dcnyqzoexbfsn6tpfmth.webp',
     link: '/kids',
     alt: 'Kid\'s Wear'
   },
@@ -39,7 +39,7 @@ export const categories: Category[] = [
     id: 5,
     name: 'INDO-WESTERN',
     title: 'INDO-WESTERN',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/17670078974382',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777424/nplusone-fashion/Category%20images/17670078974382.webp',
     link: '/indi-western',
     alt: 'Indo-Western'
   },
@@ -47,7 +47,7 @@ export const categories: Category[] = [
     id: 6,
     name: 'MEN\'S WEAR',
     title: 'MEN\'S WEAR',
-    image: 'https://res.cloudinary.com/douy8ujry/image/upload/nplus/images/categories/tvpdbbyrrjmzjrxuwlwe',
+    image: 'https://res.cloudinary.com/douy8ujry/image/upload/v1767777430/nplusone-fashion/Category%20images/tvpdbbyrrjmzjrxuwlwe.webp',
     link: '/mens',
     alt: 'Men\'s Collection'
   }

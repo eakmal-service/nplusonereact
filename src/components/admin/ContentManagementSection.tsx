@@ -108,7 +108,7 @@ const ContentManagementSection = () => {
     const handleImageUpload = async (file: File): Promise<string | null> => {
         try {
             const path = `cms/${Date.now()}_${file.name}`;
-            const publicUrl = await uploadImage(file, 'product-images', path); // Using new 'product-images' bucket
+            const publicUrl = await uploadImage(file, { type: 'other' }, path); // Using new 'product-images' bucket
             return publicUrl;
         } catch (error) {
             console.error("Upload failed", error);

@@ -4,6 +4,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     UserIcon,
     ShoppingBagIcon,
@@ -19,7 +20,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { UserIcon as UserIconSolid } from '@heroicons/react/24/solid';
 
-const UserMenu = () => {
+interface UserMenuProps {
+    onLoginClick: () => void;
+}
+
+const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick }) => {
     const { user, logout } = useAuth();
     const router = useRouter();
 
@@ -28,20 +33,19 @@ const UserMenu = () => {
         router.push('/');
     };
 
-    const handleClick = () => {
-        if (!user) {
-            router.push('/login');
-        }
-    };
-
     if (!user) {
         return (
             <button
-                onClick={handleClick}
-                className="text-white hover:text-silver focus:outline-none"
+                onClick={onLoginClick}
+                className="text-white hover:text-silver focus:outline-none relative h-6 w-6"
                 aria-label="Login"
             >
-                <UserIcon className="h-6 w-6" />
+                <Image
+                    src="/icons/user-logged-out.png"
+                    alt="Login"
+                    fill
+                    className="object-contain invert"
+                />
             </button>
         );
     }
@@ -51,12 +55,13 @@ const UserMenu = () => {
 
     return (
         <Menu as="div" className="relative">
-            <Menu.Button className="flex items-center gap-2 text-white hover:text-silver focus:outline-none">
-                <span className="sr-only">Open user menu</span>
-                {/* Use Avatar if available, else Icon */}
-                <div className="bg-gray-800 rounded-full p-1">
-                    <UserIconSolid className="h-5 w-5 text-gray-400" />
-                </div>
+            <Menu.Button className="flex items-center gap-2 text-white hover:text-silver focus:outline-none relative h-6 w-6 border-none outline-none" aria-label="Open user menu">
+                <Image
+                    src="/icons/user-logged-in.png"
+                    alt="Account"
+                    fill
+                    className="object-contain invert"
+                />
             </Menu.Button>
 
             <Transition

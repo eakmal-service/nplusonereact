@@ -61,24 +61,21 @@ const Header = () => {
   // Cart and wishlist sections in desktop view
   const cartAndWishlistSection = (
     <div className="hidden xl:flex items-center space-x-4">
-      <button
-        onClick={openLoginModal}
-        className="text-white hover:text-silver"
-        aria-label="Account"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      </button>
+      <UserMenu onLoginClick={openLoginModal} />
 
       <Link
         href="/wishlist"
         className="text-white hover:text-silver relative"
       >
         <span className="sr-only">Wishlist</span>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
+        <div className="relative h-6 w-6">
+          <Image
+            src={pathname === '/wishlist' ? '/icons/wishlist-filled.png' : '/icons/wishlist-outline.png'}
+            alt="Wishlist"
+            fill
+            className="object-contain invert"
+          />
+        </div>
         {wishlist.length > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {wishlist.length}
@@ -93,9 +90,14 @@ const Header = () => {
       >
         <Link href="/cart" className="text-white hover:text-silver relative">
           <span className="sr-only">Cart</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
+          <div className="relative h-6 w-6">
+            <Image
+              src={pathname === '/cart' ? '/icons/cart-filled.png' : '/icons/cart-outline.png'}
+              alt="Cart"
+              fill
+              className="object-contain invert"
+            />
+          </div>
           {getCartCount() > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               {getCartCount()}
@@ -110,15 +112,9 @@ const Header = () => {
   // Replace the cart and wishlist section in mobile view
   const mobileCartAndWishlistSection = (
     <div className="flex space-x-4 mt-4 border-t border-gray-700 pt-4">
-      <button
-        onClick={openLoginModal}
-        className="text-white hover:text-silver"
-        aria-label="Account"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      </button>
+      <div className="flex items-center">
+        <UserMenu onLoginClick={openLoginModal} />
+      </div>
 
       <Link
         href="/wishlist"
@@ -126,9 +122,14 @@ const Header = () => {
         onClick={() => setMobileMenuOpen(false)}
       >
         <span className="sr-only">Wishlist</span>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
+        <div className="relative h-6 w-6">
+          <Image
+            src={pathname === '/wishlist' ? '/icons/wishlist-filled.png' : '/icons/wishlist-outline.png'}
+            alt="Wishlist"
+            fill
+            className="object-contain invert"
+          />
+        </div>
         {wishlist.length > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {wishlist.length}
@@ -142,9 +143,14 @@ const Header = () => {
         onClick={() => setMobileMenuOpen(false)}
       >
         <span className="sr-only">Cart</span>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
+        <div className="relative h-6 w-6">
+          <Image
+            src={pathname === '/cart' ? '/icons/cart-filled.png' : '/icons/cart-outline.png'}
+            alt="Cart"
+            fill
+            className="object-contain invert"
+          />
+        </div>
         {getCartCount() > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {getCartCount()}
@@ -169,7 +175,7 @@ const Header = () => {
               <Link href="/">
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 relative">
                   <Image
-                    src="/images/NPlusOne logo.svg"
+                    src="https://res.cloudinary.com/douy8ujry/image/upload/v1767777416/nplusone-fashion/Logo/logo.svg"
                     alt="NPlusOne Logo"
                     fill
                     className="object-contain"

@@ -1,66 +1,48 @@
-#!/usr/bin/env node
-
-require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase URL or Service Role Key');
+    process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function makeFirstUserAdmin() {
-    console.log('Looking for users to make admin...\n');
+async function makeAdmin(email) {
+    console.log(`Looking up user: ${email}`);
 
-    // Get all profiles
-    const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .limit(5);
+    // 1. Get User ID from Auth
+    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
 
-    if (error) {
-        console.error('Error:', error);
+    if (userError) {
+        console.error('Error fetching users:', userError);
         return;
     }
 
-    if (!profiles || profiles.length === 0) {
-        console.log('❌ No users found in profiles table!');
-        console.log('\n📝 You need to:');
-        console.log('1. Go to https://nplusonefashion.com/');
-        console.log('2. Click "Sign Up" and create an account');
-        console.log('3. Run this script again to make that user an admin');
-        process.exit(0);
+    const user = users.find(u => u.email === email);
+
+    if (!user) {
+        console.error('User not found!');
+        return;
     }
 
-    console.log('Found users:');
-    profiles.forEach((p, i) => {
-        console.log(`${i + 1}. ${p.email || 'No email'} - ${p.full_name || 'No name'} - Admin: ${p.is_admin || false}`);
-    });
+    console.log(`Found user ID: ${user.id}`);
 
-    // Make the first user admin
-    const firstUser = profiles[0];
-
-    if (firstUser.is_admin) {
-        console.log(`\n✅ User ${firstUser.email} is already an admin!`);
-        process.exit(0);
-    }
-
-    console.log(`\n📝 Making ${firstUser.email || 'first user'} an admin...`);
-
-    const { error: updateError } = await supabase
+    // 2. Update Profile
+    const { data, error } = await supabase
         .from('profiles')
         .update({ is_admin: true })
-        .eq('id', firstUser.id);
+        .eq('id', user.id)
+        .select();
 
-    if (updateError) {
-        console.error('❌ Error:', updateError);
+    if (error) {
+        console.error('Error updating profile:', error);
     } else {
-        console.log(`✅ Successfully made ${firstUser.email || 'user'} an admin!`);
-        console.log(`\nYou can now access the admin dashboard at:`);
-        console.log(`https://nplusonefashion.com/admin/dashboard`);
+        console.log('Successfully updated user to admin:', data);
     }
-
-    process.exit(0);
 }
 
-makeFirstUserAdmin().catch(console.error);
+makeAdmin('hanzalaq63@gmail.com');

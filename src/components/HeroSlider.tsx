@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 
 const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
   const desktopVideoRef = useRef<HTMLVideoElement>(null);
@@ -55,13 +56,13 @@ const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
     */
   };
 
-  const defaultDesktop = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1/nplus/hero-slider-desktop/Desktop.mp4");
-  const defaultMobile = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1/nplus/hero-slider-mobile/mobile-video.mp4");
+  const defaultDesktop = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1767777413/nplusone-fashion/Hero%20section%20images/Desktop.mp4");
+  const defaultMobile = optimizeUrl("https://res.cloudinary.com/douy8ujry/video/upload/v1767777415/nplusone-fashion/Hero%20section%20images/mobile-video.mp4");
 
   // Helper to ensure valid URL or fallback
   const getValidSrc = (src: string | undefined, defaultSrc: string) => {
     const validSrc = (src && src.trim().length > 0) ? src : defaultSrc;
-    return optimizeUrl(validSrc);
+    return optimizeCloudinaryUrl(validSrc); // Use helper from imageUtils
   };
 
   const desktopSrc = getValidSrc(heroContent?.videoSrc || heroContent?.desktopSrc, defaultDesktop);
@@ -112,7 +113,9 @@ const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
               alt="Hero"
               fill
               className="object-cover"
-              priority
+              priority={true}
+              loading="eager"
+              quality={90}
             />
           )}
         </div>
@@ -137,7 +140,9 @@ const HeroSlider = ({ heroContent }: { heroContent?: any }) => {
               alt="Hero"
               fill
               className="object-cover"
-              priority
+              priority={true}
+              loading="eager"
+              quality={90}
             />
           )}
         </div>

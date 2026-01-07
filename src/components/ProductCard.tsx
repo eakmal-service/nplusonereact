@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +17,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="relative aspect-square">
         {product.image ? (
           <Image
-            src={product.image}
+            src={optimizeCloudinaryUrl(product.image)}
             alt={product.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

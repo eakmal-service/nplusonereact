@@ -8,15 +8,16 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { login, loginWithOtp, verifyOtp, updateUserPassword } = useAuth(); // Removed 'resetPasswordForEmail' as we use OTP flow for reset
+  const { login, signup, loginWithOtp, verifyOtp, updateUserPassword } = useAuth(); // Removed 'resetPasswordForEmail' as we use OTP flow for reset
 
-  // Views: 'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'
-  const [view, setView] = useState<'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset'>('login');
+  // Views: 'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset' | 'signup'
+  const [view, setView] = useState<'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset' | 'signup'>('login');
 
   // Login State
   const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState(''); // New state for phone in signup
   const [rememberMe, setRememberMe] = useState(false);
 
   // Forgot Password State
@@ -44,6 +45,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setLoginMethod('password');
     setEmail('');
     setPassword('');
+    setPhone('');
     setOtp('');
     setNewPassword('');
     setConfirmPassword('');
@@ -97,9 +99,53 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         // If I came from 'login' (OTP method), I just close after verify.
         // If I came from 'forgot-email', I move to 'forgot-reset' after verify.
         // I will add `intent` state.
+        setIntent('login');
+        setView('forgot-otp');
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Attempt Sign Up
+      const { data, error } = await signup(email, password, {
+        data: {
+          phone: phone
+        }
+      });
+
+      if (error) {
+        // Check for specific "User already registered" error
+        if (error.message.includes('already registered') || error.message.includes('unique constraint') || error.status === 400 || error.status === 422) { // Supabase often returns 400/422 for existing user
+          // Refine error check if needed, but usually message is key.
+          if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('user already exists')) {
+            throw new Error("This email is already registered on NPlusOne Fashion");
+          }
+        }
+        throw error;
+      }
+
+      // Success - user might be auto-logged in or need email confirmation.
+      // If auto-confirmed is off, check data.user.confirmation_sent_at
+      if (data?.user) {
+        if (data.user.identities && data.user.identities.length === 0) {
+          // This case happens if email is taken but not confirmed? 
+          throw new Error("This email is already registered on NPlusOne Fashion");
+        }
+        alert("Account created successfully!");
+        handleClose();
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Sign up failed');
     } finally {
       setLoading(false);
     }
@@ -303,42 +349,75 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </>
         );
 
+      case 'signup':
+        return (
+          <>
+            <h2 className="text-2xl font-bold text-center mb-1 text-white -mt-6">CREATE ACCOUNT</h2>
+            <p className="text-center text-gray-300 text-sm mb-8">Sign up to get started</p>
+            {error && <p className="text-red-400 text-xs text-center mb-4">{error}</p>}
+            <form onSubmit={handleSignupSubmit}>
+              <div className="mb-6">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <input
+                  type="tel"
+                  placeholder="Phone"
+                  className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-black py-3 uppercase font-medium rounded hover:bg-gray-200 transition-colors disabled:opacity-70"
+              >
+                {loading ? 'Processing...' : 'SIGN UP'}
+              </button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setView('login')}
+                className="text-white text-sm hover:underline"
+              >
+                Already have an account? Sign In
+              </button>
+            </div>
+          </>
+        );
+
       case 'login':
       default:
         return (
           <>
-            <h2 className="text-2xl font-bold text-center mb-1 text-white -mt-6">SIGN IN/ SIGN UP</h2>
+            <h2 className="text-2xl font-bold text-center mb-1 text-white -mt-6">SIGN IN</h2>
             <p className="text-center text-gray-300 text-sm mb-8">
               {loginMethod === 'password' ? 'via Password' : 'via OTP'}
             </p>
 
             {error && <p className="text-red-400 text-xs text-center mb-4">{error}</p>}
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setLoading(true);
-              setError(null);
-              try {
-                if (loginMethod === 'password') {
-                  const { error } = await login(email, password);
-                  if (error) {
-                    // Special handling: if error indicates user not found, maybe show message "Account does not exist"
-                    throw error;
-                  }
-                  handleClose();
-                } else {
-                  // OTP Login
-                  const { error } = await loginWithOtp(email);
-                  if (error) throw error;
-                  setIntent('login');
-                  setView('forgot-otp');
-                }
-              } catch (err: any) {
-                setError(err.message || 'Authentication failed');
-              } finally {
-                setLoading(false);
-              }
-            }}>
+            <form onSubmit={handleLoginSubmit}>
               {/* Email Input */}
               <div className="mb-6">
                 <input
@@ -367,7 +446,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  <div className="text-right mt-1">
+                  <div className="flex justify-between mt-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -377,6 +456,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       className="text-xs text-gray-400 hover:text-white hover:underline"
                     >
                       Forgot Password?
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setView('signup')}
+                      className="text-xs text-white font-semibold hover:underline"
+                    >
+                      New User? Sign Up
                     </button>
                   </div>
                 </div>

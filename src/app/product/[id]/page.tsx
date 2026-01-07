@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabaseServer';
 import ProductDetailClient from './ProductDetailClient';
 import { Product } from '@/types';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 
 interface Props {
   params: { id: string };
@@ -26,12 +27,18 @@ async function getProduct(id: string): Promise<Product | null> {
     // Helper to convert DB path to URL
     const getImageUrl = (path: string | null) => {
       if (!path) return '';
-      // If absolute URL, return as is
-      if (path.startsWith('http')) return path;
-      // If already starts with /, return as is
-      if (path.startsWith('/')) return path;
-      // Otherwise, assume relative path in public folder and prepend /
-      return `/${path}`;
+      let url = path;
+      // If absolute URL, return as is (but optimized below)
+      if (!path.startsWith('http')) {
+        // If already starts with /, return as is
+        if (path.startsWith('/')) {
+          url = path;
+        } else {
+          // Otherwise, assume relative path in public folder and prepend /
+          url = `/${path}`;
+        }
+      }
+      return optimizeCloudinaryUrl(url);
     };
 
     // Map Supabase data to Product interface
@@ -96,9 +103,9 @@ async function getSimilarProducts(id: string, category: string): Promise<Product
   if (data) {
     const getImageUrl = (path: string | null) => {
       if (!path) return '';
-      if (path.startsWith('http')) return path;
+      if (path.startsWith('http')) return optimizeCloudinaryUrl(path);
       const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
-      return `https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`;
+      return optimizeCloudinaryUrl(`https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`);
     };
 
     return data.map((p: any) => ({
@@ -146,7 +153,7 @@ export async function generateMetadata(
       siteName: 'NPlusOne Fashion',
       images: [
         {
-          url: product.image || product.imageUrl || '',
+          url: optimizeCloudinaryUrl(product.image || product.imageUrl || ''),
           width: 800,
           height: 600,
           alt: product.alt || product.title,

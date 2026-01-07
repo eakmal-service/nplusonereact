@@ -14,6 +14,7 @@ import ProductReviews from '@/components/reviews/ProductReviews';
 import SizeChart from '@/components/product/SizeChart';
 
 import { addToRecentlyViewed } from '@/utils/recentlyViewed';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -104,17 +105,17 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
     // Create thumbnail array from product images
     const thumbnails = (product?.images && product.images.length > 0)
         ? product.images.map((img: { url: string; alt?: string }) => ({
-            url: img.url,
+            url: optimizeCloudinaryUrl(img.url),
             alt: img.alt || product.title || ''
         }))
         : (product?.thumbnails && product.thumbnails.length > 0)
             ? product.thumbnails
             : (product?.imageUrls && product.imageUrls.length > 0)
                 ? product.imageUrls.map((url: string) => ({
-                    url,
+                    url: optimizeCloudinaryUrl(url),
                     alt: product.alt || product.title || ''
                 }))
-                : [{ url: product?.image || product?.imageUrl || '/placeholder.png', alt: product?.title || '' }];
+                : [{ url: optimizeCloudinaryUrl(product?.image || product?.imageUrl) || '/placeholder.png', alt: product?.title || '' }];
 
     return (
         <div className="bg-black text-silver">
@@ -602,7 +603,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                             <div className="flex items-center mb-4">
                                 <div className="w-20 h-20 relative mr-4">
                                     <Image
-                                        src={product.image || (product.images && product.images[0]?.url) || '/placeholder.png'}
+                                        src={optimizeCloudinaryUrl(product.image || (product.images && product.images[0]?.url)) || '/placeholder.png'}
                                         alt={product.title || 'Product Image'}
                                         fill
                                         className="object-cover"

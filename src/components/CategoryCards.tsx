@@ -16,6 +16,7 @@ import {
 } from '@/data/mockData';
 
 import Image from 'next/image';
+import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 
 
 interface CategoryCardsProps {
@@ -95,12 +96,14 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
         {/* NPlusOne Category Banner */}
         <div className="w-full mb-8 mt-12 relative">
           <Image
-            src="/images/categories/NPlusOne.png"
+            src={optimizeCloudinaryUrl("https://res.cloudinary.com/douy8ujry/image/upload/v1767777418/nplusone-fashion/Banner%20images/NPlusOne.png")} // Fallback if local but safe to wrap
             alt="NPlusOne Collection"
             width={1200}
             height={600}
             className="w-full h-auto object-cover rounded-lg"
-            priority
+            priority={true}
+            loading="eager"
+            quality={90}
           />
         </div>
 

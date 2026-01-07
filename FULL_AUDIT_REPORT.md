@@ -11,8 +11,10 @@
 
 ### **Configuration Analysis (`next.config.js`)**
 - **Output Mode:** `standalone` (Optimized for Docker/VPS deployment).
-- **Image Optimization:** 
-  - `remotePatterns` allow images from `**.supabase.co`, `localhost`, and **`res.cloudinary.com`**.
+| Item                  | Category | Status        | Notes                                                 |
+| :-------------------- | :------- | :------------ | :---------------------------------------------------- |
+| 4. Image Optimization | Global   | **RESOLVED**  | All images served via Cloudinary `f_auto,q_auto`.     |
+| 5. Build Stability    | Infra    | **RESOLVED**  | Fixed Type Error in CMS. Build passes.                |
   - **Security Warning:** `dangerouslyAllowSVG: true` is enabled.
   - **CSP:** Strict Content Security Policy configured for images (`default-src 'self'`).
 
@@ -83,10 +85,17 @@
 **Migration Status:** Transitioned from Supabase Storage -> **Cloudinary**.
 
 ### **Current Implementation**
-- **Upload Utility:** `src/utils/uploadService.ts` handles uploads cleanly via internal API proxy or direct SDK (scripts).
+### **Current Implementation**
+- **Upload Utility:** `src/utils/uploadService.ts` handles uploads cleanly via internal API proxy.
+  - **Dynamic Organization:** Automatically sorts uploads into `nplusone-fashion/Products images/{Category}/{SubCategory}/{HSN}`.
+  - **Asset Types:** Segregated folders for `Hero`, `My Fav`, `Category`, and `Banner` images.
 - **Refactoring:** The legacy "patched" `supabaseUpload.ts` has been removed. All admin components now import the dedicated `uploadService`.
-- **Batch Script:** `scripts/upload_assets.js` exists to sync local `public/` assets to Cloudinary.
-- **Frontend Display:** `ProductContext.tsx` contains logic to transform legacy DB paths (e.g., `products/D3P_1/1.webp`) into absolute Cloudinary URLs on the fly (`https://res.cloudinary.com/...`).
+- **Migration Status:**
+  - **Database Migration:** Completed. 100% of products (18/18) migrated from local `public/` paths to secure Cloudinary URLs.
+  - **Folder Structure:** Organized hierarchy implemented (`nplusone-fashion/`).
+- **Frontend Display:**
+  - **Optimization:** `src/utils/imageUtils.ts` (`optimizeCloudinaryUrl`) ensures all images are served with `f_auto,q_auto`.
+  - **Performance:** `HeroSlider`, `CategoryCards`, and `NewArrivals` use `priority` and `eager` loading strategies.
 
 ---
 
@@ -99,4 +108,6 @@
 ## 7. Critical Action Items (Status Update)
 1.  **Next Config Update:** **[RESOLVED]** `res.cloudinary.com` added to `next.config.js`.
 2.  **Middleware:** **[RESOLVED]** `src/middleware.ts` created and active.
-3.  **Refactoring:** **[RESOLVED]** Upload service refactored and cleaned.
+3.  **Refactoring:** **[RESOLVED]** Upload service refactored with strict typing and folder structure.
+4.  **Cloudinary Migration:** **[COMPLETED]** All local product images migrated to Cloudinary.
+5.  **Image Optimization:** **[COMPLETED]** LCP optimizations (`eager`, `priority`) applied to Home Page.

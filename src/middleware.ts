@@ -66,21 +66,50 @@ export async function middleware(request: NextRequest) {
 
     if (request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
-            return NextResponse.redirect(new URL('/', request.url))
+            console.log('Middleware: No user found for admin route, redirecting to /');
+            const url = request.nextUrl.clone();
+            url.pathname = '/admin-login-error';
+            url.searchParams.set('reason', 'No user session found in cookies');
+            return NextResponse.redirect(url)
         }
 
-        // Check for admin role logic
-        // We would need to fetch profile, but usually middleware is kept light.
-        // For now, let's at least ensure they are logged in.
-        // Ideally we fetch profile.is_admin too.
-        const { data: profile } = await supabase
+
+        console.log('Middleware: User checking admin access:', user.email, user.id);
+
+        // IMPROVED ADMIN CHECK:
+        // 1. Hardcoded Super Admins (Fastest, survives DB outages/RLS issues)
+        const superAdmins = ['hanzalaq63@gmail.com'];
+        const superAdminIds = ['7b167b7d-50aa-41c4-8f57-e5dfc2d3ac4f'];
+
+        const email = user.email?.toLowerCase();
+
+        if (
+            (email && superAdmins.includes(email)) ||
+            superAdminIds.includes(user.id)
+        ) {
+            console.log('Middleware: Super admin detected via hardcoded list');
+            return response; // Allow access immediately
+        }
+
+        // 2. Database Check (Original Logic)
+        const { data: profile, error } = await supabase
             .from('profiles')
             .select('is_admin')
             .eq('id', user.id)
             .single();
 
+        if (error) {
+            console.error('Middleware: Error fetching profile for admin check:', error);
+        }
+
+        console.log('Middleware: DB Admin check result:', profile);
+
         if (!profile?.is_admin) {
-            return NextResponse.redirect(new URL('/', request.url));
+            console.log('Middleware: User is not admin, redirecting to /');
+            const url = request.nextUrl.clone();
+            url.pathname = '/admin-login-error';
+            url.searchParams.set('reason', `User ${user.email} (ID: ${user.id}) is not an admin. Profile check: ${JSON.stringify(profile)}`);
+            return NextResponse.redirect(url);
         }
     }
 

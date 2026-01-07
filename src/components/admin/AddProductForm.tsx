@@ -300,7 +300,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         // Map images to specific slots if possible, otherwise just push
         for (const file of form.images) {
           if (file) {
-            const url = await uploadImage(file);
+            const url = await uploadImage(file, {
+              type: 'product',
+              category: form.category,
+              subcategory: form.subcategory,
+              hsnCode: form.hsnCode
+            });
             if (url) uploadedUrls.push(url);
           }
         }
