@@ -1,11 +1,11 @@
-"use client";
-
 import React, { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import '@/app/globals.css';
 import AdminHeader from '@/admin/components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
+
+export const dynamic = 'force-dynamic';
 
 interface AdminLayoutProps {
   children: ReactNode;

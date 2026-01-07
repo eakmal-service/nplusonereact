@@ -15,7 +15,7 @@ if (fs.existsSync(envPath)) {
 const API_TOKEN = process.env.HOSTINGER_API_TOKEN;
 const VM_ID = '1149588'; // Hardcoded from verification
 const PROJECT_NAME = 'nplusone';
-const REPO_URL = 'https://github.com/eakmal-service/nplusonereact';
+const REPO_URL = 'https://github.com/eakmal-service/Nplus-final-.git';
 const API_BASE_URL = 'https://developers.hostinger.com';
 
 if (!API_TOKEN) {

@@ -1,5 +1,7 @@
 import ProductsPage from '@/admin/pages/Products';
- 
+
+export const dynamic = 'force-dynamic';
+
 export default function AdminProductsPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center py-12">
