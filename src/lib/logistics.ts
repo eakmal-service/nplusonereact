@@ -1,147 +1,140 @@
-import axios from 'axios';
+// iThinkLogistics API Helper
+// Handles Pincode check and Order Creation (Prepaid & COD)
 
-// Interfaces for Type Safety
-interface LogisticsConfig {
-    baseUrl: string;
-    accessToken: string;
-    secretKey: string;
-    pickupId: string;
-}
+const BASE_URL = process.env.ITHINK_BASE_URL || 'https://pre-alpha.ithinklogistics.com/api_v3';
+const ACCESS_TOKEN = process.env.ITHINK_ACCESS_TOKEN;
+const SECRET_KEY = process.env.ITHINK_SECRET_KEY;
+const PICKUP_ID = process.env.ITHINK_PICKUP_ID;
 
-const config: LogisticsConfig = {
-    baseUrl: process.env.ITHINK_BASE_URL!,
-    accessToken: process.env.ITHINK_ACCESS_TOKEN!,
-    secretKey: process.env.ITHINK_SECRET_KEY!,
-    pickupId: process.env.ITHINK_PICKUP_ID!,
+// Helper to check config
+const checkConfig = () => {
+    if (!ACCESS_TOKEN || !SECRET_KEY || !PICKUP_ID) {
+        console.error("❌ iThinkLogistics Credentials Missing in .env.local");
+        return false;
+    }
+    return true;
 };
 
-// Helper to format date
-const formatDate = (date: Date) => {
-    const d = new Date(date);
-    let month = '' + (d.getMonth() + 1);
-    let day = '' + d.getDate();
-    const year = d.getFullYear();
+// 1. Check Pincode
+export const checkPincodeServiceability = async (pincode: string) => {
+    if (!checkConfig()) return { status: 'error', message: 'Config missing' };
 
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-
-    return [year, month, day].join('-');
-};
-
-export async function checkPincode(pincode: string) {
     try {
-        const response = await axios.post(`${config.baseUrl}/pincode/check.json`, {
+        const payload = {
             data: {
                 pincode: pincode,
-                access_token: config.accessToken,
-                secret_key: config.secretKey,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
             },
+        };
+
+        const response = await fetch(`${BASE_URL}/pincode/check.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
         });
-        return response.data;
+
+        return await response.json();
     } catch (error) {
-        console.error('Logistics: Pincode Check Error', error);
-        return null;
+        console.error('Logistics API Error (Pincode):', error);
+        return { status: 'error', message: 'Connection failed' };
     }
-}
+};
 
-export async function createShipment(order: any, paymentMode: 'Prepaid' | 'COD' = 'Prepaid') {
+// 2. Create Shipment (Common for Razorpay & COD)
+export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD') => {
+    if (!checkConfig()) return null;
+
     try {
-        // 1. Prepare Order Items
-        // Ensure items are loaded. If using 'create-order', they might be in a different structure.
-        // The snippet assumes 'order.items' is populated.
-        const orderItems = order.items || [];
+        const orderDate = new Date().toISOString().split('T')[0];
+        const isCOD = paymentMode === 'COD';
 
-        // Calculate total weight (Fallback to 0.5kg if unknown)
-        const totalWeight = orderItems.reduce((acc: number, item: any) => acc + (item.quantity * 0.5), 0); // Placeholder weight logic
-
-        // Calculate Product Value and Tax
-        // This logic depends on your tax rules. Simplified here.
-        const productValue = order.total_amount;
-
-        // Address Parsing
-        // order.shipping_address could be JSON object or string
+        // Address Parsing (Robustness for DB stored JSON vs Objects)
         let address = order.shipping_address;
         if (typeof address === 'string') {
             try {
                 address = JSON.parse(address);
             } catch (e) {
-                console.error("Failed to parse shipping address", e);
-                return null;
+                console.error("Failed to parse shipping address string:", e);
+                // Fallback: if it's a string but fails parse, maybe used as is? Unlikely but safe to keep obj
             }
         }
+
+        // Map Items (Handle both DB 'order_items' snake_case and Frontend 'cart' camelCase if needed)
+        // DB: product_name, price_per_unit, quantity, product_id
+        // Frontend: name, price, quantity, id
+        const products = (order.items || []).map((item: any) => ({
+            product_name: item.product_name || item.name || "Apparel Item",
+            product_sku: item.product_id || item.id || 'SKU-GENERIC',
+            product_quantity: item.quantity,
+            product_price: item.price_per_unit || item.price || 0,
+            product_tax_rate: 5,
+            product_hsn_code: '6204',
+            product_discount: 0
+        }));
+
+        const totalAmount = order.total_amount || order.total || 0;
 
         const payload = {
             data: {
                 shipments: [
                     {
-                        // Core Auth
-                        access_token: config.accessToken,
-                        secret_key: config.secretKey,
-
-                        // Order Details
-                        waybill: "", // Empty for auto-generate
+                        waybill: "",
                         order: order.id,
                         sub_order: "",
-                        order_date: formatDate(new Date(order.created_at || Date.now())),
-                        total_amount: order.total_amount,
-                        name: address.fullName || address.name,
-                        company_name: "NPlusOne Fashion",
-                        add: address.addressLine1 || address.street,
+                        order_date: orderDate,
+                        total_amount: totalAmount,
+                        name: address.fullName || address.name || "Customer",
+                        company_name: "NPlusOne Customer",
+                        add: address.addressLine1 || address.street || address.address || "",
                         add2: address.addressLine2 || "",
                         add3: "",
-                        pin: address.pincode || address.zip,
-                        city: address.city,
-                        state: address.state,
+                        pin: address.pincode || address.zip || address.pin || "",
+                        city: address.city || "",
+                        state: address.state || "",
                         country: "India",
-                        phone: address.phone || address.mobile,
+                        phone: address.phoneNumber || address.phone || address.mobile || "",
                         alt_phone: "",
-                        email: address.email,
+                        email: address.email || "support@nplusonefashion.com",
+                        is_cod: isCOD,
+                        payment_mode: paymentMode,
+                        cod_amount: isCOD ? totalAmount : 0, // Only set if COD
+                        products: products,
 
-                        // Shipment Details
-                        is_cod: paymentMode === 'COD' ? "yes" : "no",
-                        cod_amount: paymentMode === 'COD' ? order.total_amount : 0,
-                        weight: totalWeight,
-                        quantity: orderItems.reduce((acc: number, item: any) => acc + item.quantity, 0),
-                        products_desc: "Apparel", // Generic description
+                        // Hardcoded Fashion Dimensions (as per user snippet)
+                        shipment_length: 30,
+                        shipment_width: 20,
+                        shipment_height: 5,
+                        shipment_weight: 0.5,
 
-                        // Pickup Details
-                        pickup_address_id: config.pickupId,
-
-                        // Return Address (Optional/Same as Pickup)
-                        // r_add: ...
-
-                        // Products List
-                        products: orderItems.map((item: any) => ({
-                            product_name: item.product_name || item.product?.title || "Item",
-                            product_qty: item.quantity,
-                            product_price: item.price_per_unit || item.product?.salePrice || 0,
-                            product_tax_rate: 0, // Set tax rate if available
-                            product_hsn_code: "", // Set HSN if available
-                            product_discount: 0
-                        }))
+                        pickup_address_id: PICKUP_ID,
+                        access_token: ACCESS_TOKEN,
+                        secret_key: SECRET_KEY
                     }
                 ],
-                pickup_address_id: config.pickupId,
-                access_token: config.accessToken,
-                secret_key: config.secretKey,
+                pickup_address_id: PICKUP_ID,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY
             }
         };
 
-        console.log("Logistics: Creating Shipment Payload", JSON.stringify(payload, null, 2));
+        console.log(`📦 Logistics Payload (${paymentMode}):`, JSON.stringify(payload, null, 2));
 
-        const response = await axios.post(`${config.baseUrl}/order/add.json`, payload);
+        const response = await fetch(`${BASE_URL}/order/add.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
 
-        console.log("Logistics: Response", response.data);
-
-        // Parse response
-        // iThinkLogistics returns { status: 'success', data: { ... } }
-        // If multiple shipments, data might be an object with keys as reference numbers?
-        // Snippet assumes: const shipmentData = shippingResult.data?.[1] || {};
-
-        return response.data;
+        const result = await response.json();
+        console.log(`📦 Logistics Response (${paymentMode}):`, JSON.stringify(result));
+        return result;
 
     } catch (error) {
-        console.error('Logistics: Create Shipment Error', error);
+        console.error('Logistics Create Shipment Error:', error);
         return null;
     }
-}
+};
+
+// Backwards compatibility alias if needed
+export const checkPincode = checkPincodeServiceability;
