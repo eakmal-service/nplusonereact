@@ -96,7 +96,7 @@ export async function POST(req: Request) {
                         try {
                             const fullOrder = { ...updatedOrder, items: orderItems };
                             console.log("Triggering Shipping for Order:", updatedOrder.id);
-                            const shippingResult = await createShipment(fullOrder);
+                            const shippingResult = await createShipment(fullOrder, 'Prepaid');
 
                             if (shippingResult && shippingResult.status === 'success') {
                                 // iThinkLogistics returns keys like 'waybill' or 'ref_id' inside data
