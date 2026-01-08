@@ -87,7 +87,7 @@ export async function POST(req: Request) {
                 };
 
                 console.log("Triggering Shipping for COD Order:", orderId);
-                const shippingResult = await createShipment(fullOrder);
+                const shippingResult = await createShipment(fullOrder, 'COD');
 
                 if (shippingResult && shippingResult.status === 'success') {
                     // Robust extraction:
