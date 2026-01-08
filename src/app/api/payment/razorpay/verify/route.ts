@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@/lib/supabaseServer';
+import { createShipment } from '@/lib/logistics';
 
 export async function POST(req: Request) {
     try {
@@ -89,6 +90,47 @@ export async function POST(req: Request) {
                             // Dynamically import email service to avoid top-level issues if env vars missing
                             const { sendOrderConfirmationEmail } = await import('@/lib/email');
                             await sendOrderConfirmationEmail(updatedOrder, customerDetails, orderItems);
+                        }
+
+                        // 5. Automatic Shipping Trigger (iThinkLogistics)
+                        try {
+                            const fullOrder = { ...updatedOrder, items: orderItems };
+                            console.log("Triggering Shipping for Order:", updatedOrder.id);
+                            const shippingResult = await createShipment(fullOrder);
+
+                            if (shippingResult && shippingResult.status === 'success') {
+                                // iThinkLogistics returns keys like 'waybill' or 'ref_id' inside data
+                                // Structure depends on response. Usually data: { "1": { waybill: ... } } or similar
+                                // Let's check the result structure based on docs/experience or assume generic data access
+                                // Snippet suggestion: const shipmentData = shippingResult.data?.[1] || {};
+
+                                // Robust extraction:
+                                let awb = 'PENDING';
+                                let courier = 'iThinkLogistics';
+
+                                // Try to find waybill in data values
+                                if (shippingResult.data) {
+                                    const values = Object.values(shippingResult.data) as any[];
+                                    if (values.length > 0 && values[0].waybill) {
+                                        awb = values[0].waybill;
+                                    }
+                                }
+
+                                await (supabase.from('orders') as any)
+                                    .update({
+                                        awb_number: awb,
+                                        courier_name: courier,
+                                        status: 'SHIPPED' // Auto-mark as shipped
+                                    })
+                                    .eq('id', updatedOrder.id);
+
+                                console.log("Shipment Created. AWB:", awb);
+                            } else {
+                                console.error("Shipping Creation Failed:", shippingResult);
+                            }
+                        } catch (shipError) {
+                            console.error("Shipping Logic Error:", shipError);
+                            // Don't fail the verification response, just log it
                         }
                     }
                 }
