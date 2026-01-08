@@ -18,26 +18,26 @@ const categoryHierarchy: CategoryNode[] = [
       {
         id: 'suit-set',
         label: 'Suit Set',
-        value: 'suit-set',
-        children: [{ id: 'all-suit-set', label: 'All Suit Sets', value: 'suit-set' }]
+        value: 'SUIT SET',
+        children: [{ id: 'all-suit-set', label: 'All Suit Sets', value: 'SUIT SET' }]
       },
       {
         id: 'western-dress',
         label: 'Western Wear',
-        value: 'western-dress',
-        children: [{ id: 'all-western', label: 'All Western Wear', value: 'western-dress' }]
+        value: 'WESTERN WEAR',
+        children: [{ id: 'all-western', label: 'All Western Wear', value: 'WESTERN WEAR' }]
       },
       {
         id: 'co-ord-sets',
         label: 'Co-ord Sets',
-        value: 'co-ord-sets',
-        children: [{ id: 'all-coord', label: 'All Co-ord Sets', value: 'co-ord-sets' }]
+        value: 'CO-ORD SET',
+        children: [{ id: 'all-coord', label: 'All Co-ord Sets', value: 'CO-ORD SET' }]
       },
       {
         id: 'indi-western',
         label: 'Indo-Western',
-        value: 'indi-western',
-        children: [{ id: 'all-indi', label: 'All Indo-Western', value: 'indi-western' }]
+        value: 'INDO-WESTERN',
+        children: [{ id: 'all-indi', label: 'All Indo-Western', value: 'INDO-WESTERN' }]
       },
     ]
   },
@@ -48,8 +48,8 @@ const categoryHierarchy: CategoryNode[] = [
       {
         id: 'mens',
         label: "MEN'S WEAR",
-        value: 'mens',
-        children: [{ id: 'all-mens', label: "All Men's Wear", value: 'mens' }]
+        value: 'MENS WEAR',
+        children: [{ id: 'all-mens', label: "All Men's Wear", value: 'MENS WEAR' }]
       }
     ]
   },
@@ -60,8 +60,8 @@ const categoryHierarchy: CategoryNode[] = [
       {
         id: 'kids-cat',
         label: "KID'S WEAR",
-        value: 'kids',
-        children: [{ id: 'all-kids', label: "All Kid's Wear", value: 'kids' }]
+        value: 'KIDS WEAR', // Schema: KID'S WEAR or KIDS WEAR? Checking schema said 'KIDS WEAR'
+        children: [{ id: 'all-kids', label: "All Kid's Wear", value: 'KIDS WEAR' }]
       }
     ]
   }
