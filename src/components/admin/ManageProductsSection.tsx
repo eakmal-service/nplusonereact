@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
 import Link from 'next/link';
