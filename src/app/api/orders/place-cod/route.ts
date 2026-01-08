@@ -1,17 +1,31 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createShipment } from '@/lib/logistics';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
         const { customer, items, total } = body;
 
+        // Try to get authenticated user (Optional for Guest Checkout support)
+        let userId = null;
+        try {
+            const supabase = createRouteHandlerClient({ cookies });
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) userId = session.user.id;
+        } catch (authErr) {
+            // Context might be static or other issue, ignore auth failure for guest checkout flow
+            // But we prioritize guest flow continuing.
+        }
+
         // 1. Create Order (Status: PROCESSING, Payment: PENDING, Method: COD)
         const { data: orderData, error: orderError } = await supabaseAdmin
             .from('orders')
             .insert([
                 {
+                    user_id: userId, // Link to user if logged in
                     total_amount: total,
                     subtotal: total,
                     tax_total: 0,
@@ -81,11 +95,18 @@ export async function POST(req: Request) {
             if (shippingResult && shippingResult.status === 'success') {
                 let awb = 'PENDING';
                 let courier = 'iThinkLogistics';
+                let logisticOrderId = '';
+
+                // iThink response structure analysis based on user snippet: 
+                // data: { "1": { waybill: ..., ord_id: ... } } OR data: [{...}]?
+                // User snippet: shippingResult.data?.[1]
 
                 if (shippingResult.data) {
                     const values = Object.values(shippingResult.data) as any[];
-                    if (values.length > 0 && values[0].waybill) {
-                        awb = values[0].waybill;
+                    if (values.length > 0) {
+                        const shipmentData = values[0];
+                        if (shipmentData.waybill) awb = shipmentData.waybill;
+                        if (shipmentData.ord_id) logisticOrderId = shipmentData.ord_id;
                     }
                 }
 
@@ -94,6 +115,7 @@ export async function POST(req: Request) {
                     .update({
                         awb_number: awb,
                         courier_name: courier,
+                        logistic_order_id: logisticOrderId,
                         status: 'SHIPPED'
                     })
                     .eq('id', orderId);
