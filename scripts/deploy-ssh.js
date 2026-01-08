@@ -42,9 +42,8 @@ const commands = [
     `printf "${envContent.replace(/\n/g, '\\n').replace(/"/g, '\\"')}" > /var/www/nplusone/.env.local`,
     // Install Dependencies
     'cd /var/www/nplusone && npm install',
-    'cd /var/www/nplusone && npm install sharp', // Install sharp for image optimization
-    // Build
-    'cd /var/www/nplusone && npm run build',
+    // Build (Clean first)
+    'cd /var/www/nplusone && rm -rf .next && npm run build',
     // Copy static files for standalone mode
     'cp -r /var/www/nplusone/public /var/www/nplusone/.next/standalone/public',
     'cp -r /var/www/nplusone/.next/static /var/www/nplusone/.next/standalone/.next/static',
