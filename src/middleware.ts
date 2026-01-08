@@ -95,7 +95,7 @@ export async function middleware(request: NextRequest) {
 
         // IMPROVED ADMIN CHECK:
         // 1. Hardcoded Super Admins (Fastest, survives DB outages/RLS issues)
-        const superAdmins = ['hanzalaq63@gmail.com'];
+        const superAdmins = ['hanzalaq63@gmail.com', 'abduljalilmulla762@gmail.com'];
         const superAdminIds = ['7b167b7d-50aa-41c4-8f57-e5dfc2d3ac4f'];
 
         const email = user.email?.toLowerCase();
