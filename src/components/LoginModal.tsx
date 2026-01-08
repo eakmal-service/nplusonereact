@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,6 +11,8 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const { login, signup, loginWithOtp, verifyOtp, updateUserPassword } = useAuth(); // Removed 'resetPasswordForEmail' as we use OTP flow for reset
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Views: 'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset' | 'signup'
   const [view, setView] = useState<'login' | 'forgot-email' | 'forgot-otp' | 'forgot-reset' | 'signup'>('login');
@@ -67,7 +71,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (loginMethod === 'password') {
         const { error } = await login(email, password);
         if (error) throw error;
-        // Success
+
+        // Success - Check for Admin Redirect
+        await verifyAndRedirect();
         handleClose();
       } else {
         // OTP Login request
@@ -190,6 +196,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       } else {
         // Intent was login (if we support OTP login verification here)
         // If the user used "Sign in via OTP" -> they are now logged in.
+
+        // Success - Check for Admin Redirect
+        await verifyAndRedirect();
         handleClose();
       }
     } catch (err: any) {
@@ -235,6 +244,38 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   };
 
   // Render content based on current view
+  const verifyAndRedirect = async () => {
+    const nextUrl = searchParams.get('next');
+    if (nextUrl && nextUrl.startsWith('/admin')) {
+      try {
+        setLoading(true);
+        // 1. Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return; // Should be logged in by now
+
+        // 2. Check profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+
+        // 3. Verify Admin
+        if (profile?.is_admin) {
+          router.push(nextUrl);
+        } else {
+          alert("Access Denied: Admins only.");
+          router.push('/');
+        }
+      } catch (err) {
+        console.error("Admin check failed", err);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const renderContent = () => {
     switch (view) {
       case 'forgot-email':
