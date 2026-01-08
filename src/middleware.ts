@@ -9,51 +9,68 @@ export async function middleware(request: NextRequest) {
         },
     })
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return request.cookies.get(name)?.value
-                },
-                set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
-                },
-                remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
-                },
-            },
+    let supabase;
+    try {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+            throw new Error('Missing Supabase Environment Variables');
         }
-    )
+
+        supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+            {
+                cookies: {
+                    get(name: string) {
+                        return request.cookies.get(name)?.value
+                    },
+                    set(name: string, value: string, options: CookieOptions) {
+                        request.cookies.set({
+                            name,
+                            value,
+                            ...options,
+                        })
+                        response = NextResponse.next({
+                            request: {
+                                headers: request.headers,
+                            },
+                        })
+                        response.cookies.set({
+                            name,
+                            value,
+                            ...options,
+                        })
+                    },
+                    remove(name: string, options: CookieOptions) {
+                        request.cookies.set({
+                            name,
+                            value: '',
+                            ...options,
+                        })
+                        response = NextResponse.next({
+                            request: {
+                                headers: request.headers,
+                            },
+                        })
+                        response.cookies.set({
+                            name,
+                            value: '',
+                            ...options,
+                        })
+                    },
+                },
+            }
+        );
+    } catch (err) {
+        console.error('Middleware: Failed to initialize Supabase client:', err);
+        // If requesting a page, redirect to error. If API, return JSON.
+        if (request.nextUrl.pathname.startsWith('/api')) {
+            return NextResponse.json({ error: 'Internal Server Configuration Error' }, { status: 500 });
+        }
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin-login-error';
+        url.searchParams.set('reason', 'Server Configuration Error: Missing Environment Variables');
+        return NextResponse.redirect(url);
+    }
 
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -64,7 +81,7 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin-login-error')) {
         if (!user) {
             console.log('Middleware: No user found for admin route, redirecting to /');
             const url = request.nextUrl.clone();

@@ -1,7 +1,7 @@
-import AdminDashboard from '@/admin/pages/Dashboard';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminPage() {
-  return <AdminDashboard />;
+  redirect('/admin/dashboard');
 } 

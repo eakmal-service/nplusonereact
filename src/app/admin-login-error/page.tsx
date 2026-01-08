@@ -37,7 +37,7 @@ export default function AdminLoginErrorPage({
                     Go Home
                 </Link>
                 <Link
-                    href="/auth/login"
+                    href="/?login=true"
                     className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition-colors"
                 >
                     Login Again

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import LoginModal from './LoginModal';
 import CartPopup from './CartPopup';
 import { useCart } from '@/contexts/CartContext';
@@ -13,6 +13,8 @@ import UserMenu from './navbar/UserMenu';
 
 const Header = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,21 +29,23 @@ const Header = () => {
     return null;
   }
 
+  // Add this effect
+  useEffect(() => {
+    if (searchParams?.get('login') === 'true') {
+      setShowLoginModal(true);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const handleScroll = () => {
-      // If window is scrolled more than 50px, set isScrolled to true
       setIsScrolled(window.scrollY > 50);
     };
 
-    // Add event listener
     window.addEventListener('scroll', handleScroll);
-
-    // Initial check
     handleScroll();
-
-    // Clean up
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);

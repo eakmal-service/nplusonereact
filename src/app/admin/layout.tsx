@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import '@/app/globals.css';
-import AdminHeader from '@/admin/components/Header';
+import AdminHeader from '@/components/admin/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
