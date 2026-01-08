@@ -22,7 +22,7 @@ const CheckoutPage = () => {
     const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false); // Track script load
 
     // Checkout Steps State
-    const [checkoutMode, setCheckoutMode] = useState<'guest' | 'login' | 'logged_in'>('guest');
+    const [checkoutMode, setCheckoutMode] = useState<'login' | 'logged_in'>('login');
     const [paymentMethod, setPaymentMethod] = useState('card');
 
     // Coupon State
@@ -288,40 +288,33 @@ const CheckoutPage = () => {
                     {/* Left Column */}
                     <div className="lg:w-2/3 space-y-8">
 
-                        {/* 1. Login / Guest Choice */}
+                        {/* 1. Login Required Announcement */}
                         {!user && (
-                            <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-                                <div className="flex gap-4 border-b border-gray-800 pb-4 mb-4">
-                                    <button
-                                        className={`pb-2 px-4 text-sm font-semibold transition-colors ${checkoutMode === 'guest' ? 'text-white border-b-2 border-white' : 'text-gray-500'}`}
-                                        onClick={() => setCheckoutMode('guest')}
-                                    >
-                                        Guest Checkout
-                                    </button>
-                                    <button
-                                        className={`pb-2 px-4 text-sm font-semibold transition-colors ${checkoutMode === 'login' ? 'text-white border-b-2 border-white' : 'text-gray-500'}`}
-                                        onClick={() => setCheckoutMode('login')}
-                                    >
-                                        Login
-                                    </button>
-                                </div>
-
-                                {checkoutMode === 'login' && (
-                                    <div className="text-center py-4">
-                                        <p className="text-gray-400 mb-4">By logging in, you can save your address and view order history.</p>
-                                        <Link href="/login?redirect=/checkout" className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded transition-colors">
-                                            Log In Now
-                                        </Link>
+                            <div className="bg-gray-900 p-8 rounded-lg border border-purple-500/30 text-center shadow-lg shadow-purple-900/10">
+                                <div className="mb-6">
+                                    <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
                                     </div>
-                                )}
-                                {checkoutMode === 'guest' && (
-                                    <p className="text-gray-400 text-sm">Proceeding as a guest. You can create an account later.</p>
-                                )}
+                                    <h2 className="text-2xl font-bold text-white mb-2">Secure Checkout</h2>
+                                    <p className="text-gray-400 max-w-md mx-auto">
+                                        To ensure order security and tracking, please login to proceed with your purchase.
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    <Link href="/login?redirect=/checkout" className="inline-block w-full sm:w-auto bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition-all transform hover:scale-[1.02]">
+                                        Login / Sign Up
+                                    </Link>
+                                    <p className="text-xs text-gray-500">
+                                        Takes less than 30 seconds
+                                    </p>
+                                </div>
                             </div>
                         )}
 
-                        {/* 2. Shipping Address */}
-                        {(checkoutMode === 'guest' || user) && (
+                        {/* 2. Shipping Address (Only show if User Logged In) */}
+                        {user && (
                             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                                 <h2 className="text-xl font-bold mb-6 text-silver flex items-center gap-2">
                                     <span className="bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
@@ -393,7 +386,7 @@ const CheckoutPage = () => {
                         )}
 
                         {/* 3. Payment Method */}
-                        {(checkoutMode === 'guest' || user) && (
+                        {user && (
                             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                                 <h2 className="text-xl font-bold mb-6 text-silver flex items-center gap-2">
                                     <span className="bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>

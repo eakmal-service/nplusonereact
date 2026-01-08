@@ -9,35 +9,38 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { customer, items, total } = body;
 
-        // Try to get authenticated user (Optional for Guest Checkout support)
-        let userId = null;
-        try {
-            const cookieStore = cookies();
-            const supabase = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                {
-                    cookies: {
-                        get(name: string) {
-                            return cookieStore.get(name)?.value
-                        },
+        // --- STRICT LOGIN POLICY ENFORCEMENT ---
+        // 1. Verify Session
+        const cookieStore = cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value
                     },
-                }
-            );
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) userId = session.user.id;
-        } catch (authErr) {
-            // Context might be static or other issue, ignore auth failure for guest checkout flow
-            // But we prioritize guest flow continuing.
-            console.warn("Auth check failed in COD route (continuing as guest):", authErr);
+                },
+            }
+        );
+
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+        if (authError || !session || !session.user) {
+            console.warn("COD Attempt blocked: User not logged in.");
+            return NextResponse.json({ error: 'Unauthorized: Please login to place a COD order.' }, { status: 401 });
         }
 
-        // 1. Create Order (Status: PROCESSING, Payment: PENDING, Method: COD)
+        const userId = session.user.id;
+        // ---------------------------------------
+
+        // 2. Create Order (Status: PROCESSING, Payment: PENDING, Method: COD)
+        // We now enforce user_id, so no more guest orders or null user_ids.
         const { data: orderData, error: orderError } = await supabaseAdmin
             .from('orders')
             .insert([
                 {
-                    user_id: userId, // Link to user if logged in
+                    user_id: userId,
                     total_amount: total,
                     subtotal: total,
                     tax_total: 0,
@@ -60,7 +63,7 @@ export async function POST(req: Request) {
 
         const orderId = orderData.id;
 
-        // 2. Insert Order Items
+        // 3. Insert Order Items
         const orderItems = items.map((item: any) => ({
             order_id: orderId,
             product_id: item.product.id,
@@ -77,7 +80,7 @@ export async function POST(req: Request) {
 
         if (itemsError) throw new Error(`Order Items Creation Failed: ${itemsError.message}`);
 
-        // 3. Update Inventory (Decrement Stock)
+        // 4. Update Inventory (Decrement Stock)
         for (const item of orderItems) {
             if (item.product_id) {
                 const { data: currentProduct } = await supabaseAdmin
@@ -96,7 +99,7 @@ export async function POST(req: Request) {
             }
         }
 
-        // 4. Create Shipment
+        // 5. Create Shipment
         try {
             // Reconstruct full order object for logistics
             const fullOrder = { ...orderData, items: orderItems };
@@ -109,10 +112,7 @@ export async function POST(req: Request) {
                 let courier = 'iThinkLogistics';
                 let logisticOrderId = '';
 
-                // iThink response structure analysis based on user snippet: 
-                // data: { "1": { waybill: ..., ord_id: ... } } OR data: [{...}]?
-                // User snippet: shippingResult.data?.[1]
-
+                // Extract data robustly
                 if (shippingResult.data) {
                     const values = Object.values(shippingResult.data) as any[];
                     if (values.length > 0) {
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
             // Continue -> Don't fail the order just because shipping API hiccuped
         }
 
-        // 5. Send Confirmation Email
+        // 6. Send Confirmation Email
         try {
             // Need to dynamically import to ensure it works in API context
             const { sendOrderConfirmationEmail } = await import('@/lib/email');
