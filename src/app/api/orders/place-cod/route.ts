@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createShipment } from '@/lib/logistics';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
@@ -12,12 +12,24 @@ export async function POST(req: Request) {
         // Try to get authenticated user (Optional for Guest Checkout support)
         let userId = null;
         try {
-            const supabase = createRouteHandlerClient({ cookies });
+            const cookieStore = cookies();
+            const supabase = createServerClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                {
+                    cookies: {
+                        get(name: string) {
+                            return cookieStore.get(name)?.value
+                        },
+                    },
+                }
+            );
             const { data: { session } } = await supabase.auth.getSession();
             if (session) userId = session.user.id;
         } catch (authErr) {
             // Context might be static or other issue, ignore auth failure for guest checkout flow
             // But we prioritize guest flow continuing.
+            console.warn("Auth check failed in COD route (continuing as guest):", authErr);
         }
 
         // 1. Create Order (Status: PROCESSING, Payment: PENDING, Method: COD)
