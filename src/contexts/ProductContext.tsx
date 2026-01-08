@@ -199,6 +199,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (error) {
         console.error('Error saving product:', error);
+        alert(`Error saving product: ${error.message}`);
         return false;
       }
 
