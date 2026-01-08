@@ -153,8 +153,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       const dbProduct = {
         title: productData.title,
         description: productData.description,
-        mrp: productData.price || productData.mrp,
-        selling_price: productData.salePrice,
+        mrp: productData.price || productData.mrp || 0,
+        selling_price: productData.salePrice || 0,
+        // discount: productData.discount, // REMOVED: Not in schema
         category: productData.category,
         subcategory: productData.subcategory,
         stock_quantity: productData.stockQuantity || 100,
@@ -167,6 +168,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         fabric: productData.material, // Schema: fabric
         main_color: productData.colorName,
         default_sku: productData.sku, // Schema: default_sku
+        // barcode: productData.barcode, // REMOVED: Not in schema
         video_url: productData.videoUrl,
         meta_title: productData.metaTitle,
         meta_description: productData.metaDescription,
@@ -178,6 +180,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         style_code: productData.styleCode,
         alt_text: productData.title,
         is_admin_uploaded: true,
+        gst_percentage: productData.gstPercentage || 0,
+        hsn_code: productData.hsnCode,
 
         // Detailed attributes (Schema aligned)
         neck_design: productData.neckline, // Schema: neck_design
@@ -189,7 +193,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         work_type: productData.workType,
         bottom_type: productData.bottomType,
         set_contains: productData.setContains,
-        product_weight: productData.productWeight,
+        product_weight: productData.productWeight ? Number(productData.productWeight) : null,
       };
 
       const { data, error } = await supabase
@@ -199,13 +203,14 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (error) {
         console.error('Error saving product:', error);
-        alert(`Error saving product: ${error.message}`);
+        alert(`Error saving product: ${error.message} (Code: ${error.code})`);
         return false;
       }
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving:', err);
+      alert(`Unexpected Error saving product: ${err.message || err}`);
       return false;
     }
   };
@@ -216,8 +221,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       const dbProduct = {
         title: product.title,
         description: product.description,
-        mrp: product.price || product.mrp,
-        selling_price: product.salePrice,
+        mrp: product.price || product.mrp || 0,
+        selling_price: product.salePrice || 0,
+        // discount: product.discount,
         category: product.category,
         subcategory: product.subcategory,
         stock_quantity: product.stockQuantity,
@@ -229,6 +235,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         fabric: product.material,
         main_color: product.colorName,
         default_sku: product.sku,
+        // barcode: product.barcode,
         video_url: product.videoUrl,
         meta_title: product.metaTitle,
         meta_description: product.metaDescription,
@@ -239,7 +246,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         brand_name: product.brandName,
         style_code: product.styleCode,
         alt_text: product.title,
-        // is_admin_uploaded: true,
+        // is_admin_uploaded: true, // Don't enforce on update?
+        gst_percentage: product.gstPercentage || 0,
+        hsn_code: product.hsnCode,
 
         neck_design: product.neckline,
         sleeve_length: product.sleeveDetail,
@@ -249,7 +258,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         work_type: product.workType,
         bottom_type: product.bottomType,
         set_contains: product.setContains,
-        product_weight: product.productWeight,
+        product_weight: product.productWeight ? Number(product.productWeight) : null,
       };
 
       const { error } = await supabase
@@ -259,11 +268,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (error) {
         console.error('Error updating product:', error);
+        alert(`Error updating product: ${error.message} (Code: ${error.code})`);
         return false;
       }
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating:', err);
+      alert(`Unexpected Error updating product: ${err.message || err}`);
       return false;
     }
   };

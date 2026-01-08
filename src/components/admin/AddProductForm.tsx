@@ -410,7 +410,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           }
           window.scrollTo(0, 0);
         } else {
-          alert('Failed to save product to database.');
+          // alert('Failed to save product to database.'); // Covered by detailed alerts in context
         }
 
       } catch (error) {
