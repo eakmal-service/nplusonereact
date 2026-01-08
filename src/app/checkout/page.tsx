@@ -113,29 +113,53 @@ const CheckoutPage = () => {
         try {
             const finalTotal = getDiscountedTotal();
 
-            // 1. Create Pending Order in DB
-            const response = await fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    customer: formData,
-                    items: cart,
-                    total: finalTotal,
-                    status: 'PENDING',
-                    paymentMethod: paymentMethod
-                })
-            });
+            if (paymentMethod === 'cod') {
+                // --- COD FLOW ---
+                const response = await fetch('/api/orders/place-cod', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer: formData,
+                        items: cart,
+                        total: finalTotal,
+                    })
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to initialize order');
-            }
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to place COD order');
+                }
 
-            const orderDbId = result.orderId;
+                setOrderPlaced(true);
+                clearCart();
+                router.push(`/order-confirmation/${result.orderId}`);
 
-            // 2. Handle Razorpay Payment
-            if (paymentMethod !== 'cod') {
+            } else {
+                // --- ONLINE PAYMENT FLOW (Razorpay) ---
+
+                // 1. Create Pending Order in DB using original route
+                const response = await fetch('/api/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer: formData,
+                        items: cart,
+                        total: finalTotal,
+                        status: 'PENDING',
+                        paymentMethod: paymentMethod // 'card', 'upi', etc.
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to initialize order');
+                }
+
+                const orderDbId = result.orderId;
+
+                // 2. Handle Razorpay Payment
                 if (!isRazorpayLoaded) {
                     // Fallback check
                     if (typeof (window as any).Razorpay === 'undefined') {
@@ -204,12 +228,6 @@ const CheckoutPage = () => {
 
                 const paymentObject = new (window as any).Razorpay(options);
                 paymentObject.open();
-
-            } else {
-                // COD Flow
-                setOrderPlaced(true);
-                clearCart();
-                router.push(`/order-confirmation/${orderDbId}`);
             }
 
         } catch (err: any) {

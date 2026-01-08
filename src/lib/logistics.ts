@@ -44,7 +44,7 @@ export async function checkPincode(pincode: string) {
     }
 }
 
-export async function createShipment(order: any) {
+export async function createShipment(order: any, paymentMode: 'Prepaid' | 'COD' = 'Prepaid') {
     try {
         // 1. Prepare Order Items
         // Ensure items are loaded. If using 'create-order', they might be in a different structure.
@@ -98,8 +98,8 @@ export async function createShipment(order: any) {
                         email: address.email,
 
                         // Shipment Details
-                        is_cod: order.payment_method === 'COD' ? "yes" : "no",
-                        cod_amount: order.payment_method === 'COD' ? order.total_amount : 0,
+                        is_cod: paymentMode === 'COD' ? "yes" : "no",
+                        cod_amount: paymentMode === 'COD' ? order.total_amount : 0,
                         weight: totalWeight,
                         quantity: orderItems.reduce((acc: number, item: any) => acc + item.quantity, 0),
                         products_desc: "Apparel", // Generic description
