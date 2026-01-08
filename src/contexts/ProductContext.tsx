@@ -153,36 +153,43 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       const dbProduct = {
         title: productData.title,
         description: productData.description,
-        price: productData.price || productData.mrp,
-        sale_price: productData.salePrice,
-        discount: productData.discount,
+        mrp: productData.price || productData.mrp,
+        selling_price: productData.salePrice,
         category: productData.category,
         subcategory: productData.subcategory,
-        stock_quantity: 100,
+        stock_quantity: productData.stockQuantity || 100,
         status: productData.status || 'active',
         image_url: productData.imageUrl,
-        images: productData.imageUrls || [],
+        image_urls: productData.imageUrls || [],
         sizes: productData.sizes || [],
-        material: productData.material,
-        color_name: productData.colorName,
-        sku: productData.sku,
-        barcode: productData.barcode,
+
+        // Mapped Fields
+        fabric: productData.material, // Schema: fabric
+        main_color: productData.colorName,
+        default_sku: productData.sku, // Schema: default_sku
         video_url: productData.videoUrl,
         meta_title: productData.metaTitle,
         meta_description: productData.metaDescription,
-        tags: productData.tags,
-        size_stock: productData.sizeStock,
-        // Detailed attributes
-        top_style: productData.topStyle,
-        neckline: productData.neckline,
-        top_pattern: productData.topPattern,
-        sleeve_detail: productData.sleeveDetail,
-        fit: productData.fit,
-        occasion: productData.occasion,
-        fabric_dupatta_stole: productData.fabricDupattaStole,
-        lining_fabric: productData.liningFabric,
+        search_keywords: productData.searchKeywords ? productData.searchKeywords.split(',').map((k: string) => k.trim()) : [],
+
+        sku_map: productData.sizeSkus || {}, // Schema: sku_map
+
+        brand_name: productData.brandName,
+        style_code: productData.styleCode,
+        alt_text: productData.title,
+        is_admin_uploaded: true,
+
+        // Detailed attributes (Schema aligned)
+        neck_design: productData.neckline, // Schema: neck_design
+        sleeve_length: productData.sleeveDetail, // Schema: sleeve_length
+        fit_type: productData.fit, // Schema: fit_type
         wash_care: productData.washCare,
-        bottom_fabric: productData.bottomFabric,
+
+        // Added missing schema fields
+        work_type: productData.workType,
+        bottom_type: productData.bottomType,
+        set_contains: productData.setContains,
+        product_weight: productData.productWeight,
       };
 
       const { data, error } = await supabase
@@ -208,35 +215,40 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       const dbProduct = {
         title: product.title,
         description: product.description,
-        price: product.price || product.mrp,
-        sale_price: product.salePrice,
-        discount: product.discount,
+        mrp: product.price || product.mrp,
+        selling_price: product.salePrice,
         category: product.category,
         subcategory: product.subcategory,
         stock_quantity: product.stockQuantity,
         status: product.status,
         image_url: product.imageUrl,
-        images: product.imageUrls || [],
+        image_urls: product.imageUrls || [],
         sizes: product.sizes || [],
-        material: product.material,
-        color_name: product.colorName,
-        sku: product.sku,
-        barcode: product.barcode,
+
+        fabric: product.material,
+        main_color: product.colorName,
+        default_sku: product.sku,
         video_url: product.videoUrl,
         meta_title: product.metaTitle,
         meta_description: product.metaDescription,
-        tags: product.tags,
-        size_stock: product.sizeStock,
-        top_style: product.topStyle,
-        neckline: product.neckline,
-        top_pattern: product.topPattern,
-        sleeve_detail: product.sleeveDetail,
-        fit: product.fit,
-        occasion: product.occasion,
-        fabric_dupatta_stole: product.fabricDupattaStole,
-        lining_fabric: product.liningFabric,
+        search_keywords: product.searchKeywords ? (Array.isArray(product.searchKeywords) ? product.searchKeywords : product.searchKeywords.split(',').map((k: string) => k.trim())) : [],
+
+        sku_map: product.sizeSkus || {},
+
+        brand_name: product.brandName,
+        style_code: product.styleCode,
+        alt_text: product.title,
+        // is_admin_uploaded: true,
+
+        neck_design: product.neckline,
+        sleeve_length: product.sleeveDetail,
+        fit_type: product.fit,
         wash_care: product.washCare,
-        bottom_fabric: product.bottomFabric,
+
+        work_type: product.workType,
+        bottom_type: product.bottomType,
+        set_contains: product.setContains,
+        product_weight: product.productWeight,
       };
 
       const { error } = await supabase
