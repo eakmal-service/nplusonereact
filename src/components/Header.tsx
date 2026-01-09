@@ -168,9 +168,9 @@ const Header = () => {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${isScrolled || isHovered || mobileMenuOpen ||
-            ['/contact', '/about', '/refund-policy', '/shipping', '/terms', '/privacy'].includes(pathname || '')
-            ? 'bg-black'
-            : 'bg-transparent'
+          ['/contact', '/about', '/refund-policy', '/shipping', '/terms', '/privacy'].includes(pathname || '')
+          ? 'bg-black'
+          : 'bg-transparent'
           }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -180,7 +180,7 @@ const Header = () => {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 relative">
+                <div className="relative w-28 h-8 md:w-40 md:h-12">
                   <Image
                     src="https://res.cloudinary.com/douy8ujry/image/upload/v1767777416/nplusone-fashion/Logo/logo.svg"
                     alt="NPlusOne Logo"
@@ -196,7 +196,7 @@ const Header = () => {
             <div className="xl:hidden">
               <button
                 type="button"
-                className="text-white hover:text-gray-300 focus:outline-none"
+                className="text-white hover:text-gray-300 focus:outline-none p-2"
                 onClick={toggleMobileMenu}
                 aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               >
@@ -240,55 +240,91 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Mobile/Tablet menu - hide only on xl screens */}
+      {/* Mobile/Tablet menu - Side Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#000000] border-t border-gray-700 fixed top-16 md:top-20 left-0 right-0 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-5rem)] overflow-y-auto z-[100]">
-          <div className="px-4 pt-2 pb-4 space-y-1">
-            {/* Search Bar */}
-            <div className="mb-4">
-              <SearchBar />
-            </div>
-            <Link href="/suit-set"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              SUIT SET
-            </Link>
-            <Link href="/western-dress"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              WESTERN WEAR
-            </Link>
-            <Link href="/co-ord-sets"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              CO-ORD SET
-            </Link>
-            <Link href="/kids"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              KID'S WEAR
-            </Link>
-            <Link href="/indi-western"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              INDO-WESTERN
-            </Link>
-            <Link href="/mens"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              MEN'S WEAR
-            </Link>
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-[40] xl:hidden backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
 
-            {/* Mobile icons */}
-            {mobileCartAndWishlistSection}
+          {/* Drawer */}
+          <div
+            className="fixed top-0 left-0 bottom-0 w-[280px] bg-black border-r border-gray-800 z-[60] transform transition-transform duration-300 overflow-y-auto shadow-2xl xl:hidden"
+          >
+            <div className="flex flex-col h-full">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                  <div className="relative w-24 h-6">
+                    <Image
+                      src="https://res.cloudinary.com/douy8ujry/image/upload/v1767777416/nplusone-fashion/Logo/logo.svg"
+                      alt="NPlusOne Logo"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                </Link>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Drawer Links */}
+              <div className="flex-1 py-4 px-4 space-y-2">
+                <SearchBar />
+                <div className="h-4"></div>
+                <Link href="/suit-set"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  SUIT SET
+                </Link>
+                <Link href="/western-dress"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  WESTERN WEAR
+                </Link>
+                <Link href="/co-ord-sets"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  CO-ORD SET
+                </Link>
+                <Link href="/kids"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  KID'S WEAR
+                </Link>
+                <Link href="/indi-western"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  INDO-WESTERN
+                </Link>
+                <Link href="/mens"
+                  className="block px-3 py-3 text-sm font-medium hover:bg-gray-900 rounded-md transition-colors text-gray-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  MEN'S WEAR
+                </Link>
+
+                <div className="border-t border-gray-800 my-4 pt-4">
+                  {/* Account / Cart Links in Drawer */}
+                  {mobileCartAndWishlistSection}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Login Modal */}
