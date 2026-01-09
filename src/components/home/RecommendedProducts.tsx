@@ -83,81 +83,130 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
   };
 
   return (
-    <div className="mt-8 md:mt-16 mb-8">
+    <div className="mt-10 md:mt-16 mb-8">
       <SectionTitle title={title} />
 
-      {/* Mobile-First Grid: 2 columns on mobile, 3 on tablet, 4 on desktop */}
-      <div className="px-4 md:px-10 mt-4 md:mt-6">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-8">
-          {products.slice(0, 8).map((product) => (
-            <div key={product.id} className="group">
-              <div className="relative border border-gray-800 rounded-md overflow-hidden bg-gray-900 group-hover:border-gray-600 transition">
+      <div className="overflow-hidden relative px-6 sm:px-8 md:px-10 mt-0">
+        {/* Prev button */}
+        <button
+          onClick={prevRecommended}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          aria-label="Previous recommended products"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        <div className="flex justify-center sm:justify-start items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
+          {getCurrentRecommended().map((product) => (
+            <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
+              <div className="relative">
                 <Link href={`/product/${product.id}`} className="block relative">
-                  {/* Aspect Ratio 3/4 */}
-                  <div className="relative aspect-[3/4] overflow-hidden bg-gray-800">
-                    <Image
-                      src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
-                      alt={product.alt || product.title}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {product.badge && (
-                      <div className={`absolute top-2 left-2 z-10 px-1.5 py-0.5 text-[10px] md:text-xs text-white font-bold rounded ${product.badge === 'Sale' ? 'bg-red-600' : 'bg-blue-600'}`}>
-                        {product.badge}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                  {product.badge && (
+                    <div className={`absolute top-0 left-0 z-10 px-2 sm:px-4 py-1 text-xs text-white font-medium ${product.badge === 'Sale' ? 'bg-red-600' : 'bg-blue-600'}`}>
+                      {product.badge}
+                    </div>
+                  )}
+                  <div className="relative overflow-hidden">
+                    <div className="w-full">
+                      <Image
+                        src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
+                        alt={product.alt || product.title}
+                        width={0}
+                        height={0}
+                        priority={true}
+                        loading="eager"
+                        quality={90}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
+                        role="image"
+                        style={{ width: '100%', height: 'auto' }}
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>
                   </div>
                 </Link>
 
-                {/* Quick View (Desktop Only) */}
+                {/* Quick View Button */}
                 <button
-                  className="hidden md:block absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md"
                   onClick={(e) => openQuickView(e, product)}
                   aria-label="Quick view"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                   </svg>
                 </button>
-              </div>
 
-              {/* Product Info */}
-              <div className="mt-2 text-center md:text-left">
-                <Link href={`/product/${product.id}`}>
-                  {/* Title: Tiny on mobile, normal on desktop */}
-                  <h3 className="text-white text-xs md:text-base font-medium line-clamp-1 hover:text-gray-300 transition">
-                    {product.title}
-                  </h3>
-                  {/* Prices */}
-                  <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-                    <span className="text-white font-bold text-sm md:text-lg">{product.price}</span>
-                    {product.originalPrice && (
-                      <span className="text-gray-500 text-xs md:text-sm line-through">{product.originalPrice}</span>
-                    )}
-                    {product.discount && (
-                      <span className="text-red-500 text-xs md:text-sm font-medium">{product.discount}</span>
-                    )}
-                  </div>
-                </Link>
+                <div className="mt-2 flex items-start justify-between">
+                  <Link href={`/product/${product.id}`} className="block flex-1">
+                    <h4 className="text-xs sm:text-sm font-medium text-[#CDCDCD] line-clamp-1 hover:text-white">{product.title}</h4>
+                    <div className="flex items-center mt-1">
+                      <span className="text-xs sm:text-sm font-bold text-[#CDCDCD]">{product.price}</span>
+                      {product.originalPrice && (
+                        <>
+                          <span className="text-xs text-gray-500 line-through ml-2">{product.originalPrice}</span>
+                          <span className="text-xs text-red-600 ml-2">{product.discount}</span>
+                        </>
+                      )}
+                    </div>
+                  </Link>
+                  <button
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label="Add to wishlist"
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevent navigation
+                      e.stopPropagation(); // Stop event bubbling
+                      console.log('Added to wishlist:', product.id);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Next button */}
+        <button
+          onClick={nextRecommended}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          aria-label="Next recommended products"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+
+        {/* Slider pagination */}
+        <div className="flex justify-center mt-4 z-30 relative">
+          {Array.from({ length: totalRecommendedPages }).map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setRecommendedIndex(idx)}
+              className={`mx-1 w-2 h-2 md:w-3 md:h-3 rounded-full ${idx === recommendedIndex ? 'bg-orange-500' : 'bg-gray-300'
+                }`}
+              aria-label={`Go to recommended page ${idx + 1}`}
+            />
           ))}
         </div>
       </div>
 
       {/* Quick View Modal */}
-      {selectedProduct && isQuickViewOpen && (
+      {selectedProduct && (
         <QuickViewModal
           product={selectedProduct}
+
           onClose={closeQuickView}
         />
       )}
     </div>
   );
 };
-
 
 export default RecommendedProducts; 

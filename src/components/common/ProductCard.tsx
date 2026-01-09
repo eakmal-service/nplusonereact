@@ -117,59 +117,55 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
               alt={product.alt || product.title}
               fill
               priority={priority}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover object-top hover:scale-105 transition-transform duration-500"
             />
             {product.discount && (
-              <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded">
+              <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
                 {product.discount}
               </div>
             )}
             {product.stockQuantity === 0 && (
               <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-                <span className="text-white font-bold text-lg md:text-xl">OUT OF STOCK</span>
+                <span className="text-white font-bold text-xl">OUT OF STOCK</span>
               </div>
-            )}
-
-            {/* Mobile: Floating Add to Cart Button */}
-            {product.stockQuantity > 0 && (
-              <button
-                onClick={handleAddToCart}
-                className="md:hidden absolute bottom-2 right-2 bg-white text-black p-2 rounded-full shadow-lg hover:bg-gray-200 transition z-10"
-                aria-label="Add to Cart"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </button>
             )}
           </div>
         </Link>
 
         {/* Product Details */}
-        <div className="p-3 md:p-4">
+        <div className="p-4">
           <Link href={productUrl}>
-            <h3 className="text-silver font-medium text-xs md:text-lg hover:text-gray-300 transition line-clamp-1">
-              {product.title}
-            </h3>
+            <h3 className="text-silver font-medium text-lg hover:text-gray-300 transition truncate">{product.title}</h3>
           </Link>
 
-          <div className="mt-1 md:mt-2 flex items-center flex-wrap gap-1 md:gap-2">
+          <div className="mt-2 flex items-center">
             <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-sm md:text-xl">₹{product.salePrice}</span>
-              <span className="text-gray-500 line-through text-xs md:text-sm">₹{product.price}</span>
+              <span className="text-white font-bold text-xl">₹{product.salePrice}</span>
+              <span className="text-gray-500 line-through text-sm">₹{product.price}</span>
             </div>
 
-            {/* Rating */}
+            {/* Rating - Left aligned next to price */}
             {(product.rating || 0) > 0 && (
-              <div className="hidden md:flex items-center gap-1 ml-2">
+              <div className="flex items-center gap-1 ml-2">
                 {renderStars(product.rating || 0)}
               </div>
             )}
+
+            <button
+              onClick={handleQuickView}
+              className="text-gray-400 hover:text-white transition p-1 ml-auto"
+              aria-label="Quick View"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
           </div>
 
-          {/* Desktop: Text Buttons */}
-          <div className="hidden md:block mt-3 space-y-2">
+          {/* Add to Cart Button */}
+          <div className="mt-3">
             <button
               onClick={handleAddToCart}
               className="w-full bg-silver hover:bg-gray-300 text-black font-medium py-2 rounded transition"
@@ -177,16 +173,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
             >
               {product.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
             </button>
-            <button
-              onClick={handleWishlist}
-              className={`w-full border ${isInWishlistState ? 'border-red-500 text-red-500' : 'border-gray-600 text-silver'} hover:border-silver hover:text-white font-medium py-2 rounded transition flex items-center justify-center`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-1 ${isInWishlistState ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              {isInWishlistState ? 'Remove' : 'Wishlist'}
-            </button>
           </div>
+
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlist}
+            className={`mt-2 w-full border ${isInWishlistState ? 'border-red-500 text-red-500' : 'border-gray-600 text-silver'} hover:border-silver hover:text-white font-medium py-2 rounded transition flex items-center justify-center`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-1 ${isInWishlistState ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            {isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          </button>
         </div>
       </div>
 
