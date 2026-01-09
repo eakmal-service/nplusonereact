@@ -81,13 +81,7 @@ export default function AccountPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-medium text-silver">Account Type</h3>
-                            <div className="bg-black/50 p-4 rounded-lg">
-                                <p className="text-white mb-1">Standard Account</p>
-                                <p className="text-sm text-gray-400">Upgrade to become a premium member and unlock exclusive benefits.</p>
-                            </div>
-                        </div>
+
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-gray-800 flex justify-end">
