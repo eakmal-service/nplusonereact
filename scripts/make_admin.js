@@ -45,4 +45,4 @@ async function makeAdmin(email) {
     }
 }
 
-makeAdmin('hanzalaq63@gmail.com');
+makeAdmin('abduljalilmulla762@gmail.com');

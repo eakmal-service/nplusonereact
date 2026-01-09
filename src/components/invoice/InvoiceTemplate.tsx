@@ -105,7 +105,7 @@ const InvoiceTemplate: React.FC<InvoiceProps> = ({ order, items, user }) => {
                             <div className="mt-3 space-y-1">
                                 <p>GSTIN: <span className="font-bold">24JMPPS6289M1ZQ</span></p>
                                 <p>Phone: +91 8329208323</p>
-                                <p>Email: nplusonefashion@gmail.com</p>
+                                <p>Email: support@nplusonefashion.com</p>
                                 <p>Website: www.nplusonefashion.com</p>
                             </div>
                         </div>

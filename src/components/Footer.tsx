@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
               </p>
               <p>
                 <span className="block text-xs uppercase text-gray-600 mb-1">Email</span>
-                <a href="mailto:nplusonefashion@gmail.com" className="hover:text-silver transition-colors">nplusonefashion@gmail.com</a>
+                <a href="mailto:support@nplusonefashion.com" className="hover:text-silver transition-colors">support@nplusonefashion.com</a>
               </p>
             </div>
 

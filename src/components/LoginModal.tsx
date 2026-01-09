@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -8,6 +9,43 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+interface PasswordInputProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  className: string;
+  required?: boolean;
+}
+
+const PasswordInput: React.FC<PasswordInputProps> = ({ value, onChange, placeholder, className, required }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        type={showPassword ? 'text' : 'password'}
+        placeholder={placeholder}
+        className={`${className} pr-10`}
+        value={value}
+        onChange={onChange}
+        required={required}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-0 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+        style={{ marginRight: '4px' }}
+      >
+        {showPassword ? (
+          <EyeSlashIcon className="h-5 w-5" />
+        ) : (
+          <EyeIcon className="h-5 w-5" />
+        )}
+      </button>
+    </div>
+  );
+};
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const { login, signup, loginWithOtp, verifyOtp, updateUserPassword } = useAuth(); // Removed 'resetPasswordForEmail' as we use OTP flow for reset
@@ -360,8 +398,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {error && <p className="text-red-400 text-xs text-center mb-4">{error}</p>}
             <form onSubmit={handleForgotResetSubmit}>
               <div className="mb-6">
-                <input
-                  type="password"
+                <PasswordInput
                   placeholder="New Password"
                   className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
                   value={newPassword}
@@ -370,8 +407,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 />
               </div>
               <div className="mb-6">
-                <input
-                  type="password"
+                <PasswordInput
                   placeholder="Confirm New Password"
                   className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
                   value={confirmPassword}
@@ -418,8 +454,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 />
               </div>
               <div className="mb-6">
-                <input
-                  type="password"
+                <PasswordInput
                   placeholder="Password"
                   className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
                   value={password}
@@ -479,8 +514,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               {/* Password Input */}
               {loginMethod === 'password' && (
                 <div className="mb-6">
-                  <input
-                    type="password"
+                  <PasswordInput
                     placeholder="Enter password"
                     className="w-full border-b border-gray-600 bg-transparent py-2 text-white focus:outline-none focus:border-white placeholder-gray-500"
                     value={password}
