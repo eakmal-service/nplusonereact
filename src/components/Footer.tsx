@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm">
               <li><Link href="/refund-policy" className="hover:text-silver transition-colors">Return & Refund Policy</Link></li>
               <li><Link href="/shipping" className="hover:text-silver transition-colors">Shipping Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-silver transition-colors">Terms of Service</Link></li>
+              <li><Link href="/terms" className="hover:text-silver transition-colors">Terms & Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-silver transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
