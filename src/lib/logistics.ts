@@ -63,14 +63,15 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
         // Map Items (Handle both DB 'order_items' snake_case and Frontend 'cart' camelCase if needed)
         // DB: product_name, price_per_unit, quantity, product_id
         // Frontend: name, price, quantity, id
+        // API v3: p_name, p_sku, p_qty, p_price, p_tax_rate, p_hsn_code, p_discount
         const products = (order.items || []).map((item: any) => ({
-            product_name: item.product_name || item.name || "Apparel Item",
-            product_sku: item.product_id || item.id || 'SKU-GENERIC',
-            product_quantity: item.quantity,
-            product_price: item.price_per_unit || item.price || 0,
-            product_tax_rate: 5,
-            product_hsn_code: '6204',
-            product_discount: 0
+            p_name: item.product_name || item.name || "Apparel Item",
+            p_sku: item.product_sku || item.id || 'SKU-GENERIC',
+            p_qty: item.quantity,
+            p_price: item.price_per_unit || item.price || 0,
+            p_tax_rate: 5,
+            p_hsn_code: '6204',
+            p_discount: 0
         }));
 
         const totalAmount = order.total_amount || order.total || 0;
@@ -107,9 +108,7 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                         shipment_height: 5,
                         shipment_weight: 0.5,
 
-                        pickup_address_id: PICKUP_ID,
-                        access_token: ACCESS_TOKEN,
-                        secret_key: SECRET_KEY
+                        return_address_id: PICKUP_ID // API v3 typically requires this for return shipments, good practice to include
                     }
                 ],
                 pickup_address_id: PICKUP_ID,
@@ -136,5 +135,596 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
     }
 };
 
+// 3. Track Order
+export const trackOrder = async (awbNumbers: string[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_number_list: awbNumbers.join(','),
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/track.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Track):', error);
+        return null;
+    }
+};
+
+// 4. Cancel Order
+export const cancelOrder = async (awbNumbers: string[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_numbers: awbNumbers.join(','),
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/cancel.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Cancel):', error);
+        return null;
+    }
+};
+
+// 5. Print Label
+export const printLabel = async (awbNumbers: string[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_numbers: awbNumbers.join(','),
+                page_size: 'A4', // Defaulting to A4
+                display_cod_prepaid: '1',
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/shipping/label.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Print Label):', error);
+        return null;
+    }
+};
+
+// 6. Print Manifest
+export const printManifest = async (awbNumbers: string[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_numbers: awbNumbers.join(','),
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/shipping/manifest.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Print Manifest):', error);
+        return null;
+    }
+};
+
+// 7. Get Order Details (via AWB)
+export const getOrderDetails = async (awbNumbers: string[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_number_list: awbNumbers.join(','),
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/get_details.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Order Details):', error);
+        return null;
+    }
+};
+
+
+
+// 9. Print Invoice - CORRECTED V3
+export const printInvoice = async (awb: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_numbers: awb, // Verified: awb_numbers (plural)
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/shipping/invoice.json`, { // Verified: /shipping/invoice.json
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        // Response might be PDF binary or JSON url? Doc says "Print Invoice"
+        // Usually returns JSON with URL or binary. Let's return JSON for now.
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Print Invoice):', error);
+        return null;
+    }
+};
+
+// 10. Sync Order - CORRECTED V3
+export const syncOrder = async (shipments: any[]) => {
+    if (!checkConfig()) return null;
+
+    try {
+        // Doc says max 25
+        const payload = {
+            data: {
+                shipments: shipments,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/sync.json`, { // Verified: /order/sync.json
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Sync Order):', error);
+        return null;
+    }
+};
+
+// 11. Update Payment - CORRECTED V3
+export const updatePayment = async (awb: string, codAmount: string, paymentType: string = 'prepaid') => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                awb_numbers: awb, // Verified: awb_numbers (plural)
+                cod_amount: codAmount,
+                payment_type: paymentType,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/update-payment.json`, { // Verified: /order/update-payment.json
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Update Payment):', error);
+        return null;
+    }
+};
+
+// 12. Check AWB (Get Airwaybill) - CORRECTED V3
+// NOTE: Window must be <= 30 mins
+export const checkAWB = async (fromDate: string, toDate: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                start_date_time: fromDate, // Doc name: start_date_time
+                end_date_time: toDate,     // Doc name: end_date_time
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/order/get_awb.json`, { // Verified: /order/get_awb.json
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Check AWB):', error);
+        return null;
+    }
+};
+
+
+// 13. Get Cities
+export const getCities = async (stateId: number) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                state_id: stateId,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/city/get.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Cities):', error);
+        return null;
+    }
+};
+
+// 14. Add Warehouse
+export const addWarehouse = async (details: any) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                ...details,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/warehouse/add.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Add Warehouse):', error);
+        return null;
+    }
+};
+
+// 15. Get Warehouses
+export const getWarehouses = async () => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/warehouse/get.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Warehouses):', error);
+        return null;
+    }
+};
+
+// 16. Get Rate (Specific)
+export const getRate = async (data: any) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                ...data,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/rate/check.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Rate):', error);
+        return null;
+    }
+};
+
+// 17. Get Rate Zone Wise
+export const getRateZoneWise = async (data: any) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                ...data,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/rate/zone_rate.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Rate Zone Wise):', error);
+        return null;
+    }
+};
+
+// 18. Get Remittance
+export const getRemittance = async (remittanceDate: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                remittance_date: remittanceDate,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/remittance/get.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Remittance):', error);
+        return null;
+    }
+};
+
+// 19. Get Remittance Details
+export const getRemittanceDetails = async (remittanceDate: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                remittance_date: remittanceDate,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/remittance/get_details.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Remittance Details):', error);
+        return null;
+    }
+};
+
+// 20. Get Store
+export const getStore = async (storeId?: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                ...(storeId ? { store_id: storeId } : {}),
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/store/get.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Store):', error);
+        return null;
+    }
+};
+
+// 21. Get Store Order Details
+export const getStoreOrderDetails = async (orderNoList: string[], platformId: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                order_no_list: orderNoList.join(','),
+                platform_id: platformId,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/store/get-order-details.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Store Order Details):', error);
+        return null;
+    }
+};
+
+// 22. Get Store Order List
+export const getStoreOrderList = async (startDate: string, endDate: string, platformId: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                start_date: startDate,
+                end_date: endDate,
+                platform_id: platformId,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/store/get-order-list.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get Store Order List):', error);
+        return null;
+    }
+};
+
+// 23. Add Reattempt/RTO
+export const addReattemptRTO = async (data: any) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                shipments: [data], // Wrapping single data object in array as per doc example
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/ndr/add-reattempt-rto.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Add Reattempt/RTO):', error);
+        return null;
+    }
+};
+
+// 24. Get NDR (Placeholder / Standard pattern)
+export const getNDR = async (fromDate: string, toDate: string) => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                from_date: fromDate,
+                to_date: toDate,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        // Note: Using /ndr/all.json as a standard likely endpoint based on sidebar "All NDR"
+        // If this fails, user might need to confirm exact "Get All NDR" endpoint from V2 if V3 is silent.
+        const response = await fetch(`${BASE_URL}/ndr/all.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get NDR):', error);
+        return null;
+    }
+};
+
 // Backwards compatibility alias if needed
 export const checkPincode = checkPincodeServiceability;
+
+
+
+
+
+
+

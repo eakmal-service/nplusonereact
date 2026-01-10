@@ -11,6 +11,7 @@ import ReviewsSection from '@/components/admin/ReviewsSection';
 import CouponsSection from '@/components/admin/CouponsSection';
 import ErrorLogsSection from '@/components/admin/ErrorLogsSection';
 import ContentManagementSection from '@/components/admin/ContentManagementSection';
+import LogisticsSection from '../../../components/admin/LogisticsSection';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('addProduct');
@@ -87,6 +88,18 @@ const AdminDashboard = () => {
                       }`}
                   >
                     📦 Orders
+                  </button>
+                </li>
+                {/* Logistics Tab */}
+                <li>
+                  <button
+                    onClick={() => setActiveTab('logistics')}
+                    className={`w-full text-left px-4 py-2 rounded ${activeTab === 'logistics'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`}
+                  >
+                    🚚 Logistics
                   </button>
                 </li>
                 <li>
@@ -190,6 +203,13 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {activeTab === 'logistics' && (
+              <div>
+                {/* Removed Header inside section as it has its own inside the component */}
+                <LogisticsSection />
+              </div>
+            )}
+
             {activeTab === 'reviews' && (
               <div>
                 <h1 className="text-2xl font-bold mb-6 text-silver">⭐ Reviews</h1>
@@ -197,6 +217,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* ... other tabs ... */}
             {activeTab === 'coupons' && (
               <div>
                 <CouponsSection />
