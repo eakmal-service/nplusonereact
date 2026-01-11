@@ -104,7 +104,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     colorName: initialData?.colorName || '',
     color: initialData?.colorOptions?.[0]?.code || '#000000',
     sizes: (initialData?.sizes || []) as string[],
-    images: [] as File[],
+    images: (initialData?.imageUrls || []) as (File | string)[],
     sku: initialData?.sku || '',
     barcode: initialData?.barcode || '',
     videoUrl: initialData?.videoUrl || '',
@@ -281,7 +281,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     if (!form.salePrice) newErrors.salePrice = 'Sale price is required.';
     if (!form.category) newErrors.category = 'Category is required.';
     if (!form.material) newErrors.material = 'Material is required.';
-    if (form.images.filter(Boolean).length === 0 && !initialData?.imageUrls) newErrors.images = 'At least one image is required.';
+    if (form.images.filter(Boolean).length === 0) newErrors.images = 'At least one image is required.';
     if (form.sizes.length === 0) newErrors.sizes = 'Select at least one size.';
     return newErrors;
   };
@@ -298,19 +298,23 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         // 1. Upload Images
         const uploadedUrls: string[] = [];
         // Map images to specific slots if possible, otherwise just push
-        for (const file of form.images) {
-          if (file) {
-            const url = await uploadImage(file, {
-              type: 'product',
-              category: form.category,
-              subcategory: form.subcategory,
-              hsnCode: form.hsnCode
-            });
-            if (url) uploadedUrls.push(url);
+        for (const item of form.images) {
+          if (item) {
+            if (typeof item === 'string') {
+              uploadedUrls.push(item);
+            } else {
+              const url = await uploadImage(item, {
+                type: 'product',
+                category: form.category,
+                subcategory: form.subcategory,
+                hsnCode: form.hsnCode
+              });
+              if (url) uploadedUrls.push(url);
+            }
           }
         }
 
-        if (uploadedUrls.length === 0 && !initialData?.imageUrls) {
+        if (uploadedUrls.length === 0) {
           alert('Failed to upload images. Please try again.');
           setIsSubmitting(false);
           return;
@@ -329,7 +333,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           material: form.material,
           status: form.status,
           imageUrl: uploadedUrls[0] || initialData?.imageUrl,
-          imageUrls: uploadedUrls.length > 0 ? uploadedUrls : (initialData?.imageUrls || []),
+          imageUrls: uploadedUrls,
           sizes: form.sizes.map(String),
           colorName: form.colorName, // Just simple color name now
           sku: form.sku,
@@ -833,7 +837,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                     {form.images[idx] ? (
                       <div className="w-full h-full relative group">
                         <img
-                          src={URL.createObjectURL(form.images[idx])}
+                          src={typeof form.images[idx] === 'string' ? (form.images[idx] as string) : URL.createObjectURL(form.images[idx] as File)}
                           alt="preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
@@ -843,7 +847,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                           setForm(prev => ({ ...prev, images: newImages }));
                         }} className="absolute top-2 right-2 bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity" disabled={isSubmitting}>&times;</button>
                         <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-[10px] text-center py-1 truncate px-1 rounded-b-lg">
-                          {form.images[idx].name}
+                          {typeof form.images[idx] === 'string' ? 'Existing Image' : (form.images[idx] as File).name}
                         </div>
                       </div>
                     ) : (

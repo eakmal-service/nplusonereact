@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Link } from "lucide-react"; // Placeholder import, icons used inline below
+import { Link } from "lucide-react";
 import { RefreshCw, CheckCircle, XCircle, FileText, DollarSign, XSquare } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -12,69 +12,66 @@ export default function RefundPolicyPage() {
         <div className="bg-black min-h-screen py-12 px-4 sm:px-6 lg:px-8 mt-20">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold text-silver mb-8 text-center uppercase tracking-wide">
-                    Return & Refund Policy
+                    Refund and Cancellation policy
                 </h1>
 
                 <div className="space-y-8 text-gray-300">
                     <p className="text-gray-400 text-center mb-8">
-                        At NPlusOne Fashion, we want you to love what you ordered. If something isn't right, let us know.
+                        This refund and cancellation policy outlines how you can cancel or seek a refund for a product / service that you have purchased through the Platform.
                     </p>
 
-                    {/* Returns & Exchanges */}
+                    {/* Cancellation Policy */}
                     <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                         <div className="flex items-start space-x-4">
-                            <RefreshCw className="w-8 h-8 text-silver flex-shrink-0 mt-1" />
+                            <XSquare className="w-8 h-8 text-silver flex-shrink-0 mt-1" />
                             <div>
-                                <h2 className="text-xl font-bold text-silver mb-3">1. Returns & Exchanges</h2>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>We accept returns/exchanges within <strong>7 days</strong> of delivery.</li>
-                                    <li>The item must be unused, unwashed, and in its original condition with all tags intact.</li>
+                                <h2 className="text-xl font-bold text-silver mb-3">1. Cancellation Policy</h2>
+                                <p className="text-gray-400 mb-2">
+                                    Under this policy:
+                                </p>
+                                <ul className="list-disc pl-5 space-y-2 text-gray-400">
+                                    <li>Cancellations will only be considered if the request is made within 7 days of placing the order. However, cancellation requests may not be entertained if the orders have been communicated to such sellers / merchant(s) listed on the Platform and they have initiated the process of shipping them, or the product is out for delivery. In such an event, you may choose to reject the product at the doorstep.</li>
+                                    <li>NPlusOne Fashion does not accept cancellation requests for perishable items like flowers, eatables, etc. However, the refund / replacement can be made if the user establishes that the quality of the product delivered is not good.</li>
                                 </ul>
                             </div>
                         </div>
                     </section>
 
-                    {/* Eligible Cases */}
-                    <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-                        <div className="flex items-start space-x-4">
-                            <CheckCircle className="w-8 h-8 text-green-500 flex-shrink-0 mt-1" />
-                            <div>
-                                <h2 className="text-xl font-bold text-silver mb-3">2. Eligible Cases for Return</h2>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>Defective or damaged product received.</li>
-                                    <li>Wrong size or product delivered.</li>
-                                    <li>Quality issues (subject to verification).</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Non-Returnable */}
+                    {/* Damaged or Defective Items */}
                     <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                         <div className="flex items-start space-x-4">
                             <XCircle className="w-8 h-8 text-red-500 flex-shrink-0 mt-1" />
                             <div>
-                                <h2 className="text-xl font-bold text-silver mb-3">3. Non-Returnable Items</h2>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>Products purchased during clearace sales.</li>
-                                    <li>Accessories and innerwear (for hygiene reasons).</li>
-                                    <li>Items without original tags or packaging.</li>
-                                </ul>
+                                <h2 className="text-xl font-bold text-silver mb-3">2. Damaged or Defective Items</h2>
+                                <p className="text-gray-400">
+                                    In case of receipt of damaged or defective items, please report to our customer service team. The request would be entertained once the seller/ merchant listed on the Platform, has checked and determined the same at its own end. This should be reported within 7 days of receipt of products.
+                                </p>
                             </div>
                         </div>
                     </section>
 
-                    {/* Return Process */}
+                    {/* Product Mismatch */}
                     <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                         <div className="flex items-start space-x-4">
-                            <FileText className="w-8 h-8 text-blue-400 flex-shrink-0 mt-1" />
+                            <RefreshCw className="w-8 h-8 text-blue-400 flex-shrink-0 mt-1" />
                             <div>
-                                <h2 className="text-xl font-bold text-silver mb-3">4. How to Initiate a Return</h2>
-                                <ol className="list-decimal pl-5 space-y-2">
-                                    <li>Email us at <a href="mailto:support@nplusonefashion.com" className="text-silver hover:underline">support@nplusonefashion.com</a> or WhatsApp us at +91 8329208323 with your Order ID and images of the product.</li>
-                                    <li>Our team will review your request within 24-48 hours.</li>
-                                    <li>Once approved, we will arrange a reverse pickup (subject to pincode availability).</li>
-                                </ol>
+                                <h2 className="text-xl font-bold text-silver mb-3">3. Product Mismatch</h2>
+                                <p className="text-gray-400">
+                                    In case you feel that the product received is not as shown on the site or as per your expectations, you must bring it to the notice of our customer service within 7 days of receiving the product. The customer service team after looking into your complaint will take an appropriate decision.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Warranty */}
+                    <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
+                        <div className="flex items-start space-x-4">
+                            <CheckCircle className="w-8 h-8 text-green-500 flex-shrink-0 mt-1" />
+                            <div>
+                                <h2 className="text-xl font-bold text-silver mb-3">4. Manufacturer Warranty</h2>
+                                <p className="text-gray-400">
+                                    In case of complaints regarding the products that come with a warranty from the manufacturers, please refer the issue to them.
+                                </p>
                             </div>
                         </div>
                     </section>
@@ -85,28 +82,12 @@ export default function RefundPolicyPage() {
                             <DollarSign className="w-8 h-8 text-yellow-500 flex-shrink-0 mt-1" />
                             <div>
                                 <h2 className="text-xl font-bold text-silver mb-3">5. Refunds</h2>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Prepaid Orders:</strong> Refund will be credited to the original source within 5-7 working days after we receive the product.</li>
-                                    <li><strong>COD Orders:</strong> Refund will be provided via bank transfer or UPI. You will need to provide your bank details.</li>
-                                </ul>
+                                <p className="text-gray-400">
+                                    In case of any refunds approved by NPlusOne Fashion, it will take 10 days for the refund to be processed to you.
+                                </p>
                             </div>
                         </div>
                     </section>
-
-                    {/* Cancellation */}
-                    <section className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-                        <div className="flex items-start space-x-4">
-                            <XSquare className="w-8 h-8 text-gray-500 flex-shrink-0 mt-1" />
-                            <div>
-                                <h2 className="text-xl font-bold text-silver mb-3">6. Cancellation Policy</h2>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>Orders can be cancelled before they are shipped.</li>
-                                    <li>Once shipped, the order cannot be cancelled but can be returned after delivery.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
                 </div>
             </div>
         </div>
