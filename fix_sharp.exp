@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /root/nplusone/nplus && npm list sharp && npm install sharp --legacy-peer-deps && pm2 restart nplusone"
+expect "*?assword:*"
+send "$password\r"
+expect eof

@@ -4,7 +4,7 @@ set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
 
-spawn ssh -o StrictHostKeyChecking=no $user@$host "ls -la /root/nplusone/nplus/.next/standalone/public/images/"
+spawn ssh -o StrictHostKeyChecking=no $user@$host "curl -I http://localhost:3000/api/admin/content"
 expect "*?assword:*"
 send "$password\r"
 expect eof

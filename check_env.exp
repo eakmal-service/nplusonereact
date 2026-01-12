@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host "ls -la /root/nplusone/nplus/.env.local && ls -la /root/nplusone/nplus/.next/standalone/.env.local && grep 'SUPABASE_URL' /root/nplusone/nplus/.env.local"
+expect "*?assword:*"
+send "$password\r"
+expect eof

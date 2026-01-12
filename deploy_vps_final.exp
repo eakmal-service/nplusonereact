@@ -4,14 +4,45 @@ set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
 
-set env_content "HOSTINGER_API_TOKEN=tdOfGugxiLNVrBK5BM7fFe335l18EiihaqYMKDqu1f23dcbb\n\n# Cloudinary Configuration\nNEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=douy8ujry\nCLOUDINARY_API_KEY=279443238934183\nCLOUDINARY_API_SECRET=4mcVRmTfKjMV2DBK4MZQb0jMb6o\nCLOUDINARY_URL=cloudinary://279443238934183:4mcVRmTfKjMV2DBK4MZQb0jMb6o@douy8ujry\n\n# Supabase Configuration\nNEXT_PUBLIC_SUPABASE_URL=https://jdwzdwkkmqaaycgjuipn.supabase.co\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE\nSUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0\n\n# VPS SSH Credentials\nVPS_HOST=72.61.229.171\nVPS_USER=root\nVPS_PASSWORD=)vbofQi/lHXSMqF?Nk8E\n\n# iThinkLogistics Staging Keys\nITHINK_BASE_URL=https://pre-alpha.ithinklogistics.com/api_v3\nITHINK_ACCESS_TOKEN=5a7b40197cd919337501dd6e9a3aad9a\nITHINK_SECRET_KEY=2b54c373427be180d1899400eeb21aab\nITHINK_PICKUP_ID=1293\n\n# PhonePe Configuration (UAT/Sandbox)\nPHONEPE_CLIENT_ID=\"M23MML14I7ZCI_2601111701\"\nPHONEPE_CLIENT_SECRET=\"NDQ1NWZhOWQtMTM0OC00NzcxLTkxNDAtNTg0M2M2NWFhOTM3\"\nPHONEPE_CLIENT_VERSION=\"1\"\nPHONEPE_MERCHANT_ID=\"M23MML14I7ZCI\"\nPHONEPE_ENV=\"SANDBOX\"\nNEXT_PUBLIC_APP_URL=\"https://nplusonefashion.com\""
+# 1. Fetch & Reset (Ensure code is fresh)
+# 2. DELETE RAZORPAY (Safety)
+# 3. Restore .env.local via echo
+# 4. Sync code
+# 5. Build
+# 6. Copy .env.local to standalone (CRITICAL FIX)
+# 7. Copy assets
+# 8. Restart
+spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /var/www/nplusone && git fetch origin && git reset --hard origin/main && rm -rf src/app/api/payment/razorpay src/lib/razorpay.ts && git clean -fdx && echo 'HOSTINGER_API_TOKEN=tdOfGugxiLNVrBK5BM7fFe335l18EiihaqYMKDqu1f23dcbb
 
-# 1. Fetch & Reset
-# 2. Clean untracked
-# 3. Restore .env.local
-# 4. SWEEP TARGET DIR (Fix for zombie files)
-# 5. Sync, Build, Asset Copy, Restart
-spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /var/www/nplusone && git fetch origin && git reset --hard origin/main && git clean -fdx && echo '$env_content' > .env.local && rm -rf /root/nplusone/nplus/* && cp -a /var/www/nplusone/. /root/nplusone/nplus/ && cd /root/nplusone/nplus && npm install --legacy-peer-deps && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && pm2 restart nplusone"
+# Cloudinary Configuration
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=douy8ujry
+CLOUDINARY_API_KEY=279443238934183
+CLOUDINARY_API_SECRET=4mcVRmTfKjMV2DBK4MZQb0jMb6o
+CLOUDINARY_URL=cloudinary://279443238934183:4mcVRmTfKjMV2DBK4MZQb0jMb6o@douy8ujry
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://jdwzdwkkmqaaycgjuipn.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0
+
+# VPS SSH Credentials
+VPS_HOST=72.61.229.171
+VPS_USER=root
+VPS_PASSWORD=)vbofQi/lHXSMqF?Nk8E
+
+# iThinkLogistics Staging Keys
+ITHINK_BASE_URL=https://pre-alpha.ithinklogistics.com/api_v3
+ITHINK_ACCESS_TOKEN=5a7b40197cd919337501dd6e9a3aad9a
+ITHINK_SECRET_KEY=2b54c373427be180d1899400eeb21aab
+ITHINK_PICKUP_ID=1293
+
+# PhonePe Configuration (UAT/Sandbox)
+PHONEPE_CLIENT_ID=\"M23MML14I7ZCI_2601111701\"
+PHONEPE_CLIENT_SECRET=\"NDQ1NWZhOWQtMTM0OC00NzcxLTkxNDAtNTg0M2M2NWFhOTM3\"
+PHONEPE_CLIENT_VERSION=\"1\"
+PHONEPE_MERCHANT_ID=\"M23MML14I7ZCI\"
+PHONEPE_ENV=\"SANDBOX\"
+NEXT_PUBLIC_APP_URL=\"https://nplusonefashion.com\"' > .env.local && rm -rf /root/nplusone/nplus/* && cp -a /var/www/nplusone/. /root/nplusone/nplus/ && cd /root/nplusone/nplus && npm install --legacy-peer-deps && npm run build && cp .env.local .next/standalone/ && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && pm2 restart nplusone --update-env"
 expect "*?assword:*"
 send "$password\r"
 expect eof

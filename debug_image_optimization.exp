@@ -4,7 +4,7 @@ set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
 
-spawn ssh -o StrictHostKeyChecking=no $user@$host "ls -la /root/nplusone/nplus/.next/standalone/public/images/"
+spawn ssh -o StrictHostKeyChecking=no $user@$host "curl -I 'http://localhost:3000/_next/image?url=%2Ficons%2Fwishlist-filled.png&w=64&q=75'"
 expect "*?assword:*"
 send "$password\r"
 expect eof

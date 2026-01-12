@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host "ls -F /root/nplusone/nplus/.next/standalone/ && echo '--- PUBLIC ---' && ls -F /root/nplusone/nplus/.next/standalone/public/ && echo '--- STATIC ---' && ls -F /root/nplusone/nplus/.next/standalone/.next/"
+expect "*?assword:*"
+send "$password\r"
+expect eof

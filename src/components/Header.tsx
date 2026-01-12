@@ -132,6 +132,7 @@ const Header = () => {
             alt="Wishlist"
             fill
             className="object-contain invert"
+            unoptimized
           />
         </div>
         {wishlist.length > 0 && (
@@ -168,9 +169,9 @@ const Header = () => {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${isScrolled || isHovered || mobileMenuOpen ||
-            ['/contact', '/about', '/refund-policy', '/shipping', '/terms', '/privacy'].includes(pathname || '')
-            ? 'bg-black'
-            : 'bg-transparent'
+          ['/contact', '/about', '/refund-policy', '/shipping', '/terms', '/privacy'].includes(pathname || '')
+          ? 'bg-black'
+          : 'bg-transparent'
           }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
