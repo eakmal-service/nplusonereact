@@ -45,6 +45,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick }) => {
                     alt="Login"
                     fill
                     className="object-contain invert"
+                    unoptimized
                 />
             </button>
         );
@@ -61,6 +62,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onLoginClick }) => {
                     alt="Account"
                     fill
                     className="object-contain invert"
+                    unoptimized
                 />
             </Menu.Button>
 
