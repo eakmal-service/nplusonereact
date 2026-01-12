@@ -8,6 +8,11 @@ const CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET || 'NO_CLIENT_SECRET_CON
 const CLIENT_VERSION = parseInt(process.env.PHONEPE_CLIENT_VERSION || '1');
 const ENV = (process.env.PHONEPE_ENV === 'PRODUCTION') ? Env.PRODUCTION : Env.SANDBOX;
 
+// Re-use logic for GET requests (redirects)
+export async function GET(req: Request) {
+    return POST(req);
+}
+
 export async function POST(req: Request) {
     try {
         console.log("Received PhonePe Callback/Redirect");
@@ -20,11 +25,15 @@ export async function POST(req: Request) {
         } else if (contentType.includes('application/x-www-form-urlencoded')) {
             const formData = await req.formData();
             body = Object.fromEntries(formData.entries());
+        } else {
+            // Check query params if body parsing fails or for GET requests
+            const { searchParams } = new URL(req.url);
+            body = Object.fromEntries(searchParams.entries());
         }
 
         const { code, merchantId, transactionId, amount, providerReferenceId } = body;
 
-        console.log("Callback Body:", JSON.stringify(body));
+        console.log("Callback Body/Params:", JSON.stringify(body));
 
         const frontendRedirect = process.env.NEXT_PUBLIC_APP_URL || 'https://nplusonefashion.com';
         let targetUrl = `${frontendRedirect}/order-confirmation/${transactionId || 'error'}`;
