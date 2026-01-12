@@ -1,3 +1,5 @@
+"use client";
+
 import EnhancedProductGrid from '../../components/common/EnhancedProductGrid';
 import { useProducts } from '../../contexts/ProductContext';
 import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
