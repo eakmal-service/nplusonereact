@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+# Supabase Keys (Hardcoded for injection)
+set sb_url "https://jdwzdwkkmqaaycgjuipn.supabase.co"
+set sb_key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+
+# Clean previous build
+expect "#"
+send "rm -rf .next\r"
+
+# Build with INLINE environment variables
+expect "#"
+send "export NEXT_PUBLIC_SUPABASE_URL=$sb_url\r"
+expect "#"
+send "export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$sb_key\r"
+expect "#"
+send "npm run build\r"
+
+# Restore Standalone Structure
+expect "#"
+send "cp -r public .next/standalone/\r"
+expect "#"
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "#"
+send "cp .env.local .next/standalone/.env.production\r"
+
+# Restart
+expect "#"
+send "pm2 restart nplusone\r"
+
+expect "#"
+send "exit\r"
+expect eof

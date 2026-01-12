@@ -41,7 +41,7 @@ export const checkPincodeServiceability = async (pincode: string) => {
     }
 };
 
-// 2. Create Shipment (Common for Razorpay & COD)
+// 2. Create Shipment (Common for Prepaid & COD)
 export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD') => {
     if (!checkConfig()) return null;
 

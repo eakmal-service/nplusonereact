@@ -1,0 +1,41 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+
+# 1. Copy Public folder to Standalone
+expect "#"
+send "cp -r public .next/standalone/\r"
+
+# Verify Public copy
+expect "#"
+send "ls -ld .next/standalone/public\r"
+
+# 2. Copy Static folder to Standalone (Ensure parent dir exists)
+expect "#"
+send "mkdir -p .next/standalone/.next\r"
+expect "#"
+send "cp -r .next/static .next/standalone/.next/\r"
+
+# Verify Static copy
+expect "#"
+send "ls -ld .next/standalone/.next/static\r"
+
+# 3. Restart Server
+expect "#"
+send "pm2 restart nplusone\r"
+
+expect "#"
+send "exit\r"
+expect eof

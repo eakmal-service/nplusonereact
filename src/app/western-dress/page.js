@@ -5,6 +5,8 @@ import Link from 'next/link';
 import CategoryProductsGrid from '../../components/common/CategoryProductsGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
+import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
+
 export default function WesternDressPage() {
     const { getActiveProductsByCategory, isLoading } = useProducts();
     const products = getActiveProductsByCategory('western-dress');
@@ -15,9 +17,7 @@ export default function WesternDressPage() {
                 <h1 className="text-3xl font-bold mb-6 text-silver">Western Dress</h1>
 
                 {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-silver"></div>
-                    </div>
+                    <ProductGridSkeleton count={8} />
                 ) : products.length > 0 ? (
                     <CategoryProductsGrid products={products} />
                 ) : (

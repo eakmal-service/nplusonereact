@@ -1,0 +1,23 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "ls -la /var/www/nplusone/.next/standalone\r"
+expect "#"
+send "ls -la /var/www/nplusone/.next\r"
+expect "#"
+send "cat /var/www/nplusone/next.config.js\r"
+expect "#"
+
+send "exit\r"
+expect eof

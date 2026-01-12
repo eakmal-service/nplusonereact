@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+set timeout 900
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+# 1. Update git repo in /var/www/nplusone
+# 2. Sync to running dir /root/nplusone/nplus
+# 3. Build and Restart
+spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /var/www/nplusone && git reset --hard && git pull origin main && cp -a /var/www/nplusone/. /root/nplusone/nplus/ && cd /root/nplusone/nplus && npm install --legacy-peer-deps && npm run build && pm2 restart nplusone"
+expect "*?assword:*"
+send "$password\r"
+expect eof
+catch wait result
+exit [lindex $result 3]

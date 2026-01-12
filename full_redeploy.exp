@@ -1,0 +1,85 @@
+#!/usr/bin/expect -f
+
+set timeout 900
+
+set vps_host "72.61.229.171"
+set vps_user "root"
+set vps_pass ")vbofQi/lHXSMqF?Nk8E"
+
+# Supabase Credentials
+set sb_url "https://jdwzdwkkmqaaycgjuipn.supabase.co"
+set sb_key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE"
+set sb_service_role "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0"
+
+# 1. Create directory
+spawn ssh $vps_user@$vps_host "mkdir -p /root/nplusone/nplus"
+expect {
+    "password:" { send "$vps_pass\r" }
+    "yes/no" { send "yes\r"; exp_continue }
+}
+expect eof
+
+# 2. Upload Files
+# We upload individually or in batches to avoid command line length issues if using globs? No, specific list is fine.
+spawn scp -r src public package.json package-lock.json next.config.js tsconfig.json postcss.config.js tailwind.config.js .env.local $vps_user@$vps_host:/root/nplusone/nplus/
+expect {
+    "password:" { send "$vps_pass\r" }
+}
+expect eof
+
+# 3. Build and Start
+spawn ssh $vps_user@$vps_host
+expect {
+    "password:" { send "$vps_pass\r" }
+}
+expect "#"
+
+send "cd /root/nplusone/nplus\r"
+expect "#"
+
+# Install dependencies
+send "npm install\r"
+expect "#"
+
+# Build with Env Vars
+send "export NEXT_PUBLIC_SUPABASE_URL=$sb_url\r"
+expect "#"
+send "export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$sb_key\r"
+expect "#"
+send "export NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=douy8ujry\r"
+expect "#"
+
+send "npm run build\r"
+expect "#"
+
+# Prepare Standalone
+send "cp -r public .next/standalone/\r"
+expect "#"
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "#"
+
+# Clean up old process
+send "pm2 delete nplusone\r"
+expect "#"
+
+# Start with Runtime Env Vars
+send "export NEXT_PUBLIC_SUPABASE_URL=$sb_url\r"
+expect "#"
+send "export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$sb_key\r"
+expect "#"
+send "export SUPABASE_SERVICE_ROLE_KEY=$sb_service_role\r"
+expect "#"
+send "export NEXT_PUBLIC_APP_URL=https://nplusonefashion.com\r"
+expect "#"
+send "export PORT=3000\r"
+expect "#"
+
+# Start PM2
+send "pm2 start /root/nplusone/nplus/.next/standalone/server.js --name nplusone --cwd /root/nplusone/nplus/.next/standalone\r"
+expect "online"
+
+send "pm2 save\r"
+expect "#"
+
+send "exit\r"
+expect eof

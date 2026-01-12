@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+set remote_path "/var/www/nplusone"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd $remote_path\r"
+
+# 1. Delete Stale Razorpay Files (Crucial Step!)
+expect "#"
+send "rm -rf src/app/api/payment/razorpay\r"
+expect "#"
+send "rm src/lib/razorpay.ts\r"
+
+# 2. Re-Build
+expect "#"
+send "rm -rf .next\r"
+expect "#"
+send "npm run build\r"
+
+# 3. Setup Standalone
+expect "#"
+send "cp -r public .next/standalone/\r"
+expect "#"
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "#"
+send "cp .env.local .next/standalone/.env.production\r"
+
+# 4. Restart
+expect "#"
+send "pm2 restart nplusone\r"
+
+expect "#"
+send "exit\r"
+expect eof

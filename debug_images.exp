@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+
+# Check logs for Sharp errors
+expect "#"
+send "pm2 logs nplusone --lines 50 --nostream\r"
+
+# Check if sharp exists in standalone node_modules
+expect "#"
+send "ls -la .next/standalone/node_modules/sharp\r"
+
+# Check if sharp exists in root node_modules
+expect "#"
+send "ls -la node_modules/sharp\r"
+
+expect "#"
+send "exit\r"
+expect eof

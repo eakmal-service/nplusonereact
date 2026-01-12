@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
         console.log("Callback Body:", JSON.stringify(body));
 
-        const frontendRedirect = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+        const frontendRedirect = process.env.NEXT_PUBLIC_APP_URL || 'https://nplusonefashion.com';
         let targetUrl = `${frontendRedirect}/order-confirmation/${transactionId || 'error'}`;
 
         // Optimistic handling: If code is success, we try to update DB and redirect.
@@ -44,8 +44,7 @@ export async function POST(req: Request) {
                         .from('orders')
                         .update({
                             status: 'PROCESSING', // Correct ENUM value (was PAID which caused error)
-                            payment_status: 'PAID',
-                            payment_info: statusRes
+                            payment_status: 'PAID'
                         })
                         .eq('id', orderId);
                 }
@@ -64,6 +63,6 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error("PhonePe Callback Error:", error);
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/cart?error=server_error`, 303);
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'https://nplusonefashion.com'}/cart?error=server_error`, 303);
     }
 }

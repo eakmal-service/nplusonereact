@@ -144,7 +144,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   <Link href={`/product/${product.id}`} className="block flex-1">
                     <h4 className="text-xs sm:text-sm font-medium text-[#CDCDCD] line-clamp-1 hover:text-white">{product.title}</h4>
                     <div className="flex items-center mt-1">
-                      <span className="text-xs sm:text-sm font-bold text-[#CDCDCD]">{product.price}</span>
+                      <span className="text-xs sm:text-sm font-bold text-[#CDCDCD]">₹{product.price}</span>
                       {product.originalPrice && (
                         <>
                           <span className="text-xs text-gray-500 line-through ml-2">{product.originalPrice}</span>

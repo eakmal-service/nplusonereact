@@ -10,7 +10,7 @@ const ENV = (process.env.PHONEPE_ENV === 'PRODUCTION') ? Env.PRODUCTION : Env.SA
 const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
 
 // Callback URLs
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://nplusonefashion.com';
 const CALLBACK_URL = `${BASE_URL}/api/payment/phonepe/callback`;
 
 export async function POST(req: Request) {

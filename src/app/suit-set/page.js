@@ -5,6 +5,8 @@ import Link from 'next/link';
 import EnhancedProductGrid from '../../components/common/EnhancedProductGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
+import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
+
 export default function SuitSetPage() {
     const { getActiveProductsByCategory, isLoading } = useProducts();
     const products = getActiveProductsByCategory('suit-set');
@@ -14,9 +16,7 @@ export default function SuitSetPage() {
             <div className="container mx-auto px-4">
 
                 {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-silver"></div>
-                    </div>
+                    <ProductGridSkeleton count={8} />
                 ) : products.length > 0 ? (
                     <EnhancedProductGrid products={products} title="Suit Set" />
                 ) : (

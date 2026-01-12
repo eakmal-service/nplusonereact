@@ -113,8 +113,20 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
         {/* Category Explore Title */}
         <SectionTitle title="Explore Category" />
 
+
+
         {/* Category Grid */}
         <CategoryGrid categories={categoriesData} />
+
+
+
+        {/* New Arrivals / Recommended Section */}
+        {recommendedData.length > 0 && (
+          <RecommendedProducts
+            products={recommendedData}
+            title="New Arrivals"
+          />
+        )}
 
 
 

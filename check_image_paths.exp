@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone/.next/standalone\r"
+
+# Check if public folder exists in standalone
+expect "#"
+send "ls -F\r"
+
+# Check if specific image exists
+expect "#"
+send "ls -l public/products/D3P_10/02_1.webp\r"
+
+# Check permissions
+expect "#"
+send "ls -ld public\r"
+send "ls -ld public/products\r"
+
+expect "#"
+send "exit\r"
+expect eof

@@ -1,0 +1,59 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+set remote_path "/var/www/nplusone"
+
+# 1. Sync ALL Config Files (Corrected Names)
+foreach file {next.config.js tsconfig.json tailwind.config.js postcss.config.js .env.local} {
+    spawn scp $file $user@$host:$remote_path/
+    expect {
+        "yes/no" { send "yes\r"; exp_continue }
+        "password:" { send "$password\r" }
+    }
+    expect eof
+}
+
+# 2. Remote Build & Repair
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd $remote_path\r"
+
+# Clean previous build artifacts
+expect "#"
+send "rm -rf .next\r"
+
+# Install 
+expect "#"
+send "npm install\r"
+
+# Build
+expect "#"
+send "npm run build\r"
+
+# Verify built files
+expect "#"
+send "ls -la .next/standalone\r"
+
+# Setup Standalone (Copy Assets)
+expect "#"
+send "cp -r public .next/standalone/\r"
+expect "#"
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "#"
+send "cp .env.local .next/standalone/.env.production\r"
+
+# Restart
+expect "#"
+send "pm2 restart nplusone\r"
+
+expect "#"
+send "exit\r"
+expect eof

@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Explicitly copy static folder
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "#"
+
+# Verify it exists now
+send "ls -la .next/standalone/.next/static\r"
+expect "#"
+
+# Restart PM2
+send "pm2 restart nplusone\r"
+expect "#"
+send "exit\r"
+expect eof

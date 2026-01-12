@@ -1,0 +1,29 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Check root next static
+send "ls -la .next/static\r"
+expect "#"
+
+# Check standalone next static (CRITICAL)
+send "ls -la .next/standalone/.next\r"
+expect "#"
+send "ls -la .next/standalone/.next/static\r"
+expect "#"
+
+send "exit\r"
+expect eof

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import Script from 'next/script';
+
 
 const CheckoutPage = () => {
     const { cart, getDiscountedTotal, clearCart, getCartTotal, discount, applyCoupon, removeCoupon, couponCode } = useCart();
@@ -18,7 +18,7 @@ const CheckoutPage = () => {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+
 
     // Checkout Steps State
     const [checkoutMode, setCheckoutMode] = useState<'login' | 'logged_in'>('login');
@@ -179,99 +179,6 @@ const CheckoutPage = () => {
                     throw new Error(phonePeData.error || 'Failed to initiate PhonePe payment');
                 }
 
-            } else {
-                // --- RAZORPAY / OTHER LEGACY FLOW ---
-
-                // 1. Create Pending Order in DB (Reuse same logic)
-                const response = await fetch('/api/create-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        customer: formData,
-                        items: cart,
-                        total: finalTotal,
-                        status: 'PENDING',
-                        paymentMethod: paymentMethod
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to initialize order');
-                }
-
-                const orderDbId = result.orderId;
-
-                // 2. Handle Razorpay Payment
-                if (!isRazorpayLoaded) {
-                    // Fallback check
-                    if (typeof (window as any).Razorpay === 'undefined') {
-                        throw new Error('Payment gateway failed to load. Please refresh and try again.');
-                    }
-                }
-
-                // Create Razorpay Order via API
-                const rpRes = await fetch('/api/payment/razorpay', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: finalTotal,
-                        currency: 'INR',
-                        receipt: orderDbId
-                    }),
-                });
-
-                const rpOrder = await rpRes.json();
-                if (!rpRes.ok) throw new Error(rpOrder.error || 'Razorpay order creation failed');
-
-                const options = {
-                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'test_key_id',
-                    amount: rpOrder.amount,
-                    currency: rpOrder.currency,
-                    name: "NPlusOne Fashion",
-                    description: "Order Payment",
-                    order_id: rpOrder.id,
-                    handler: async function (response: any) {
-                        // Verify Payment
-                        const verifyRes = await fetch('/api/payment/razorpay/verify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                                order_db_id: orderDbId
-                            }),
-                        });
-
-                        const verifyData = await verifyRes.json();
-                        if (verifyData.success) {
-                            setOrderPlaced(true);
-                            clearCart();
-                            router.push(`/order-confirmation/${orderDbId}`);
-                        } else {
-                            setError("Payment verification failed. Please contact support.");
-                            setIsProcessing(false);
-                        }
-                    },
-                    prefill: {
-                        name: formData.name,
-                        email: formData.email,
-                        contact: formData.phoneNumber || '',
-                    },
-                    theme: {
-                        color: "#000000",
-                    },
-                    modal: {
-                        ondismiss: function () {
-                            setIsProcessing(false);
-                        }
-                    }
-                };
-
-                const paymentObject = new (window as any).Razorpay(options);
-                paymentObject.open();
             }
 
         } catch (err: any) {
@@ -293,12 +200,6 @@ const CheckoutPage = () => {
 
     return (
         <div className="bg-black min-h-screen text-white">
-            <Script
-                id="razorpay-checkout-js"
-                src="https://checkout.razorpay.com/v1/checkout.js"
-                onLoad={() => setIsRazorpayLoaded(true)}
-                onError={() => setError('Failed to load payment gateway. Please check your connection.')}
-            />
 
             <div className="h-16"></div>
 
@@ -330,7 +231,7 @@ const CheckoutPage = () => {
                                     </p>
                                 </div>
                                 <div className="space-y-4">
-                                    <Link href="/login?redirect=/checkout" className="inline-block w-full sm:w-auto bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition-all transform hover:scale-[1.02]">
+                                    <Link href="/?login=true&next=/checkout" className="inline-block w-full sm:w-auto bg-white text-black font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition-all transform hover:scale-[1.02]">
                                         Login / Sign Up
                                     </Link>
                                     <p className="text-xs text-gray-500">
@@ -439,9 +340,7 @@ const CheckoutPage = () => {
                                     >
                                         Cash on Delivery
                                     </button>
-                                    {/* Legacy Razorpay Options - Hidden/Secondary if PhonePe is preferred 
-                                        Keeping them accessible just in case user wants them, can add back easily 
-                                    */}
+
                                 </div>
 
                                 <div className="bg-black p-4 rounded border border-gray-800">

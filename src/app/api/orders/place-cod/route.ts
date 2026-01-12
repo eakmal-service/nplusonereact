@@ -125,9 +125,8 @@ export async function POST(req: Request) {
                 await supabaseAdmin
                     .from('orders')
                     .update({
-                        awb_number: awb,
-                        courier_name: courier,
-                        logistic_order_id: logisticOrderId,
+                        tracking_id: awb,
+                        carrier: courier,
                         status: 'SHIPPED'
                     })
                     .eq('id', orderId);

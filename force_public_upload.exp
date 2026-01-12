@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+set remote_path "/var/www/nplusone/.next/standalone"
+
+# 1. Upload entire 'public' directory
+spawn scp -r public $user@$host:$remote_path/
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect eof
+
+# 2. Verify and Restart
+spawn ssh $user@$host
+expect {
+    "yes/no" { send "yes\r"; exp_continue }
+    "password:" { send "$password\r" }
+}
+expect "#"
+
+# Check a key file to ensure upload worked
+send "ls -la $remote_path/public/products/D3P_5\r"
+expect "#"
+
+# Restart PM2
+send "pm2 restart nplusone\r"
+expect "#"
+send "exit\r"
+expect eof

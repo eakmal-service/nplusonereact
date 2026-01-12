@@ -1,0 +1,21 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+# Commands:
+# 1. cd to project
+# 2. git reset hard to ensure clean state
+# 3. git pull origin main to get the specific restored version
+# 4. npm install to ensure deps are consistent
+# 5. npm run build to generate standalone output
+# 6. pm2 restart nplusone
+spawn ssh -o StrictHostKeyChecking=no $user@$host "cd /root/nplusone/nplus && git reset --hard && git pull origin main && npm install --legacy-peer-deps && npm run build && pm2 restart nplusone"
+expect "*?assword:*"
+send "$password\r"
+# Expect the command to finish. It might produce a lot of output.
+# We expect EOF which means the ssh session closed (command finished).
+expect eof
+catch wait result
+exit [lindex $result 3]

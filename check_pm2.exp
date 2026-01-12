@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+set vps_host "72.61.229.171"
+set vps_user "root"
+set vps_pass ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $vps_user@$vps_host
+
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$vps_pass\r"
+    }
+}
+
+expect "#"
+send "pm2 list\r"
+
+expect "#"
+send "pm2 describe nplusone\r"
+
+expect "#"
+send "exit\r"
+
+expect eof

@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+set vps_host "72.61.229.171"
+set vps_user "root"
+set vps_pass ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh $vps_user@$vps_host
+
+expect {
+    "yes/no" {
+        send "yes\r"
+        exp_continue
+    }
+    "password:" {
+        send "$vps_pass\r"
+    }
+}
+
+expect "#"
+# Check layout of standalone folder
+send "ls -F /root/nplusone/nplus/.next/standalone/\r"
+expect "#"
+
+# Check if public is there
+send "ls -F /root/nplusone/nplus/.next/standalone/public/\r"
+expect "#"
+
+# Check if .next/static is there (CRITICAL for 1000 errors)
+send "ls -F /root/nplusone/nplus/.next/standalone/.next/static/\r"
+expect "#"
+
+send "exit\r"
+expect eof
