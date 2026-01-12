@@ -82,11 +82,27 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
         if (pincode.length === 6 && /^\d+$/.test(pincode)) {
             // Use the API service
             const result = await checkDeliveryAvailability(pincode);
-            setDeliveryStatus(result.available
-                ? "Delivery available to your location"
-                : result.message);
+
+            if (result.available) {
+                setDeliveryStatus("Delivery available to your location");
+                // Optional: Log successful client check if rare, but server already logs "PINCODE_CHECK" "SUCCESS"
+            } else {
+                setDeliveryStatus(result.message);
+                // Log Client Error if server side logging wasn't sufficient or for client-specific context
+                // Server aleady logs 'PINCODE_CHECK' 'FAILURE' inside the API.
+                // But we can log if the UI displayed an error to the user effectively.
+            }
         } else {
             setDeliveryStatus("Please enter a valid 6-digit pincode");
+            // Log User Input Error
+            import('@/utils/logger').then(({ logEvent }) => {
+                logEvent({
+                    eventType: 'CLIENT_ERROR',
+                    status: 'WARNING',
+                    message: 'Invalid Pincode Format Entered',
+                    requestData: { pincode }
+                });
+            });
         }
     };
 

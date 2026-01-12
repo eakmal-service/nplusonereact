@@ -3,146 +3,132 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-interface SystemError {
+// Minimal interface for logs (Updated for system_logs table)
+interface SystemLog {
     id: string;
-    error_message: string;
-    error_stack: string;
-    url: string;
-    created_at: string;
+    event_type: string;
     status: string;
+    message: string;
+    request_data: any;
+    response_data: any;
+    url: string;
+    user_agent: string;
+    created_at: string;
 }
 
 const ErrorLogsSection = () => {
-    const [errors, setErrors] = useState<SystemError[]>([]);
+    const [logs, setLogs] = useState<SystemLog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [toast, setToast] = useState<string | null>(null);
+    const [filterType, setFilterType] = useState('ALL');
 
-    const fetchErrors = async () => {
+    const fetchLogs = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('system_errors')
+        let query = supabase
+            .from('system_logs')
             .select('*')
-            .eq('status', 'open') // Only show open errors
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(50); // Fetch last 50
 
+        if (filterType !== 'ALL') {
+            query = query.eq('event_type', filterType);
+        }
+
+        const { data, error } = await query;
         if (error) {
-            console.error('Error fetching system logs:', error);
+            console.error('Error fetching logs:', error);
         } else {
-            setErrors(data || []);
+            setLogs(data || []);
         }
         setLoading(false);
     };
 
-    const resolveError = async (id: string) => {
-        // In database we can just DELETE it or set status to 'resolved'.
-        // User asked: "ek bar resolve ho jaaye the clear ho jana chiya" -> implied deletion or moved from view.
-        // Let's delete it for cleanliness as per "clear ho jana chiya".
-
-        const { error } = await supabase
-            .from('system_errors')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            alert('Failed to resolve error');
-        } else {
-            // Optimistic update
-            setErrors(prev => prev.filter(e => e.id !== id));
-        }
-    };
-
     useEffect(() => {
-        fetchErrors();
+        fetchLogs();
 
-        // Real-time Subscription
+        // Subscribe to new logs
         const channel = supabase
-            .channel('public:system_errors')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'system_errors'
-                },
-                (payload) => {
-                    console.log('New Error Logged:', payload);
-                    const newError = payload.new as SystemError;
-                    setErrors(prev => [newError, ...prev]);
-
-                    // Show Toast / Pop-up
-                    setToast(`New Error Detected: ${newError.error_message}`);
-                    // Auto hide toast after 5s
-                    setTimeout(() => setToast(null), 5000);
-                }
-            )
+            .channel('public:system_logs')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_logs' }, (payload) => {
+                const newLog = payload.new as SystemLog;
+                setLogs(prev => [newLog, ...prev]);
+            })
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+        return () => { supabase.removeChannel(channel); };
+    }, [filterType]);
+
+    const getStatusColor = (status: string) => {
+        if (status === 'SUCCESS') return 'text-green-400 border-green-900/50 bg-green-900/10';
+        if (status === 'FAILURE') return 'text-red-400 border-red-900/50 bg-red-900/10';
+        if (status === 'WARNING') return 'text-yellow-400 border-yellow-900/50 bg-yellow-900/10';
+        return 'text-gray-400 border-gray-800 bg-gray-900';
+    };
 
     return (
-        <div className="bg-black p-6 rounded-lg border border-gray-800 relative">
-            {/* Toast Notification for New Errors */}
-            {toast && (
-                <div className="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-4 rounded shadow-2xl z-50 animate-bounce">
-                    <div className="flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <div>
-                            <h4 className="font-bold">System Alert!</h4>
-                            <p className="text-sm">{toast}</p>
-                        </div>
-                        <button onClick={() => setToast(null)} className="ml-4 font-bold text-red-200 hover:text-white">✕</button>
-                    </div>
-                </div>
-            )}
-
+        <div className="bg-black p-6 rounded-lg border border-gray-800">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl text-white font-bold">System Error Logs</h2>
-                <button
-                    onClick={fetchErrors}
-                    className="text-sm text-silver hover:text-white underline"
-                >
-                    Refresh
-                </button>
+                <h2 className="text-xl text-white font-bold">System Logs & Errors</h2>
+                <div className="flex gap-2">
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="bg-gray-800 text-sm text-silver border border-gray-700 rounded px-2 py-1"
+                    >
+                        <option value="ALL">All Events</option>
+                        <option value="PINCODE_CHECK">Pincode Check</option>
+                        <option value="ORDER_HOOK">Order Hook</option>
+                        <option value="CLIENT_ERROR">Client Error</option>
+                        <option value="SHIPMENT_TRACKING">Tracking</option>
+                        <option value="SHIPMENT_CANCEL">Cancellation</option>
+                        <option value="SHIPMENT_RETURN">Return/RTO</option>
+                        <option value="LABEL_GENERATION">Label Gen</option>
+                        <option value="MANIFEST_GENERATION">Manifest Gen</option>
+                        <option value="WEBHOOK_EVENT">Webhook</option>
+                    </select>
+                    <button onClick={fetchLogs} className="text-sm text-silver hover:text-white underline">Refresh</button>
+                </div>
             </div>
 
             {loading ? (
-                <div className="text-gray-400 text-center py-8">Loading logs...</div>
-            ) : errors.length === 0 ? (
-                <div className="text-green-500 text-center py-12 bg-gray-900 rounded border border-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p>All clear! No active system errors.</p>
+                <div className="text-gray-500 text-center py-8">Loading logs...</div>
+            ) : logs.length === 0 ? (
+                <div className="text-gray-500 text-center py-10 border border-dashed border-gray-800 rounded">
+                    No logs found.
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {errors.map(err => (
-                        <div key={err.id} className="bg-gray-900 border border-red-900/30 p-4 rounded hover:border-red-500 transition-colors">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-red-400 font-mono text-xs bg-red-900/10 px-2 py-1 rounded">
-                                    {new Date(err.created_at).toLocaleString()}
-                                </span>
-                                <button
-                                    onClick={() => resolveError(err.id)}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold"
-                                >
-                                    Resolve
-                                </button>
+                <div className="space-y-3">
+                    {logs.map(log => (
+                        <div key={log.id} className={`p-4 rounded border ${getStatusColor(log.status)} transition-colors`}>
+                            <div className="flex justify-between items-start mb-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm tracking-wide">{log.event_type}</span>
+                                    <span className="text-xs opacity-60">| {new Date(log.created_at).toLocaleString()}</span>
+                                </div>
+                                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-black/30">{log.status}</span>
                             </div>
-                            <h3 className="text-white font-bold mb-1">{err.error_message}</h3>
-                            <p className="text-gray-500 text-xs mb-2 truncate">URL: {err.url}</p>
 
-                            {err.error_stack && (
-                                <details className="mt-2">
-                                    <summary className="text-gray-600 text-xs cursor-pointer hover:text-gray-400">View Stack Trace</summary>
-                                    <pre className="mt-2 bg-black p-2 rounded text-red-300 text-xs overflow-x-auto font-mono whitespace-pre-wrap">
-                                        {err.error_stack}
-                                    </pre>
+                            <p className="font-medium text-sm mb-2">{log.message}</p>
+
+                            {(log.request_data || log.response_data) && (
+                                <details className="mt-2 text-xs">
+                                    <summary className="cursor-pointer opacity-70 hover:opacity-100">View Details</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                        {log.request_data && (
+                                            <div className="bg-black/50 p-2 rounded overflow-x-auto">
+                                                <strong className="block mb-1 opacity-50">Request:</strong>
+                                                <pre>{JSON.stringify(log.request_data, null, 2)}</pre>
+                                            </div>
+                                        )}
+                                        {log.response_data && (
+                                            <div className="bg-black/50 p-2 rounded overflow-x-auto">
+                                                <strong className="block mb-1 opacity-50">Response:</strong>
+                                                <pre>{JSON.stringify(log.response_data, null, 2)}</pre>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mt-2 opacity-50">
+                                        User Agent: {log.user_agent}
+                                    </div>
                                 </details>
                             )}
                         </div>

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         // Fetch existing events
         const { data: order, error: fetchError } = await supabase
             .from('orders')
-            .select('tracking_events, courier_info')
+            .select('tracking_events, courier_info, user_id')
             .eq('id', orderId)
             .single();
 
@@ -76,10 +76,40 @@ export async function POST(req: Request) {
 
         if (updateError) throw updateError;
 
+        // Log Webhook Success
+        await supabase
+            .from('system_logs')
+            .insert([{
+                event_type: 'WEBHOOK_EVENT',
+                status: 'SUCCESS',
+                message: `Courier Webhook Processed: ${courierData.current_status}`,
+                request_data: courierData,
+                response_data: { success: true },
+                user_id: order.user_id, // Link to user if possible
+                url: req.url,
+                user_agent: req.headers.get('user-agent') || 'webhook-sender'
+            }]);
+
         return NextResponse.json({ success: true, message: "Tracking updated from courier" });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Courier Webhook Error:', error);
+
+        // Try to log failure to DB (create new client if needed or reuse existing)
+        try {
+            await supabase.from('system_logs').insert([{
+                event_type: 'WEBHOOK_EVENT',
+                status: 'FAILURE',
+                message: error.message || 'Webhook Processing Failed',
+                request_data: {}, // Can't easily access body here if parsing failed, but strictly speaking we could try
+                response_data: { error: error.toString() },
+                url: req.url,
+                user_agent: req.headers.get('user-agent') || 'webhook-sender'
+            }]);
+        } catch (logError) {
+            console.error("Failed to log webhook error:", logError);
+        }
+
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

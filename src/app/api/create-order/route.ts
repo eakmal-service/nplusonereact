@@ -101,20 +101,37 @@ export async function POST(req: Request) {
                         }
                     }
 
-                    // Update Order with AWB
                     await supabaseAdmin
                         .from('orders')
                         .update({
-                            awb_number: awb,
-                            courier_name: courier,
-                            status: 'SHIPPED' // Auto-mark as shipped for COD? Or just processing?
-                            // Usually for COD, "Shipped" means label generated.
+                            tracking_id: awb, // Schema has tracking_id, not awb_number
+                            carrier: courier, // Schema has carrier, not courier_name
+                            status: 'SHIPPED'
                         })
                         .eq('id', orderId);
 
                     console.log("COD Shipment Created. AWB:", awb);
+
+                    // Log Success
+                    await supabaseAdmin.from('system_logs').insert([{
+                        event_type: 'ORDER_HOOK',
+                        status: 'SUCCESS',
+                        message: `COD Shipment Created: ${awb}`,
+                        request_data: { orderId, paymentMethod: 'COD' },
+                        response_data: shippingResult,
+                        user_id: orderData.user_id // Might be null
+                    }]);
+
                 } else {
                     console.error("COD Shipping Creation Failed:", shippingResult);
+                    // Log Failure
+                    await supabaseAdmin.from('system_logs').insert([{
+                        event_type: 'ORDER_HOOK',
+                        status: 'FAILURE',
+                        message: 'COD Shipping API Failed',
+                        request_data: { orderId, paymentMethod: 'COD' },
+                        response_data: shippingResult
+                    }]);
                 }
 
             } catch (shipError) {

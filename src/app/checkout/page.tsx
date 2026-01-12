@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import Script from 'next/script'; // Import Script
+import Script from 'next/script';
 
 const CheckoutPage = () => {
-    // ... context hooks ...
     const { cart, getDiscountedTotal, clearCart, getCartTotal, discount, applyCoupon, removeCoupon, couponCode } = useCart();
     const { user, login } = useAuth();
     const router = useRouter();
@@ -19,11 +18,11 @@ const CheckoutPage = () => {
     const [orderPlaced, setOrderPlaced] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false); // Track script load
+    const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
 
     // Checkout Steps State
     const [checkoutMode, setCheckoutMode] = useState<'login' | 'logged_in'>('login');
-    const [paymentMethod, setPaymentMethod] = useState('card');
+    const [paymentMethod, setPaymentMethod] = useState('phonepe'); // Default to PhonePe
 
     // Coupon State
     const [localCoupon, setLocalCoupon] = useState('');
@@ -33,7 +32,7 @@ const CheckoutPage = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phoneNumber: '', // Added Phone Number
+        phoneNumber: '',
         address: '',
         city: '',
         zip: '',
@@ -50,7 +49,7 @@ const CheckoutPage = () => {
                 ...prev,
                 email: user.email || '',
                 name: user.user_metadata?.full_name || '',
-                phoneNumber: user.phone || '' // Prefill if available
+                phoneNumber: user.phone || ''
             }));
         }
     }, [user]);
@@ -135,10 +134,10 @@ const CheckoutPage = () => {
                 clearCart();
                 router.push(`/order-confirmation/${result.orderId}`);
 
-            } else {
-                // --- ONLINE PAYMENT FLOW (Razorpay) ---
+            } else if (paymentMethod === 'phonepe') {
+                // --- PHONEPE FLOW ---
 
-                // 1. Create Pending Order in DB using original route
+                // 1. Create Pending Order in DB
                 const response = await fetch('/api/create-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -147,7 +146,52 @@ const CheckoutPage = () => {
                         items: cart,
                         total: finalTotal,
                         status: 'PENDING',
-                        paymentMethod: paymentMethod // 'card', 'upi', etc.
+                        paymentMethod: 'PHONEPE'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to initialize order');
+                }
+
+                const orderDbId = result.orderId;
+
+                // 2. Initiate PhonePe Payment
+                const phonePeRes = await fetch('/api/payment/phonepe/initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: finalTotal,
+                        orderId: orderDbId,
+                        mobileNumber: formData.phoneNumber || '9999999999',
+                        userId: user ? user.id : `guest_${Date.now()}`
+                    })
+                });
+
+                const phonePeData = await phonePeRes.json();
+
+                if (phonePeData.success && phonePeData.redirectUrl) {
+                    // 3. Redirect to PhonePe
+                    window.location.href = phonePeData.redirectUrl;
+                } else {
+                    throw new Error(phonePeData.error || 'Failed to initiate PhonePe payment');
+                }
+
+            } else {
+                // --- RAZORPAY / OTHER LEGACY FLOW ---
+
+                // 1. Create Pending Order in DB (Reuse same logic)
+                const response = await fetch('/api/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer: formData,
+                        items: cart,
+                        total: finalTotal,
+                        status: 'PENDING',
+                        paymentMethod: paymentMethod
                     })
                 });
 
@@ -214,7 +258,7 @@ const CheckoutPage = () => {
                     prefill: {
                         name: formData.name,
                         email: formData.email,
-                        contact: user?.phone || '',
+                        contact: formData.phoneNumber || '',
                     },
                     theme: {
                         color: "#000000",
@@ -232,11 +276,7 @@ const CheckoutPage = () => {
 
         } catch (err: any) {
             console.error('Checkout Error Full:', err);
-            console.error('Error Name:', err.name);
-            console.error('Error Message:', err.message);
-            if (err.stack) console.error('Error Stack:', err.stack);
-
-            setError(`Error: ${err.name} - ${err.message}` || "Something went wrong while placing your order.");
+            setError(`Error: ${err.message}` || "Something went wrong while placing your order.");
             setIsProcessing(false);
             window.scrollTo(0, 0);
         }
@@ -263,7 +303,6 @@ const CheckoutPage = () => {
             <div className="h-16"></div>
 
             <div className="container mx-auto px-4 py-12 max-w-6xl">
-                {/* ... rest of the JSX remains similar, just make sure to keep the closing tags ... */}
                 <h1 className="text-3xl font-bold mb-8 text-silver">Checkout</h1>
 
                 {error && (
@@ -272,19 +311,7 @@ const CheckoutPage = () => {
                     </div>
                 )}
 
-                {/* Main Content Layout */}
                 <div className="flex flex-col lg:flex-row gap-12">
-                    {/* ... Content ... */}
-
-                    {/* Re-rendering the content to ensure it matches the original structure minus the layout changes I might duplicate if not careful. 
-                       Since this is a partial replace, I need to be careful. 
-                       Actually, the tool asks for "ReplacementContent" for a range.
-                       I have selected a LARGE range (StartLine 10 to EndLine 589 basically covers everything).
-                       I will paste the FULL file content with my changes to be safe, assuming I have the full content in my context.
-                       
-                       Wait, I should only replace the TOP part and the BOTTOM part if I can, but since the logic is intertwined (state, handlePlaceOrder), I'll do a full rewrite of the component body to be safe and clean.
-                    */}
-
                     {/* Left Column */}
                     <div className="lg:w-2/3 space-y-8">
 
@@ -313,7 +340,7 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* 2. Shipping Address (Only show if User Logged In) */}
+                        {/* 2. Shipping Address */}
                         {user && (
                             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                                 <h2 className="text-xl font-bold mb-6 text-silver flex items-center gap-2">
@@ -394,88 +421,41 @@ const CheckoutPage = () => {
                                 </h2>
 
                                 <div className="flex flex-wrap gap-2 mb-6">
-                                    {['card', 'upi', 'netbanking', 'wallet', 'cod'].map((method) => (
-                                        <button
-                                            key={method}
-                                            onClick={() => setPaymentMethod(method)}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${paymentMethod === method
-                                                ? 'bg-white text-black border-white'
-                                                : 'bg-black text-gray-400 border-gray-700 hover:border-gray-500'
-                                                }`}
-                                        >
-                                            {method === 'card' && 'Debit/Credit Card'}
-                                            {method === 'upi' && 'UPI'}
-                                            {method === 'netbanking' && 'Net Banking'}
-                                            {method === 'wallet' && 'Wallets'}
-                                            {method === 'cod' && 'Cash on Delivery'}
-                                        </button>
-                                    ))}
+                                    <button
+                                        onClick={() => setPaymentMethod('phonepe')}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${paymentMethod === 'phonepe'
+                                            ? 'bg-purple-600 text-white border-purple-500'
+                                            : 'bg-black text-gray-400 border-gray-700 hover:border-gray-500'
+                                            }`}
+                                    >
+                                        PhonePe Secure
+                                    </button>
+                                    <button
+                                        onClick={() => setPaymentMethod('cod')}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${paymentMethod === 'cod'
+                                            ? 'bg-white text-black border-white'
+                                            : 'bg-black text-gray-400 border-gray-700 hover:border-gray-500'
+                                            }`}
+                                    >
+                                        Cash on Delivery
+                                    </button>
+                                    {/* Legacy Razorpay Options - Hidden/Secondary if PhonePe is preferred 
+                                        Keeping them accessible just in case user wants them, can add back easily 
+                                    */}
                                 </div>
 
                                 <div className="bg-black p-4 rounded border border-gray-800">
-                                    {paymentMethod === 'card' && (
-                                        <div className="grid grid-cols-1 gap-6">
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-2">Card Number *</label>
-                                                <input
-                                                    name="cardNumber"
-                                                    value={formData.cardNumber}
-                                                    onChange={handleInputChange}
-                                                    className="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none"
-                                                    placeholder="0000 0000 0000 0000"
-                                                    maxLength={19}
-                                                />
+                                    {paymentMethod === 'phonepe' && (
+                                        <div className="text-center py-6">
+                                            <div className="bg-purple-900/20 inline-block p-4 rounded-full mb-4">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-gray-400 text-sm mb-2">Expiry *</label>
-                                                    <input
-                                                        name="expiry"
-                                                        value={formData.expiry}
-                                                        onChange={handleInputChange}
-                                                        className="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none"
-                                                        placeholder="MM/YY"
-                                                        maxLength={5}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-gray-400 text-sm mb-2">CVC *</label>
-                                                    <input
-                                                        name="cvc"
-                                                        value={formData.cvc}
-                                                        onChange={handleInputChange}
-                                                        className="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none"
-                                                        placeholder="123"
-                                                        maxLength={3}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {paymentMethod === 'upi' && (
-                                        <div>
-                                            <label className="block text-gray-400 text-sm mb-2">UPI ID *</label>
-                                            <input
-                                                name="upiId"
-                                                value={formData.upiId}
-                                                onChange={handleInputChange}
-                                                className="w-full bg-gray-900 border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none"
-                                                placeholder="username@bank"
-                                            />
-                                            <p className="text-xs text-gray-500 mt-2">Open your UPI app to approve the request after placing order.</p>
-                                        </div>
-                                    )}
-
-                                    {paymentMethod === 'netbanking' && (
-                                        <div className="text-gray-400 text-center py-4">
-                                            <p>You will be redirected to your bank's secure payment gateway.</p>
-                                        </div>
-                                    )}
-
-                                    {paymentMethod === 'wallet' && (
-                                        <div className="text-gray-400 text-center py-4">
-                                            <p>Select Wallet on the next screen (Paytm, PhonePe, Freecharge).</p>
+                                            <h3 className="text-lg font-bold text-white mb-2">Pay securely with PhonePe</h3>
+                                            <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                                                You will be redirected to PhonePe to complete your payment using UPI, Credit/Debit Card, or Wallet.
+                                            </p>
                                         </div>
                                     )}
 
@@ -603,10 +583,10 @@ const CheckoutPage = () => {
                                 {isProcessing ? (
                                     <span className="flex items-center gap-2">
                                         <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                                        Processing...
+                                        Redirecting...
                                     </span>
                                 ) : (
-                                    `Place Order via ${paymentMethod === 'cod' ? 'COD' : paymentMethod.toUpperCase()}`
+                                    `Place Order via ${paymentMethod === 'cod' ? 'COD' : 'PhonePe'}`
                                 )}
                             </button>
 

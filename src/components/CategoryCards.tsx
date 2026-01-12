@@ -7,16 +7,23 @@ import RecommendedProducts from './home/RecommendedProducts';
 import SectionTitle from './home/SectionTitle';
 import WelcomePopup from './WelcomePopup';
 import { Product } from '@/types';
-import {
-  categories,
-  collectionItems,
-  recommendedProducts,
-  sampleRecentlyViewed,
-  shoppingGreetings
-} from '@/data/mockData';
+const recommendedProducts: any[] = [];
+const sampleRecentlyViewed: any[] = [];
+
+const shoppingGreetings = [
+  "Ready to explore our latest collection?",
+  "Discover stylish deals waiting for you!",
+  "Welcome back to NPlusOne shopping!",
+  "Your fashion journey continues here!",
+  "New arrivals just for your style!",
+  "Find your perfect fashion match today!",
+  "Exclusive deals waiting in your cart!",
+  "Shop the season's hottest trends now!"
+];
 
 import Image from 'next/image';
 import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
+import { useCategories } from '@/hooks/useCategories';
 
 
 interface CategoryCardsProps {
@@ -33,19 +40,38 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [hasViewedProducts, setHasViewedProducts] = useState(false);
 
-  // Use props if available, otherwise fallback to mock data
-  const categoriesData = cmsCategories || categories;
-  const collectionsData = cmsCollections || collectionItems;
+  // Use hook for specific category logic if needed, or props
+  // If props are missing (not passed from page server comp), we might want to fetch?
+  // But typically this component is used with data passed in or fetches itself.
+  // Given existing code favored props || mock, we'll favor props || hook/state.
+
+  const { categories: hookCategories } = useCategories();
+  const [collections, setCollections] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch collections if not provided
+    if (!cmsCollections) {
+      fetch('/api/admin/content?section_id=collections')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setCollections(data);
+          else setCollections([]); // Empty if no data
+        })
+        .catch(err => console.error("Failed to fetch collections", err));
+    }
+  }, [cmsCollections]);
+
+
+  const categoriesData = cmsCategories || hookCategories || [];
+  const collectionsData = cmsCollections || collections || [];
   const bannerData = cmsBanner || {
     image: "/images/Discount-2.png",
     link: "/sales",
     alt: "Special Discount Offers"
   };
-  const recommendedData = cmsRecommended || recommendedProducts;
+  const recommendedData = cmsRecommended || recommendedProducts; // keeping recommendedProducts for now as it was empty anyway in mock
 
   useEffect(() => {
-    // Fetch logic removed - passed as props
-
     // This would check for user data from login system
     const loggedInUserName = localStorage.getItem('user_logged_in_name');
     if (loggedInUserName) {

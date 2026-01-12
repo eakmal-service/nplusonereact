@@ -5,12 +5,27 @@
 -- ==========================================
 
 -- 1. ENUMS
-CREATE TYPE app_category AS ENUM ('SUIT SET', 'WESTERN WEAR', 'CO-ORD SET', 'KIDS WEAR', 'INDO-WESTERN', 'MENS WEAR');
-CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED');
-CREATE TYPE discount_type AS ENUM ('PERCENTAGE', 'FIXED_AMOUNT');
+-- 1. ENUMS (Idempotent)
+DO $$ BEGIN
+    CREATE TYPE app_category AS ENUM ('SUIT SET', 'WESTERN WEAR', 'CO-ORD SET', 'KIDS WEAR', 'INDO-WESTERN', 'MENS WEAR');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE discount_type AS ENUM ('PERCENTAGE', 'FIXED_AMOUNT');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- 2. PROFILES
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT,
   phone_number TEXT,
@@ -29,7 +44,7 @@ CREATE TABLE public.profiles (
 
 -- 3. PRODUCTS
 -- (Merged: Optimized Fields + Requested Detailed Specs)
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   
   -- Basic Info
@@ -101,7 +116,7 @@ CREATE TABLE public.products (
 );
 
 -- 4. CART ITEMS
-CREATE TABLE public.cart_items (
+CREATE TABLE IF NOT EXISTS public.cart_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
@@ -112,7 +127,7 @@ CREATE TABLE public.cart_items (
 );
 
 -- 5. COUPONS
-CREATE TABLE public.coupons (
+CREATE TABLE IF NOT EXISTS public.coupons (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   code TEXT UNIQUE NOT NULL,
   type discount_type NOT NULL,
@@ -127,7 +142,7 @@ CREATE TABLE public.coupons (
 );
 
 -- 6. ORDERS
-CREATE TABLE public.orders (
+CREATE TABLE IF NOT EXISTS public.orders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   subtotal NUMERIC NOT NULL,
@@ -148,7 +163,7 @@ CREATE TABLE public.orders (
 );
 
 -- 7. ORDER ITEMS
-CREATE TABLE public.order_items (
+CREATE TABLE IF NOT EXISTS public.order_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
@@ -163,7 +178,7 @@ CREATE TABLE public.order_items (
 );
 
 -- 8. REVIEWS
-CREATE TABLE public.reviews (
+CREATE TABLE IF NOT EXISTS public.reviews (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
@@ -175,7 +190,7 @@ CREATE TABLE public.reviews (
 );
 
 -- 9. CMS (BANNERS)
-CREATE TABLE public.content_banners (
+CREATE TABLE IF NOT EXISTS public.content_banners (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT,
   image_url_desktop TEXT NOT NULL,
@@ -188,12 +203,26 @@ CREATE TABLE public.content_banners (
 );
 
 -- 10. WISHLIST
-CREATE TABLE public.wishlist (
+CREATE TABLE IF NOT EXISTS public.wishlist (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   UNIQUE(user_id, product_id)
+);
+
+-- 11. SYSTEM LOGS (ERROR TRACKING)
+CREATE TABLE IF NOT EXISTS public.system_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_type TEXT NOT NULL, -- 'PINCODE_CHECK', 'ORDER_HOOK', 'CLIENT_ERROR', 'SHIPMENT_TRACKING', 'SHIPMENT_CANCEL', 'SHIPMENT_RETURN', 'INVOICE_GENERATION', 'MANIFEST_GENERATION'
+    status TEXT NOT NULL, -- 'SUCCESS', 'FAILURE'
+    message TEXT,
+    request_data JSONB,
+    response_data JSONB,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    url TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 -- ================= FUNCTIONS & TRIGGERS =================
@@ -207,7 +236,7 @@ BEGIN
     WHERE id = auth.uid() AND is_admin = true
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Auto Create Profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -217,11 +246,15 @@ BEGIN
   VALUES (new.id, new.raw_user_meta_data->>'full_name', new.email);
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+DO $$ BEGIN
+    CREATE TRIGGER on_auth_user_created
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Auto Update Timestamp
 CREATE OR REPLACE FUNCTION update_modified_column()
@@ -230,10 +263,18 @@ BEGIN
     NEW.updated_at = now();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ language 'plpgsql' SET search_path = public;
 
-CREATE TRIGGER update_profiles_modtime BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
-CREATE TRIGGER update_products_modtime BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+DO $$ BEGIN
+    CREATE TRIGGER update_profiles_modtime BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    CREATE TRIGGER update_products_modtime BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ================= RLS POLICIES (SECURE) =================
 
@@ -246,75 +287,121 @@ ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wishlist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content_banners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
+DROP POLICY IF EXISTS "Users view own profile" ON public.profiles;
 CREATE POLICY "Users view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
 CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Admins view all profiles" ON public.profiles;
 CREATE POLICY "Admins view all profiles" ON public.profiles FOR SELECT USING (is_admin());
 
 -- Products
+DROP POLICY IF EXISTS "Public read products" ON public.products;
 CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins manage products" ON public.products;
 CREATE POLICY "Admins manage products" ON public.products FOR ALL USING (is_admin());
 
 -- Cart
+DROP POLICY IF EXISTS "Users manage own cart" ON public.cart_items;
 CREATE POLICY "Users manage own cart" ON public.cart_items FOR ALL USING (auth.uid() = user_id);
 
 -- Orders
+DROP POLICY IF EXISTS "Users view own orders" ON public.orders;
 CREATE POLICY "Users view own orders" ON public.orders FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users create own orders" ON public.orders;
 CREATE POLICY "Users create own orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins view all orders" ON public.orders;
 CREATE POLICY "Admins view all orders" ON public.orders FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "Admins update orders" ON public.orders;
 CREATE POLICY "Admins update orders" ON public.orders FOR UPDATE USING (is_admin());
 
 -- Order Items
+DROP POLICY IF EXISTS "Users view order items" ON public.order_items;
 CREATE POLICY "Users view order items" ON public.order_items FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.orders WHERE id = order_items.order_id AND user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Admins view order items" ON public.order_items;
 CREATE POLICY "Admins view order items" ON public.order_items FOR SELECT USING (is_admin());
 
 -- Reviews
+DROP POLICY IF EXISTS "Public view reviews" ON public.reviews;
 CREATE POLICY "Public view reviews" ON public.reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users create reviews" ON public.reviews;
 CREATE POLICY "Users create reviews" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users edit own reviews" ON public.reviews;
 CREATE POLICY "Users edit own reviews" ON public.reviews FOR UPDATE USING (auth.uid() = user_id);
 
 -- Wishlist
+DROP POLICY IF EXISTS "Users manage wishlist" ON public.wishlist;
 CREATE POLICY "Users manage wishlist" ON public.wishlist FOR ALL USING (auth.uid() = user_id);
 
 -- CMS
+DROP POLICY IF EXISTS "Public view banners" ON public.content_banners;
 CREATE POLICY "Public view banners" ON public.content_banners FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Admins manage banners" ON public.content_banners;
 CREATE POLICY "Admins manage banners" ON public.content_banners FOR ALL USING (is_admin());
 
 -- Coupons
+DROP POLICY IF EXISTS "Public view active coupons" ON public.coupons;
 CREATE POLICY "Public view active coupons" ON public.coupons FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Admins manage coupons" ON public.coupons;
 CREATE POLICY "Admins manage coupons" ON public.coupons FOR ALL USING (is_admin());
+
+-- System Logs (Secure)
+DROP POLICY IF EXISTS "Admins manage system logs" ON public.system_logs;
+CREATE POLICY "Admins manage system logs" ON public.system_logs FOR ALL USING (is_admin());
 
 -- ================= PERFORMANCE INDEXES (POLISH) =================
 
 -- Products: Faster search & filtering
-CREATE INDEX idx_products_category ON public.products(category);
-CREATE INDEX idx_products_slug ON public.products(slug);
-CREATE INDEX idx_products_status ON public.products(status);
-CREATE INDEX idx_products_price ON public.products(selling_price);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
+CREATE INDEX IF NOT EXISTS idx_products_price ON public.products(selling_price);
 
 -- Orders: Faster lookup by user & status
-CREATE INDEX idx_orders_user_id ON public.orders(user_id);
-CREATE INDEX idx_orders_status ON public.orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
 
 -- Cart: Faster cart loading
-CREATE INDEX idx_cart_user_id ON public.cart_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_cart_user_id ON public.cart_items(user_id);
 
 -- Profiles: Faster admin checks
-CREATE INDEX idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
 
 
 -- ================= DATA INTEGRITY CHECKS (POLISH) =================
 
 -- Ensure Selling Price is never greater than MRP
-ALTER TABLE public.products 
-ADD CONSTRAINT check_price_logic CHECK (selling_price <= mrp);
+-- Ensure Selling Price is never greater than MRP
+DO $$ BEGIN
+    ALTER TABLE public.products ADD CONSTRAINT check_price_logic CHECK (selling_price <= mrp);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Ensure Stock is non-negative
-ALTER TABLE public.products 
-ADD CONSTRAINT check_stock_non_negative CHECK (stock_quantity >= 0);
+DO $$ BEGIN
+    ALTER TABLE public.products ADD CONSTRAINT check_stock_non_negative CHECK (stock_quantity >= 0);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Final Note: Schema is ready for production use.
+
+-- ================= SECURITY PATCHES FOR EXISTING FUNCTIONS =================
+-- Fix "Function Search Path Mutable" for functions that might exist in the DB
+DO $$ BEGIN
+    ALTER FUNCTION public.generate_order_number() SET search_path = public;
+EXCEPTION
+    WHEN undefined_function THEN null;
+END $$;
+
+DO $$ BEGIN
+    ALTER FUNCTION public.update_updated_at_column() SET search_path = public;
+EXCEPTION
+    WHEN undefined_function THEN null;
+END $$;
 

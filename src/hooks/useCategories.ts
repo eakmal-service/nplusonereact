@@ -16,27 +16,25 @@ export const useCategories = (options: UseCategoriesOptions = {}) => {
 
     const fetchCategories = useCallback(async () => {
         try {
-            setLoading(true);
-            setError(null);
-
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Use mock data
-            const { categories: mockCategories } = await import('@/data/mockData');
+            const response = await fetch('/api/categories');
+            if (!response.ok) {
+                throw new Error('Failed to fetch categories');
+            }
+            const data = await response.json();
 
             // Filter logic if needed (e.g., search)
-            let filteredCategories = [...mockCategories];
+            let filteredCategories = Array.isArray(data) ? data : [];
 
             if (options.search) {
                 const searchLower = options.search.toLowerCase();
-                filteredCategories = filteredCategories.filter(c =>
-                    c.title.toLowerCase().includes(searchLower)
+                filteredCategories = filteredCategories.filter((c: Category) =>
+                    c.title?.toLowerCase().includes(searchLower)
                 );
             }
 
             setCategories(filteredCategories);
         } catch (err) {
+            console.error('Error loading categories:', err);
             setError(err instanceof Error ? err : new Error('Failed to fetch categories'));
         } finally {
             setLoading(false);

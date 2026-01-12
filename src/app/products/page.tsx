@@ -60,29 +60,38 @@ async function getProducts(): Promise<Product[]> {
 }
 
 async function getCategories() {
-  // In many implementations categories are static or fetched from DB. 
-  // Based on "useCategories" hook it might just return static list or fetch.
-  // We'll mimic the static list often found in mockData if no table exists, 
-  // OR fetch if a 'categories' table exists. 
-  // The 'useCategories' hook usually imports from mockData or DB.
-  // Let's assume for now we can fetch distinct categories from products OR use a fixed list.
-  // Ideally, valid categories are known.
+  // Try to fetch from website_content first (CMS approach)
+  const { data: cmsContent } = await supabase
+    .from('website_content')
+    .select('content')
+    .eq('section_id', 'categories')
+    .single();
 
-  // Checking previous useCategories logic would be good, but for now let's pass an empty list 
-  // and let the client component handle fallback OR fetch from a distinct query.
+  if (cmsContent?.content && Array.isArray(cmsContent.content) && cmsContent.content.length > 0) {
+    return cmsContent.content;
+  }
 
-  // Better yet, let's just query distinct categories from DB to be dynamic?
-  // Or just provide the standard list known in the project.
+  // Fallback: Fetch distinct categories from products
+  const { data: products } = await supabase
+    .from('products')
+    .select('category')
+    .eq('status', 'active');
 
-  // Let's safe-bet on providing what we can from DB.
-  return [
-    { id: 1, name: "SUIT SET", image: "/Category/Suits.jpg" },
-    { id: 2, name: "WESTERN WEAR", image: "/Category/Western.jpg" },
-    { id: 3, name: "CO-ORD SET", image: "/Category/Co-ord.jpg" },
-    { id: 4, name: "KID'S WEAR", image: "/Category/Kids.jpg" },
-    { id: 5, name: "INDO-WESTERN", image: "/Category/Indo.jpg" },
-    { id: 6, name: "MAN'S WEAR", image: "/Category/Mens.jpg" }
-  ];
+  if (products) {
+    const uniqueCategories = Array.from(new Set(products.map((p: any) => p.category)))
+      .filter(Boolean)
+      .map((cat: any, index: number) => ({
+        id: index + 1,
+        name: cat,
+        title: cat?.toUpperCase(),
+        image: '', // Placeholder
+        link: `/${cat?.toLowerCase().replace(/\s+/g, '-')}`,
+        alt: cat
+      }));
+    return uniqueCategories;
+  }
+
+  return [];
 }
 
 export default async function ProductsPage({
