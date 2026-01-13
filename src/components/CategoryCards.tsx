@@ -80,50 +80,69 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
 
     // Load recently viewed products from localStorage
     if (typeof window !== 'undefined') {
-      const storedRecentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-      if (storedRecentlyViewed.length > 0) {
+      try {
+        const storedJson = localStorage.getItem('recentlyViewed');
+        if (storedJson) {
+          const parsed = JSON.parse(storedJson);
 
-        // Recalculate badges for stored products to ensure they match current logic
-        const updatedRecentlyViewed = storedRecentlyViewed.map((p: Product) => {
-          let badge = undefined;
+          if (Array.isArray(parsed)) {
+            // Filter out null/undefined/invalid items first
+            const validItems = parsed.filter((item: any) => item && typeof item === 'object' && item.id);
 
-          // 1. Calculate Discount Badge (Priority)
-          if (p.originalPrice && (p.salePrice || p.price)) {
-            const mrp = parseFloat(p.originalPrice.toString().replace(/[^0-9.]/g, ''));
-            const selling = parseFloat((p.salePrice || p.price).toString().replace(/[^0-9.]/g, ''));
+            if (validItems.length > 0) {
+              const updatedRecentlyViewed = validItems.map((p: Product) => {
+                let badge = undefined;
+                try {
+                  // 1. Calculate Discount Badge (Priority)
+                  if (p.originalPrice && (p.salePrice || p.price)) {
+                    const originalPriceStr = String(p.originalPrice);
+                    const sellingPriceStr = String(p.salePrice || p.price);
 
-            if (!isNaN(mrp) && !isNaN(selling) && mrp > selling) {
-              const percentage = Math.round(((mrp - selling) / mrp) * 100);
-              if (percentage > 0) {
-                badge = `${percentage}% OFF`;
-              }
+                    const mrp = parseFloat(originalPriceStr.replace(/[^0-9.]/g, ''));
+                    const selling = parseFloat(sellingPriceStr.replace(/[^0-9.]/g, ''));
+
+                    if (!isNaN(mrp) && !isNaN(selling) && mrp > selling) {
+                      const percentage = Math.round(((mrp - selling) / mrp) * 100);
+                      if (percentage > 0) {
+                        badge = `${percentage}% OFF`;
+                      }
+                    }
+                  }
+
+                  // 2. Calculate New Badge (If no discount badge)
+                  if (!badge && p.dateAdded) {
+                    const createdAt = new Date(p.dateAdded);
+                    const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
+                    const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                    if (diffDays <= 30) {
+                      badge = 'New';
+                    }
+                  }
+
+                  // 3. Fallback to existing badge
+                  if (!badge && p.badge) {
+                    badge = p.badge;
+                  }
+                } catch (e) {
+                  console.warn("Error calculating badge for product", p.id, e);
+                }
+
+                return {
+                  ...p,
+                  badge: badge
+                };
+              });
+
+              setRecentlyViewed(updatedRecentlyViewed);
+              setHasViewedProducts(true);
             }
           }
-
-          // 2. Calculate New Badge (If no discount badge)
-          if (!badge && p.dateAdded) {
-            const createdAt = new Date(p.dateAdded);
-            const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
-            const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-            if (diffDays <= 30) {
-              badge = 'New';
-            }
-          }
-
-          // 3. Fallback to existing badge
-          if (!badge && p.badge) {
-            badge = p.badge;
-          }
-
-          return {
-            ...p,
-            badge: badge
-          };
-        });
-
-        setRecentlyViewed(updatedRecentlyViewed);
-        setHasViewedProducts(true);
+        }
+      } catch (error) {
+        console.error("Error loading recently viewed products:", error);
+        // If data is corrupt, clear it to prevent persistent crashes
+        localStorage.removeItem('recentlyViewed');
       }
     }
   }, []);

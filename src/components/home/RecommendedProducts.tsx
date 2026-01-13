@@ -72,7 +72,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
   // Get current recommended products
   const getCurrentRecommended = () => {
     const startIndex = recommendedIndex * itemsPerView;
-    return products.slice(startIndex, startIndex + itemsPerView);
+    return products.slice(startIndex, startIndex + itemsPerView).filter(p => !!p);
   };
 
   const openQuickView = (e: React.MouseEvent, product: Product) => {
@@ -174,7 +174,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                       <span className="text-sm font-bold text-[#CDCDCD]">₹{product.price}</span>
                       {product.originalPrice && (
                         <>
-                          <span className="text-xs text-gray-500 line-through">₹{product.originalPrice.replace('₹', '')}</span>
+                          <span className="text-xs text-gray-500 line-through">₹{String(product.originalPrice).replace('₹', '')}</span>
                           <span className="text-xs text-red-600 font-medium">{product.discount}</span>
                         </>
                       )}
