@@ -2,14 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
-import CategoryProductsGrid from '../../components/common/CategoryProductsGrid';
+import EnhancedProductGrid from '../../components/common/EnhancedProductGrid';
 import { useProducts } from '../../contexts/ProductContext';
 
 import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
 
 export default function CoOrdSetsPage() {
   const { getActiveProductsByCategory, isLoading } = useProducts();
-  const products = getActiveProductsByCategory('co-ord-sets');
+  const products = getActiveProductsByCategory('CO-ORD SET');
 
   return (
     <div className="min-h-screen bg-custom-black text-white pt-24 pb-16">
@@ -18,15 +18,8 @@ export default function CoOrdSetsPage() {
 
         {isLoading ? (
           <ProductGridSkeleton count={8} />
-        ) : products.length > 0 ? (
-          <CategoryProductsGrid products={products} />
         ) : (
-          <div className="text-center py-16">
-            <p className="text-xl mb-4">No products found in this category.</p>
-            <Link href="/" className="inline-block bg-silver hover:bg-gray-300 text-black font-medium px-6 py-2 rounded transition">
-              Back to Home
-            </Link>
-          </div>
+          <EnhancedProductGrid products={products} title="CO-ORD SETS" />
         )}
       </div>
     </div>

@@ -12,8 +12,8 @@ const CategoryProductsGrid: React.FC<CategoryProductsGridProps> = ({ products })
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {products.map(product => (
-        <ProductCard 
-          key={product.id} 
+        <ProductCard
+          key={product.id}
           product={{
             id: product.id,
             title: product.title,
@@ -25,7 +25,7 @@ const CategoryProductsGrid: React.FC<CategoryProductsGridProps> = ({ products })
             status: product.status || 'active',
             description: product.description,
             alt: product.alt || product.title
-          }} 
+          }}
         />
       ))}
     </div>

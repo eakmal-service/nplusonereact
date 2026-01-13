@@ -15,6 +15,7 @@ import SizeChart from '@/components/product/SizeChart';
 
 import { addToRecentlyViewed } from '@/utils/recentlyViewed';
 import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
+import { getCategoryUrl } from '@/utils/categoryUtils';
 
 interface ProductDetailClientProps {
     product: Product;
@@ -142,7 +143,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                     <div className="flex text-sm text-gray-400">
                         <Link href="/" className="hover:text-silver">HOME</Link>
                         <span className="mx-2">/</span>
-                        <Link href={`/${product?.category || 'products'}`} className="hover:text-silver">
+                        <Link href={getCategoryUrl(product?.category)} className="hover:text-silver">
                             {(product?.category || 'PRODUCTS').toUpperCase().replace('-', ' ')}
                         </Link>
                         <span className="mx-2">/</span>
