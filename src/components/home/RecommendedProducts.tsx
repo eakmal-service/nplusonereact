@@ -108,22 +108,17 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                       {product.badge}
                     </div>
                   )}
-                  <div className="relative overflow-hidden">
-                    <div className="w-full">
-                      <Image
-                        src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
-                        alt={product.alt || product.title}
-                        width={0}
-                        height={0}
-                        priority={true}
-                        loading="eager"
-                        quality={90}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="w-full h-auto max-w-100% transition-transform duration-300 group-hover:scale-105"
-                        role="image"
-                        style={{ width: '100%', height: 'auto' }}
-                      />
-                    </div>
+                  <div className="relative overflow-hidden aspect-[3/4] w-full bg-gray-100">
+                    <Image
+                      src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
+                      alt={product.alt || product.title}
+                      fill
+                      priority={true}
+                      loading="eager"
+                      quality={90}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    />
                     <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>
                   </div>
                 </Link>
