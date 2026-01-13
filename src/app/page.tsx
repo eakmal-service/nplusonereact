@@ -45,28 +45,48 @@ export default async function HomePage() {
     return `/${path}`;
   };
 
-  const newArrivals: Product[] = (productsData || []).map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    brandName: p.brand_name,
-    styleCode: p.style_code,
-    category: p.category,
-    subcategory: p.subcategory,
-    price: p.selling_price || p.price, // Prefer selling_price from new schema
-    salePrice: p.sale_price,
-    discount: p.mrp && p.selling_price ? `${Math.round(((p.mrp - p.selling_price) / p.mrp) * 100)}% OFF` : undefined,
-    image: getImageUrl(p.image_url),
-    imageUrl: getImageUrl(p.image_url),
-    imageUrls: (p.image_urls || []).map((img: string) => getImageUrl(img)),
-    link: `/product/${p.id}`,
-    alt: p.alt_text || p.title,
-    stockQuantity: p.stock_quantity,
-    status: p.status,
-    description: p.description,
-    sizes: p.sizes || [],
-    colorName: p.main_color,
-    // Add other fields as necessary depending on what RecommendedProducts needs
-  }));
+  const newArrivals: Product[] = (productsData || []).map((p: any) => {
+    // Badge Login
+    let badge = undefined;
+    const createdAt = new Date(p.created_at);
+    const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
+    const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    // Logic: 'New' if < 30 days, else 'Sale' if discount exists
+    if (diffDays <= 30) {
+      badge = 'New';
+    } else if (p.mrp && p.selling_price && p.mrp > p.selling_price) {
+      badge = 'Sale';
+    }
+
+    return {
+      id: p.id,
+      title: p.title,
+      brandName: p.brand_name,
+      styleCode: p.style_code,
+      category: p.category,
+      subcategory: p.subcategory,
+      price: p.selling_price || p.price,
+      salePrice: p.sale_price,
+      discount: p.mrp && p.selling_price ? `${Math.round(((p.mrp - p.selling_price) / p.mrp) * 100)}% OFF` : undefined,
+      image: getImageUrl(p.image_url),
+      imageUrl: getImageUrl(p.image_url),
+      imageUrls: (p.image_urls || []).map((img: string) => getImageUrl(img)),
+      // Map to 'images' for QuickView compatibility
+      images: (p.image_urls || []).map((img: string) => ({
+        url: getImageUrl(img),
+        alt: p.alt_text || p.title
+      })),
+      link: `/product/${p.id}`,
+      alt: p.alt_text || p.title,
+      stockQuantity: p.stock_quantity,
+      status: p.status,
+      description: p.description,
+      sizes: p.sizes || [],
+      colorName: p.main_color,
+      badge: badge,
+    };
+  });
 
   return (
     <>
