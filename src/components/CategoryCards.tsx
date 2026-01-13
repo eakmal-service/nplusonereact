@@ -83,11 +83,11 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
       const storedRecentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
       if (storedRecentlyViewed.length > 0) {
 
-        // Recalculate badges for stored products to ensure they match current logic (e.g. 64% OFF)
+        // Recalculate badges for stored products to ensure they match current logic
         const updatedRecentlyViewed = storedRecentlyViewed.map((p: Product) => {
           let badge = undefined;
 
-          // Calculate Discount Badge
+          // 1. Calculate Discount Badge (Priority)
           if (p.originalPrice && (p.salePrice || p.price)) {
             const mrp = parseFloat(p.originalPrice.toString().replace(/[^0-9.]/g, ''));
             const selling = parseFloat((p.salePrice || p.price).toString().replace(/[^0-9.]/g, ''));
@@ -100,8 +100,18 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
             }
           }
 
-          // Fallback to existing badge if calculation failed or not applicable, 
-          // but give priority to the calculated discount as per user request.
+          // 2. Calculate New Badge (If no discount badge)
+          if (!badge && p.dateAdded) {
+            const createdAt = new Date(p.dateAdded);
+            const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
+            const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            if (diffDays <= 30) {
+              badge = 'New';
+            }
+          }
+
+          // 3. Fallback to existing badge
           if (!badge && p.badge) {
             badge = p.badge;
           }

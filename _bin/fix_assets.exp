@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "*?assword:*"
+send "$password\r"
+expect "*#*"
+
+send "cd /root/nplusone/nplus\r"
+expect "*#*"
+
+# Verify source existence
+send "ls -d public .next/static\r"
+expect "*#*"
+
+# Copy public
+send "cp -r public .next/standalone/ || echo 'cp public failed'\r"
+expect "*#*"
+
+# Copy static
+send "cp -r .next/static .next/standalone/.next/ || echo 'cp static failed'\r"
+expect "*#*"
+
+# Verify destination
+send "ls -F .next/standalone/public/ && ls -F .next/standalone/.next/static/\r"
+expect "*#*"
+
+# Restart PM2
+send "pm2 restart nplusone\r"
+expect "*#*"
+
+send "exit\r"
+expect eof

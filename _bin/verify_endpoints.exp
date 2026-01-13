@@ -1,0 +1,21 @@
+#!/usr/bin/expect -f
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "*?assword:*"
+send "$password\r"
+expect "*#*"
+
+# Check standard health
+send "curl -I http://localhost:3000\r"
+expect "*#*"
+
+# Check PhonePe Callback GET (Mocking a failed payment redirect)
+send "curl -v 'http://localhost:3000/api/payment/phonepe/callback?code=PAYMENT_ERROR&transactionId=test_123&merchantId=MockMerchant'\r"
+expect "*#*"
+
+send "exit\r"
+expect eof

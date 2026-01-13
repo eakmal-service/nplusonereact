@@ -49,6 +49,7 @@ async function getProduct(id: string): Promise<Product | null> {
       styleCode: product.style_code,
       category: product.category,
       subcategory: product.subcategory,
+      originalPrice: product.mrp,
       price: product.selling_price || product.mrp, // Prefer selling_price
       salePrice: product.sale_price,
       discount: product.mrp && product.selling_price ? `${Math.round(((product.mrp - product.selling_price) / product.mrp) * 100)}% OFF` : undefined,
