@@ -136,6 +136,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     ? Math.max(0, Math.round((1 - Number(form.salePrice) / Number(form.mrp)) * 100))
     : '';
 
+  const isMensWear = form.category === 'MENS WEAR';
+
   // Handle Step 1 Selection
   const handleSuperCatSelect = (cat: CategoryNode) => {
     setSelectedSuperCat(cat);
@@ -750,17 +752,77 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Fabric *</label>
-                <input type="text" name="material" value={form.material} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                {isMensWear ? (
+                  <select name="material" value={form.material} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
+                    <option value="">Select Fabric</option>
+                    <option value="cotton">Cotton</option>
+                    <option value="cotton-blend">Cotton Blend</option>
+                    <option value="polyester">Polyester</option>
+                    <option value="cotton-polyester">Cotton Polyester</option>
+                    <option value="lycra-blend">Lycra Blend</option>
+                    <option value="jersey">Jersey</option>
+                    <option value="pique-cotton">Pique Cotton</option>
+                    <option value="linen-blend">Linen Blend</option>
+                    <option value="modal">Modal</option>
+                    <option value="bamboo-fabric">Bamboo Fabric</option>
+                  </select>
+                ) : (
+                  <input type="text" name="material" value={form.material} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                )}
                 {errors.material && <div className="text-red-500 text-xs mt-1">{errors.material}</div>}
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Pattern</label>
                 <select name="topPattern" value={attributes.topPattern} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
                   <option value="">Select Pattern</option>
-                  <option value="solid">Solid</option>
-                  <option value="printed">Printed</option>
-                  <option value="embroidered">Embroidered</option>
-                  <option value="striped">Striped</option>
+                  {isMensWear ? (
+                    <>
+                      <option value="solid">Solid</option>
+                      <option value="printed">Printed</option>
+                      <option value="graphic-print">Graphic Print</option>
+                      <option value="typography-print">Typography Print</option>
+                      <option value="striped">Striped</option>
+                      <option value="checked">Checked</option>
+                      <option value="color-block">Color Block</option>
+                      <option value="tie-dye">Tie & Dye</option>
+                      <option value="all-over-print">All Over Print</option>
+                      <option value="panelled">Panelled</option>
+                      <option value="washed-acid-wash">Washed / Acid Wash</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="solid">Solid</option>
+                      <option value="printed">Printed</option>
+                      <option value="floral-print">Floral Print</option>
+                      <option value="geometric-print">Geometric Print</option>
+                      <option value="abstract-print">Abstract Print</option>
+                      <option value="striped">Striped</option>
+                      <option value="checked">Checked</option>
+                      <option value="polka-dot">Polka Dot</option>
+                      <option value="embroidered">Embroidered</option>
+                      <option value="chikankari">Chikankari</option>
+                      <option value="block-print">Block Print</option>
+                      <option value="ajrakh-print">Ajrakh Print</option>
+                      <option value="tie-dye">Tie & Dye</option>
+                      <option value="ombre">Ombre</option>
+                      <option value="pleated">Pleated</option>
+                      <option value="ruffled">Ruffled</option>
+                      <option value="layered">Layered</option>
+                      <option value="peplum">Peplum</option>
+                      <option value="wrap-style">Wrap Style</option>
+                      <option value="front-open">Front Open</option>
+                      <option value="button-down">Button-Down</option>
+                      <option value="a-line">A-Line</option>
+                      <option value="straight-fit">Straight Fit</option>
+                      <option value="crop-top-style">Crop Top Style</option>
+                      <option value="high-low-pattern">High-Low Pattern</option>
+                      <option value="asymmetrical-pattern">Asymmetrical Pattern</option>
+                      <option value="panelled-design">Panelled Design</option>
+                      <option value="gathered-design">Gathered Design</option>
+                      <option value="smocked-pattern">Smocked Pattern</option>
+                      <option value="lace-work">Lace Work</option>
+                    </>
+                  )}
                 </select>
               </div>
               {/* ... other attributes ... */}
@@ -768,46 +830,236 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                 <label className="block text-gray-400 text-sm mb-1">Fit</label>
                 <select name="fit" value={attributes.fit} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
                   <option value="">Select Fit</option>
-                  <option value="regular">Regular</option>
-                  <option value="slim">Slim</option>
-                  <option value="loose">Loose/Oversized</option>
+                  {isMensWear ? (
+                    <>
+                      <option value="oversized-fit">Oversized Fit</option>
+                      <option value="regular-fit">Regular Fit</option>
+                      <option value="slim-fit">Slim Fit</option>
+                      <option value="relaxed-fit">Relaxed Fit</option>
+                      <option value="boxy-fit">Boxy Fit</option>
+                      <option value="muscle-fit">Muscle Fit</option>
+                      <option value="longline-fit">Longline Fit</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="a-line-dress">A-Line Dress</option>
+                      <option value="straight-dress">Straight Dress</option>
+                      <option value="fit-flare-dress">Fit & Flare Dress</option>
+                      <option value="skater-dress">Skater Dress</option>
+                      <option value="shift-dress">Shift Dress</option>
+                      <option value="sheath-dress">Sheath Dress</option>
+                      <option value="empire-waist-dress">Empire Waist Dress</option>
+                      <option value="peplum-dress">Peplum Dress</option>
+                      <option value="wrap-dress">Wrap Dress</option>
+                      <option value="bodycon-dress">Bodycon Dress</option>
+                      <option value="maxi-dress">Maxi Dress</option>
+                      <option value="midi-dress">Midi Dress</option>
+                      <option value="mini-dress">Mini Dress</option>
+                      <option value="high-low-dress">High-Low Dress</option>
+                      <option value="asymmetrical-dress">Asymmetrical Dress</option>
+                      <option value="tiered-dress">Tiered Dress</option>
+                      <option value="layered-dress">Layered Dress</option>
+                      <option value="smocked-dress">Smocked Dress</option>
+                      <option value="panelled-dress">Panelled Dress</option>
+                      <option value="front-open-dress">Front Open Dress</option>
+                      <option value="button-down-dress">Button-Down Dress</option>
+                      <option value="kaftan-dress">Kaftan Dress</option>
+                      <option value="tunic-dress">Tunic Dress</option>
+                      <option value="shirt-dress">Shirt Dress</option>
+                      <option value="anarkali-style-dress">Anarkali Style Dress</option>
+                      <option value="angrakha-style-dress">Angrakha Style Dress</option>
+                      <option value="cold-shoulder-dress">Cold Shoulder Dress</option>
+                      <option value="off-shoulder-dress">Off-Shoulder Dress</option>
+                      <option value="one-piece-dress">One-Piece Dress</option>
+                      <option value="ruffled-dress">Ruffled Dress</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Neckline</label>
                 <select name="neckline" value={attributes.neckline} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
                   <option value="">Select Neckline</option>
-                  <option value="round">Round Neck</option>
-                  <option value="v-neck">V-Neck</option>
-                  <option value="collared">Collared</option>
-                  <option value="boat">Boat Neck</option>
+                  {isMensWear ? (
+                    <>
+                      <option value="crew-neck">Crew Neck</option>
+                      <option value="v-neck">V-Neck</option>
+                      <option value="henley-neck">Henley Neck</option>
+                      <option value="polo-collar-neck">Polo Collar Neck</option>
+                      <option value="scoop-neck">Scoop Neck</option>
+                      <option value="boat-neck">Boat Neck</option>
+                      <option value="high-neck">High Neck</option>
+                      <option value="turtle-neck">Turtle Neck</option>
+                      <option value="hooded-neck">Hooded Neck</option>
+                      <option value="zip-neck">Zip Neck</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="round">Round Neck</option>
+                      <option value="v-neck">V Neck</option>
+                      <option value="deep-v-neck">Deep V Neck</option>
+                      <option value="u-neck">U Neck</option>
+                      <option value="square-neck">Square Neck</option>
+                      <option value="boat-neck">Boat Neck</option>
+                      <option value="scoop-neck">Scoop Neck</option>
+                      <option value="sweetheart-neck">Sweetheart Neck</option>
+                      <option value="halter-neck">Halter Neck</option>
+                      <option value="high-neck">High Neck</option>
+                      <option value="turtle-neck">Turtle Neck</option>
+                      <option value="collar-neck">Collar Neck</option>
+                      <option value="mandarin-chinese-collar">Mandarin / Chinese Collar</option>
+                      <option value="keyhole-neck">Keyhole Neck</option>
+                      <option value="notch-neck">Notch Neck</option>
+                      <option value="angrakha-neck">Angrakha Neck</option>
+                      <option value="off-shoulder-neck">Off-Shoulder Neck</option>
+                      <option value="one-shoulder-neck">One-Shoulder Neck</option>
+                      <option value="strapless-neck">Strapless Neck</option>
+                      <option value="cowl-neck">Cowl Neck</option>
+                      <option value="asymmetrical-neck">Asymmetrical Neck</option>
+                      <option value="queen-anne-neck">Queen Anne Neck</option>
+                      <option value="jewel-neck">Jewel Neck</option>
+                      <option value="surplice-neck">Surplice Neck</option>
+                      <option value="illusion-neck">Illusion Neck</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Occasion</label>
+                <label className="block text-gray-400 text-sm mb-1">{isMensWear ? 'Style / Use' : 'Occasion'}</label>
                 <select name="occasion" value={attributes.occasion} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Occasion</option>
-                  <option value="casual">Casual</option>
-                  <option value="festive">Festive</option>
-                  <option value="formal">Formal</option>
-                  <option value="party">Party</option>
+                  <option value="">Select {isMensWear ? 'Style' : 'Occasion'}</option>
+                  {isMensWear ? (
+                    <>
+                      <option value="casual-t-shirt">Casual T-Shirt</option>
+                      <option value="sports-t-shirt">Sports T-Shirt</option>
+                      <option value="gym-t-shirt">Gym T-Shirt</option>
+                      <option value="streetwear-t-shirt">Streetwear T-Shirt</option>
+                      <option value="party-wear-t-shirt">Party Wear T-Shirt</option>
+                      <option value="lounge-wear-t-shirt">Lounge Wear T-Shirt</option>
+                      <option value="travel-wear-t-shirt">Travel Wear T-Shirt</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="casual">Casual</option>
+                      <option value="festive">Festive</option>
+                      <option value="formal">Formal</option>
+                      <option value="party">Party</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Sleeve Detail</label>
-                <input type="text" name="sleeveDetail" value={attributes.sleeveDetail} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                <select name="sleeveDetail" value={attributes.sleeveDetail} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
+                  <option value="">Select Sleeve Pattern</option>
+                  {isMensWear ? (
+                    <>
+                      <option value="half-sleeve">Half Sleeve</option>
+                      <option value="full-sleeve">Full Sleeve</option>
+                      <option value="sleeveless">Sleeveless</option>
+                      <option value="cap-sleeve">Cap Sleeve</option>
+                      <option value="raglan-sleeve">Raglan Sleeve</option>
+                      <option value="drop-shoulder-sleeve">Drop Shoulder Sleeve</option>
+                      <option value="roll-up-sleeve">Roll-Up Sleeve</option>
+                      <option value="muscle-sleeve">Muscle Sleeve</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="sleeveless">Sleeveless</option>
+                      <option value="cap-sleeves">Cap Sleeves</option>
+                      <option value="short-sleeves">Short Sleeves</option>
+                      <option value="half-sleeves">Half Sleeves</option>
+                      <option value="3-4th-sleeves">3/4th Sleeves</option>
+                      <option value="full-sleeves">Full Sleeves</option>
+                      <option value="puff-sleeves">Puff Sleeves</option>
+                      <option value="bell-sleeves">Bell Sleeves</option>
+                      <option value="bishop-sleeves">Bishop Sleeves</option>
+                      <option value="butterfly-sleeves">Butterfly Sleeves</option>
+                      <option value="flutter-sleeves">Flutter Sleeves</option>
+                      <option value="cold-shoulder-sleeves">Cold Shoulder Sleeves</option>
+                      <option value="off-shoulder-sleeves">Off-Shoulder Sleeves</option>
+                      <option value="raglan-sleeves">Raglan Sleeves</option>
+                      <option value="kimono-sleeves">Kimono Sleeves</option>
+                      <option value="dolman-sleeves">Dolman Sleeves</option>
+                      <option value="slit-sleeves">Slit Sleeves</option>
+                      <option value="cape-sleeves">Cape Sleeves</option>
+                      <option value="cuff-sleeves">Cuff Sleeves</option>
+                      <option value="balloon-sleeves">Balloon Sleeves</option>
+                      <option value="layered-sleeves">Layered Sleeves</option>
+                      <option value="sheer-sleeves">Sheer Sleeves</option>
+                      <option value="bell-cuff-sleeves">Bell Cuff Sleeves</option>
+                      <option value="petal-sleeves">Petal Sleeves</option>
+                      <option value="roll-up-sleeves">Roll-Up Sleeves</option>
+                    </>
+                  )}
+                </select>
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Wash Care</label>
                 <input type="text" name="washCare" value={attributes.washCare} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Work Type</label>
-                <input type="text" name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                <label className="block text-gray-400 text-sm mb-1">{isMensWear ? 'Hemline' : 'Work Type'}</label>
+                {isMensWear ? (
+                  <select name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
+                    <option value="">Select Hemline</option>
+                    <option value="straight-hem">Straight Hem</option>
+                    <option value="curved-hem">Curved Hem</option>
+                    <option value="asymmetrical-hem">Asymmetrical Hem</option>
+                    <option value="split-hem">Split Hem</option>
+                  </select>
+                ) : (
+                  <input type="text" name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                )}
               </div>
+
+              {isMensWear && (
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Length</label>
+                  <select name="topStyle" value={attributes.topStyle} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
+                    <option value="">Select Length</option>
+                    <option value="regular-length">Regular Length</option>
+                    <option value="longline">Longline</option>
+                    <option value="cropped">Cropped</option>
+                    <option value="high-low-length">High-Low Length</option>
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Bottom Type</label>
-                <input type="text" name="bottomType" value={form.bottomType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                <select name="bottomType" value={form.bottomType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
+                  <option value="">Select Bottom Type</option>
+                  <option value="jeans">Jeans</option>
+                  <option value="straight-pants">Straight Pants</option>
+                  <option value="cigarette-pants">Cigarette Pants</option>
+                  <option value="palazzo-pants">Palazzo Pants</option>
+                  <option value="wide-leg-pants">Wide Leg Pants</option>
+                  <option value="flared-pants">Flared Pants</option>
+                  <option value="bell-bottoms">Bell Bottoms</option>
+                  <option value="cargo-pants">Cargo Pants</option>
+                  <option value="jogger-pants">Jogger Pants</option>
+                  <option value="track-pants">Track Pants</option>
+                  <option value="trousers">Trousers</option>
+                  <option value="chinos">Chinos</option>
+                  <option value="leggings">Leggings</option>
+                  <option value="jeggings">Jeggings</option>
+                  <option value="capri-pants">Capri Pants</option>
+                  <option value="culottes">Culottes</option>
+                  <option value="harem-pants">Harem Pants</option>
+                  <option value="dhoti-pants">Dhoti Pants</option>
+                  <option value="sharara-pants">Sharara Pants</option>
+                  <option value="gharara-pants">Gharara Pants</option>
+                  <option value="skirts">Skirts</option>
+                  <option value="a-line-skirt">A-Line Skirt</option>
+                  <option value="pencil-skirt">Pencil Skirt</option>
+                  <option value="pleated-skirt">Pleated Skirt</option>
+                  <option value="wrap-skirt">Wrap Skirt</option>
+                  <option value="mini-skirt">Mini Skirt</option>
+                  <option value="midi-skirt">Midi Skirt</option>
+                  <option value="maxi-skirt">Maxi Skirt</option>
+                  <option value="tulip-pants">Tulip Pants</option>
+                  <option value="paperbag-waist-pants">Paperbag Waist Pants</option>
+                </select>
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Set Contains</label>

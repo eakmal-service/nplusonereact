@@ -45,6 +45,40 @@ export async function POST(request: Request) {
                 result = await logistics.getStore(data.storeId);
                 break;
 
+
+
+            case 'trackOrder':
+                result = await logistics.trackOrder(data.awbNumbers);
+                break;
+
+            case 'cancelOrder':
+                result = await logistics.cancelOrder(data.awbNumbers);
+                break;
+
+            case 'printLabel':
+                result = await logistics.printLabel(data.awbNumbers);
+                break;
+
+            case 'printManifest':
+                result = await logistics.printManifest(data.awbNumbers);
+                break;
+
+            case 'printInvoice':
+                result = await logistics.printInvoice(data.awbNumbers); // Using awbNumbers string/array handling in lib
+                break;
+
+            case 'syncOrder':
+                result = await logistics.syncOrder(data.shipments);
+                break;
+
+            case 'updatePayment':
+                result = await logistics.updatePayment(data.awb, data.codAmount, data.paymentType);
+                break;
+
+            case 'checkAWB':
+                result = await logistics.checkAWB(data.fromDate, data.toDate);
+                break;
+
             default:
                 return NextResponse.json({ status: 'error', message: `Invalid action: ${action}` }, { status: 400 });
         }

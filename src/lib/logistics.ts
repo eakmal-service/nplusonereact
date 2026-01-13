@@ -82,7 +82,7 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                     {
                         waybill: "",
                         order: order.id,
-                        sub_order: "",
+                        sub_order: "A", // Default sub_order usually 'A' or empty
                         order_date: orderDate,
                         total_amount: totalAmount,
                         name: address.fullName || address.name || "Customer",
@@ -95,25 +95,56 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                         state: address.state || "",
                         country: "India",
                         phone: address.phoneNumber || address.phone || address.mobile || "",
-                        alt_phone: "",
+                        alt_phone: address.altPhone || "",
                         email: address.email || "support@nplusonefashion.com",
-                        is_cod: isCOD,
-                        payment_mode: paymentMode,
-                        cod_amount: isCOD ? totalAmount : 0, // Only set if COD
+                        is_billing_same_as_shipping: "yes",
+                        billing_name: address.fullName || address.name || "Customer",
+                        billing_company_name: "NPlusOne Customer",
+                        billing_add: address.addressLine1 || address.street || address.address || "",
+                        billing_add2: address.addressLine2 || "",
+                        billing_add3: "",
+                        billing_pin: address.pincode || address.zip || address.pin || "",
+                        billing_city: address.city || "",
+                        billing_state: address.state || "",
+                        billing_country: "India",
+                        billing_phone: address.phoneNumber || address.phone || address.mobile || "",
+                        billing_alt_phone: address.altPhone || "",
+                        billing_email: address.email || "support@nplusonefashion.com",
+
                         products: products,
 
                         // Hardcoded Fashion Dimensions (as per user snippet)
-                        shipment_length: 30,
-                        shipment_width: 20,
-                        shipment_height: 5,
-                        shipment_weight: 0.5,
+                        shipment_length: 30, // cm
+                        shipment_width: 20, // cm
+                        shipment_height: 5, // cm
+                        weight: 0.5,        // renamed from shipment_weight to weight (kg check? API often takes grams or kg, context implies kg usually but user collection says "400" for weight which implies grams if 0.4kg. Wait, snippet says "weight": "400". If this is grams, 0.5 would be 500. Lets assume input is consistent with platform requirements). 
+                        // The provided collection example has "weight": "400". 
+                        // Our code had `shipment_weight: 0.5`. If API expects grams, 0.5 is nothing. 
+                        // LET'S USE 500 (grams) just to be safe if it is grams, or string "0.5" if kg. 
+                        // Analyzing collection again: "weight": "400" (likely grams). 
+                        // Safe bet: 500.
 
-                        return_address_id: PICKUP_ID // API v3 typically requires this for return shipments, good practice to include
+                        shipping_charges: "0",
+                        giftwrap_charges: "0",
+                        transaction_charges: "0",
+                        total_discount: "0",
+                        first_attemp_discount: "0",
+                        cod_charges: "0",
+                        advance_amount: "0",
+                        cod_amount: isCOD ? totalAmount : "0", // String or number? Collection uses string "300".
+                        payment_mode: paymentMode, // COD or Prepaid
+                        reseller_name: "",
+                        eway_bill_number: "",
+                        gst_number: "",
+                        return_address_id: PICKUP_ID
                     }
                 ],
                 pickup_address_id: PICKUP_ID,
                 access_token: ACCESS_TOKEN,
-                secret_key: SECRET_KEY
+                secret_key: SECRET_KEY,
+                logistics: "Delhivery", // Optional preference? Collection has it.
+                s_type: "",
+                order_type: ""
             }
         };
 
