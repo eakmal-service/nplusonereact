@@ -82,7 +82,37 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
     if (typeof window !== 'undefined') {
       const storedRecentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
       if (storedRecentlyViewed.length > 0) {
-        setRecentlyViewed(storedRecentlyViewed);
+
+        // Recalculate badges for stored products to ensure they match current logic (e.g. 64% OFF)
+        const updatedRecentlyViewed = storedRecentlyViewed.map((p: Product) => {
+          let badge = undefined;
+
+          // Calculate Discount Badge
+          if (p.originalPrice && (p.salePrice || p.price)) {
+            const mrp = parseFloat(p.originalPrice.toString().replace(/[^0-9.]/g, ''));
+            const selling = parseFloat((p.salePrice || p.price).toString().replace(/[^0-9.]/g, ''));
+
+            if (!isNaN(mrp) && !isNaN(selling) && mrp > selling) {
+              const percentage = Math.round(((mrp - selling) / mrp) * 100);
+              if (percentage > 0) {
+                badge = `${percentage}% OFF`;
+              }
+            }
+          }
+
+          // Fallback to existing badge if calculation failed or not applicable, 
+          // but give priority to the calculated discount as per user request.
+          if (!badge && p.badge) {
+            badge = p.badge;
+          }
+
+          return {
+            ...p,
+            badge: badge
+          };
+        });
+
+        setRecentlyViewed(updatedRecentlyViewed);
         setHasViewedProducts(true);
       }
     }
