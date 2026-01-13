@@ -102,28 +102,57 @@ async function getSimilarProducts(id: string, category: string): Promise<Product
     .limit(4);
 
   if (data) {
-    const getImageUrl = (path: string | null) => {
-      if (!path) return '';
-      if (path.startsWith('http')) return optimizeCloudinaryUrl(path);
-      const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
-      return optimizeCloudinaryUrl(`https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`);
-    };
+    return data.map((p: any) => {
+      // Calculate Badge
+      let badge = undefined;
+      const mrp = p.mrp;
+      const selling = p.selling_price || p.mrp;
 
-    return data.map((p: any) => ({
-      id: p.id,
-      title: p.title,
-      category: p.category,
-      price: p.selling_price || p.mrp,
-      salePrice: p.sale_price,
-      image: getImageUrl(p.image_url),
-      imageUrl: getImageUrl(p.image_url),
-      imageUrls: (p.image_urls || []).map((img: string) => getImageUrl(img)),
-      link: `/product/${p.id}`,
-      alt: p.alt_text || p.title,
-      stockQuantity: p.stock_quantity,
-      status: p.status,
-      sizes: p.sizes || [],
-    }));
+      // 1. Discount Badge
+      if (mrp && selling && mrp > selling) {
+        const percentage = Math.round(((mrp - selling) / mrp) * 100);
+        if (percentage > 0) {
+          badge = `${percentage}% OFF`;
+        }
+      }
+
+      // 2. New Badge
+      if (!badge && p.created_at) {
+        const createdAt = new Date(p.created_at);
+        const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
+        const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        if (diffDays <= 30) {
+          badge = 'New';
+        }
+      }
+
+      const getImageUrl = (path: string | null) => {
+        if (!path) return '';
+        if (path.startsWith('http')) return optimizeCloudinaryUrl(path);
+        const nameWithoutExt = path.replace(/^\//, '').replace(/\.[^/.]+$/, "");
+        return optimizeCloudinaryUrl(`https://res.cloudinary.com/douy8ujry/image/upload/nplus/${nameWithoutExt}`);
+      };
+
+      return {
+        id: p.id,
+        title: p.title,
+        category: p.category,
+        originalPrice: p.mrp,
+        price: p.selling_price || p.mrp,
+        salePrice: p.selling_price, // Ensure salePrice is mapped for compatibility
+        discount: badge && badge.includes('%') ? badge : undefined,
+        badge: badge,
+        image: getImageUrl(p.image_url),
+        imageUrl: getImageUrl(p.image_url),
+        imageUrls: (p.image_urls || []).map((img: string) => getImageUrl(img)),
+        link: `/product/${p.id}`,
+        alt: p.alt_text || p.title,
+        stockQuantity: p.stock_quantity,
+        status: p.status,
+        sizes: p.sizes || [],
+        dateAdded: p.created_at
+      };
+    });
   }
   return [];
 }

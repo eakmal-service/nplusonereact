@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import SimilarProducts from '@/components/home/SimilarProducts';
+import RecommendedProducts from '@/components/home/RecommendedProducts';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import Header from '@/components/Header';
@@ -598,7 +598,12 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             </div>
 
             {/* Similar Products */}
-            <SimilarProducts products={similarProducts} />
+            {similarProducts.length > 0 && (
+                <RecommendedProducts
+                    products={similarProducts}
+                    title="SIMILAR PRODUCTS"
+                />
+            )}
 
             {/* Share Modal */}
             {showShareModal && (
