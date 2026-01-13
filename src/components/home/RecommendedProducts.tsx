@@ -120,7 +120,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
               <div className="relative">
                 <Link href={`/product/${product.id}`} className="block relative">
                   {product.badge && (
-                    <div className={`absolute top-0 left-0 z-10 px-2 sm:px-4 py-1 text-xs text-white font-medium ${product.badge === 'Sale' ? 'bg-red-600' : 'bg-blue-600'}`}>
+                    <div className={`absolute top-0 left-0 z-10 px-2 sm:px-4 py-1 text-xs text-white font-medium ${product.badge === 'New' ? 'bg-blue-600' : 'bg-red-600'}`}>
                       {product.badge}
                     </div>
                   )}
@@ -143,8 +143,8 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                   {/* Wishlist Button */}
                   <button
                     className={`p-2 rounded-full shadow-md transition-colors duration-300 ${isInWishlist(product.id)
-                        ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                        : 'bg-white text-gray-800 hover:bg-red-50 hover:text-red-500'
+                      ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                      : 'bg-white text-gray-800 hover:bg-red-50 hover:text-red-500'
                       }`}
                     aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                     onClick={(e) => handleWishlistToggle(e, product)}

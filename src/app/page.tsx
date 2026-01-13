@@ -52,11 +52,14 @@ export default async function HomePage() {
     const timeDiff = Math.abs(new Date().getTime() - createdAt.getTime());
     const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // Logic: 'New' if < 30 days, else 'Sale' if discount exists
-    if (diffDays <= 30) {
+    // Logic: Show discount % if available (Sale), otherwise 'New' if < 30 days
+    // User requested specific badge "64% OFF" in red.
+    const discountText = p.mrp && p.selling_price ? `${Math.round(((p.mrp - p.selling_price) / p.mrp) * 100)}% OFF` : undefined;
+
+    if (discountText) {
+      badge = discountText;
+    } else if (diffDays <= 30) {
       badge = 'New';
-    } else if (p.mrp && p.selling_price && p.mrp > p.selling_price) {
-      badge = 'Sale';
     }
 
     return {
