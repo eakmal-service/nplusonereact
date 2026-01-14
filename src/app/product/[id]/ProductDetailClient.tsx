@@ -399,60 +399,80 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Brand Name</span>
-                                    <span className="text-silver">{product?.brandName || 'Nplusone Fashion'}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Style Code</span>
-                                    <span className="text-silver">{product?.styleCode || product?.sku}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Product Weight</span>
-                                    <span className="text-silver">{product?.productWeight}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Top Style</span>
-                                    <span className="text-silver">{product?.topStyle}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Top Pattern</span>
-                                    <span className="text-silver">{product?.topPattern}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Bottom Fabric</span>
-                                    <span className="text-silver">{product?.bottomFabric}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Fabric Dupatta/Stole</span>
-                                    <span className="text-silver">{product?.fabricDupattaStole}</span>
-                                </div>
+                                {product?.brandName && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Brand Name</span>
+                                        <span className="text-silver">{product.brandName}</span>
+                                    </div>
+                                )}
+                                {(product?.styleCode || product?.sku) && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Style Code</span>
+                                        <span className="text-silver">{product.styleCode || product.sku}</span>
+                                    </div>
+                                )}
+                                {product?.fabric && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Fabric</span>
+                                        <span className="text-silver">{product.fabric}</span>
+                                    </div>
+                                )}
+                                {product?.topPattern && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Pattern</span>
+                                        <span className="text-silver">{product.topPattern}</span>
+                                    </div>
+                                )}
+                                {product?.fit && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Fit</span>
+                                        <span className="text-silver">{product.fit}</span>
+                                    </div>
+                                )}
+                                {product?.productWeight && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Product Weight</span>
+                                        <span className="text-silver">{product.productWeight}</span>
+                                    </div>
+                                )}
                             </div>
                             <div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Set Contains</span>
-                                    <span className="text-silver">{product?.setContains}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Work Type</span>
-                                    <span className="text-silver">{product?.workType}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Neck/Neckline</span>
-                                    <span className="text-silver">{product?.neckline}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Sleeve Detail</span>
-                                    <span className="text-silver">{product?.sleeveDetail}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Lining Fabric</span>
-                                    <span className="text-silver">{product?.liningFabric}</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-gray-700">
-                                    <span className="font-medium text-gray-300">Fabric</span>
-                                    <span className="text-silver">{product?.fabric}</span>
-                                </div>
+                                {product?.bottomFabric && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Bottom type</span>
+                                        <span className="text-silver">{product.bottomFabric}</span>
+                                    </div>
+                                )}
+                                {product?.fabricDupattaStole && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Dupatta/Stole Fabric</span>
+                                        <span className="text-silver">{product.fabricDupattaStole}</span>
+                                    </div>
+                                )}
+                                {product?.setContains && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Set Contains</span>
+                                        <span className="text-silver">{product.setContains}</span>
+                                    </div>
+                                )}
+                                {product?.workType && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Work Type</span>
+                                        <span className="text-silver">{product.workType}</span>
+                                    </div>
+                                )}
+                                {product?.neckline && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Neck/Neckline</span>
+                                        <span className="text-silver">{product.neckline}</span>
+                                    </div>
+                                )}
+                                {product?.sleeveDetail && (
+                                    <div className="flex justify-between py-2 border-b border-gray-700">
+                                        <span className="font-medium text-gray-300">Sleeve Detail</span>
+                                        <span className="text-silver">{product.sleeveDetail}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -67,57 +67,82 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         };
 
+        // Helper to parse sku_map which might be simple strings or complex objects
+        const parseSkuMap = (skuMap: any) => {
+          const skus: Record<string, string> = {};
+          const stock: Record<string, number> = {};
+
+          if (!skuMap) return { skus, stock };
+
+          Object.keys(skuMap).forEach(key => {
+            const val = skuMap[key];
+            if (typeof val === 'string') {
+              skus[key] = val;
+              stock[key] = 0; // Default if legacy string
+            } else if (typeof val === 'object' && val !== null) {
+              skus[key] = val.sku || '';
+              stock[key] = Number(val.stock) || 0;
+            }
+          });
+          return { skus, stock };
+        };
+
         // Map Supabase data to our Product interface
-        const mappedProducts: Product[] = data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          brandName: p.brand_name,
-          styleCode: p.style_code,
-          category: p.category,
-          subcategory: p.subcategory,
-          price: p.price,
-          salePrice: p.sale_price,
-          discount: p.discount ? `${p.discount}` : undefined,
-          image: getImageUrl(p.image_url),
-          imageUrl: getImageUrl(p.image_url),
-          imageUrls: (p.image_urls || p.images || []).map((img: string) => getImageUrl(img)),
-          link: `/product/${p.id}`,
-          alt: p.alt_text || p.title,
-          stockQuantity: p.stock_quantity,
-          viewCount: p.view_count || 0,
-          cartCount: 0,
-          purchaseCount: p.purchase_count || 0,
-          dateAdded: p.created_at,
-          status: p.status,
-          description: p.description,
-          sizes: p.sizes || [],
-          colorName: p.main_color || p.color_name,
-          // Mapping Detailed Specs
-          fabric: p.fabric || p.material,
-          workType: p.work_type,
-          neckline: p.neck_design || p.neckline,
-          sleeveDetail: p.sleeve_length || p.sleeve_detail,
-          fit: p.fit_type || p.fit,
-          bottomType: p.bottom_type,
-          setContains: p.set_contains,
-          productWeight: p.product_weight,
-          washCare: p.wash_care,
-          searchKeywords: Array.isArray(p.search_keywords) ? p.search_keywords.join(', ') : p.search_keywords,
+        const mappedProducts: Product[] = data.map((p: any) => {
+          const { skus, stock } = parseSkuMap(p.sku_map || {});
 
-          sizeSkus: p.sku_map,
-          hsnCode: p.hsn_code,
-          gstPercentage: p.gst_percentage,
+          return {
+            id: p.id,
+            title: p.title,
+            brandName: p.brand_name,
+            styleCode: p.style_code,
+            category: p.category,
+            subcategory: p.subcategory,
+            price: p.price,
+            salePrice: p.sale_price,
+            discount: p.discount ? `${p.discount}` : undefined,
+            image: getImageUrl(p.image_url),
+            imageUrl: getImageUrl(p.image_url),
+            imageUrls: (p.image_urls || p.images || []).map((img: string) => getImageUrl(img)),
+            link: `/product/${p.id}`,
+            alt: p.alt_text || p.title,
+            stockQuantity: p.stock_quantity,
+            viewCount: p.view_count || 0,
+            cartCount: 0,
+            purchaseCount: p.purchase_count || 0,
+            dateAdded: p.created_at,
+            status: p.status,
+            description: p.description,
+            sizes: p.sizes || [],
+            colorName: p.main_color || p.color_name,
+            // Mapping Detailed Specs
+            fabric: p.fabric || p.material,
+            workType: p.work_type,
+            neckline: p.neck_design || p.neckline,
+            sleeveDetail: p.sleeve_length || p.sleeve_detail,
+            fit: p.fit_type || p.fit,
+            bottomType: p.bottom_type,
+            setContains: p.set_contains,
+            productWeight: p.product_weight,
+            washCare: p.wash_care,
+            searchKeywords: Array.isArray(p.search_keywords) ? p.search_keywords.join(', ') : p.search_keywords,
 
-          colorOptions: p.color_options || (p.main_color ? [{ name: p.main_color, code: '#000000' }] : []),
-          isAdminUploaded: true,
+            sizeSkus: skus,
+            sizeStock: stock,
+            hsnCode: p.hsn_code,
+            gstPercentage: p.gst_percentage,
 
-          // Legacy/Fallback mapping
-          topStyle: p.top_style,
-          topPattern: p.top_pattern,
-          fabricDupattaStole: p.fabric_dupatta_stole,
-          liningFabric: p.lining_fabric,
-          bottomFabric: p.bottom_fabric,
-        }));
+            colorOptions: p.color_options || (p.main_color ? [{ name: p.main_color, code: '#000000' }] : []),
+            isAdminUploaded: true,
+
+            // Legacy/Fallback mapping
+            topStyle: p.top_style,
+            topPattern: p.top_pattern,
+            fabricDupattaStole: p.fabric_dupatta_stole,
+            liningFabric: p.lining_fabric,
+            bottomFabric: p.bottom_fabric,
+          };
+        });
 
         setProducts(mappedProducts);
       }
@@ -145,6 +170,20 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       supabase.removeChannel(subscription);
     };
   }, []);
+
+  // Prepare hybrid sku_map
+  const prepareSkuMap = (skus: Record<string, string>, stock: Record<string, number>) => {
+    const combined: Record<string, any> = {};
+    const allKeys = new Set([...Object.keys(skus || {}), ...Object.keys(stock || {})]);
+
+    allKeys.forEach(key => {
+      combined[key] = {
+        sku: skus?.[key] || '',
+        stock: stock?.[key] || 0
+      };
+    });
+    return combined;
+  };
 
   // Save new product (INSERT)
   const saveNewProduct = async (productData: any) => {
@@ -174,7 +213,10 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         meta_description: productData.metaDescription,
         search_keywords: productData.searchKeywords ? productData.searchKeywords.split(',').map((k: string) => k.trim()) : [],
 
-        sku_map: productData.sizeSkus || {}, // Schema: sku_map
+        // Ensure color_options is saved as JSONB
+        color_options: productData.colorOptions || (productData.colorName ? [{ name: productData.colorName, code: productData.color || '#000000' }] : []),
+
+        sku_map: prepareSkuMap(productData.sizeSkus, productData.sizeStock), // Hybrid map
 
         brand_name: productData.brandName,
         style_code: productData.styleCode,
@@ -241,7 +283,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         meta_description: product.metaDescription,
         search_keywords: product.searchKeywords ? (Array.isArray(product.searchKeywords) ? product.searchKeywords : product.searchKeywords.split(',').map((k: string) => k.trim())) : [],
 
-        sku_map: product.sizeSkus || {},
+        color_options: product.colorOptions || (product.colorName ? [{ name: product.colorName, code: product.color || '#000000' }] : []),
+        sku_map: prepareSkuMap(product.sizeSkus, product.sizeStock),
 
         brand_name: product.brandName,
         style_code: product.styleCode,

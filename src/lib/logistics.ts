@@ -65,13 +65,13 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
         // Frontend: name, price, quantity, id
         // API v3: p_name, p_sku, p_qty, p_price, p_tax_rate, p_hsn_code, p_discount
         const products = (order.items || []).map((item: any) => ({
-            p_name: item.product_name || item.name || "Apparel Item",
-            p_sku: item.product_sku || item.id || 'SKU-GENERIC',
-            p_qty: item.quantity,
-            p_price: item.price_per_unit || item.price || 0,
-            p_tax_rate: 5,
-            p_hsn_code: '6204',
-            p_discount: 0
+            product_name: item.product_name || item.name || "Apparel Item",
+            product_sku: item.product_sku || item.id || 'SKU-GENERIC',
+            product_quantity: String(item.quantity),
+            product_price: String(item.price_per_unit || item.price || 0),
+            product_tax_rate: "5",
+            product_hsn_code: "6204",
+            product_discount: "0"
         }));
 
         const totalAmount = order.total_amount || order.total || 0;
@@ -84,7 +84,7 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                         order: order.id,
                         sub_order: "A", // Default sub_order usually 'A' or empty
                         order_date: orderDate,
-                        total_amount: totalAmount,
+                        total_amount: String(totalAmount),
                         name: address.fullName || address.name || "Customer",
                         company_name: "NPlusOne Customer",
                         add: address.addressLine1 || address.street || address.address || "",
@@ -131,7 +131,7 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                         first_attemp_discount: "0",
                         cod_charges: "0",
                         advance_amount: "0",
-                        cod_amount: isCOD ? totalAmount : "0", // String or number? Collection uses string "300".
+                        cod_amount: isCOD ? String(totalAmount) : "0", // String or number? Collection uses string "300".
                         payment_mode: paymentMode, // COD or Prepaid
                         reseller_name: "",
                         eway_bill_number: "",
@@ -746,6 +746,33 @@ export const getNDR = async (fromDate: string, toDate: string) => {
         return result;
     } catch (error) {
         console.error('Logistics API Error (Get NDR):', error);
+        return null;
+    }
+};
+
+// 25. Get States
+export const getStates = async (countryId: string = "101") => {
+    if (!checkConfig()) return null;
+
+    try {
+        const payload = {
+            data: {
+                country_id: countryId,
+                access_token: ACCESS_TOKEN,
+                secret_key: SECRET_KEY,
+            },
+        };
+
+        const response = await fetch(`${BASE_URL}/state/get.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Logistics API Error (Get States):', error);
         return null;
     }
 };

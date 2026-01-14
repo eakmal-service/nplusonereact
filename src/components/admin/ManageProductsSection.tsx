@@ -9,10 +9,10 @@ const categories = [
   'All Categories',
   'Suit Set',
   'Western Wear',
-  'Co-ord Sets',
-  'KID\'S WEAR',
+  'Co-ord Set', // Fixed: Singular to match DB "CO-ORD SET"
+  "Kid's Wear", // Normalized case
   'Indo-Western',
-  'MAN\'S WEAR',
+  "Men's Wear",
 ];
 const statuses = ['All Statuses', 'Active', 'Inactive'];
 const stockFilters = ['All Products', 'In Stock', 'Out of Stock'];

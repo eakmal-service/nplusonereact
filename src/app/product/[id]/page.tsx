@@ -82,7 +82,11 @@ async function getProduct(id: string): Promise<Product | null> {
       fabricDupattaStole: product.fabric_dupatta_stole,
       liningFabric: product.lining_fabric,
       washCare: product.wash_care,
-      bottomFabric: product.bottom_type, // or bottom_fabric? The requested field was bottom_fabric in UI but bottom_type in schema?
+      bottomFabric: product.bottom_type, // Mapping bottom_type to bottomFabric for UI compatibility
+      bottomType: product.bottom_type, // Also mapping to bottomType for correctness
+      setContains: product.set_contains,
+      workType: product.work_type,
+      productWeight: product.product_weight != null ? String(product.product_weight) : '' // Handle number or string
       // Let's stick to what schema has: schema has bottom_type and bottom_fabric.
       // Wait, schema has bottom_type. Old implementation had bottomFabric. 
       // Let's use bottom_fabric if it exists in schema (it was added in superschema)

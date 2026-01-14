@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
 import { uploadImage } from '@/utils/uploadService';
+import SearchableSelect from './SearchableSelect';
 
 // --- Category Data Hierarchy ---
 interface CategoryNode {
@@ -76,6 +77,181 @@ const subcategories = [
 ];
 
 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+// --- Attribute Options Data ---
+const NECK_DESIGNS = [
+  { value: 'round-neck', label: 'Round Neck' },
+  { value: 'v-neck', label: 'V Neck' },
+  { value: 'deep-v-neck', label: 'Deep V Neck' },
+  { value: 'u-neck', label: 'U Neck' },
+  { value: 'square-neck', label: 'Square Neck' },
+  { value: 'boat-neck', label: 'Boat Neck' },
+  { value: 'scoop-neck', label: 'Scoop Neck' },
+  { value: 'sweetheart-neck', label: 'Sweetheart Neck' },
+  { value: 'halter-neck', label: 'Halter Neck' },
+  { value: 'high-neck', label: 'High Neck' },
+  { value: 'turtle-neck', label: 'Turtle Neck' },
+  { value: 'collar-neck', label: 'Collar Neck' },
+  { value: 'mandarin-chinese-collar', label: 'Mandarin / Chinese Collar' },
+  { value: 'keyhole-neck', label: 'Keyhole Neck' },
+  { value: 'notch-neck', label: 'Notch Neck' },
+  { value: 'angrakha-neck', label: 'Angrakha Neck' },
+  { value: 'off-shoulder-neck', label: 'Off-Shoulder Neck' },
+  { value: 'one-shoulder-neck', label: 'One-Shoulder Neck' },
+  { value: 'strapless-neck', label: 'Strapless Neck' },
+  { value: 'cowl-neck', label: 'Cowl Neck' },
+  { value: 'asymmetrical-neck', label: 'Asymmetrical Neck' },
+  { value: 'queen-anne-neck', label: 'Queen Anne Neck' },
+  { value: 'jewel-neck', label: 'Jewel Neck' },
+  { value: 'surplice-neck', label: 'Surplice Neck' },
+  { value: 'illusion-neck', label: 'Illusion Neck' },
+];
+
+const SLEEVE_DESIGNS = [
+  { value: 'sleeveless', label: 'Sleeveless' },
+  { value: 'cap-sleeves', label: 'Cap Sleeves' },
+  { value: 'short-sleeves', label: 'Short Sleeves' },
+  { value: 'half-sleeves', label: 'Half Sleeves' },
+  { value: '3-4th-sleeves', label: '3/4th Sleeves' },
+  { value: 'full-sleeves', label: 'Full Sleeves' },
+  { value: 'puff-sleeves', label: 'Puff Sleeves' },
+  { value: 'bell-sleeves', label: 'Bell Sleeves' },
+  { value: 'bishop-sleeves', label: 'Bishop Sleeves' },
+  { value: 'butterfly-sleeves', label: 'Butterfly Sleeves' },
+  { value: 'flutter-sleeves', label: 'Flutter Sleeves' },
+  { value: 'cold-shoulder-sleeves', label: 'Cold Shoulder Sleeves' },
+  { value: 'off-shoulder-sleeves', label: 'Off-Shoulder Sleeves' },
+  { value: 'raglan-sleeves', label: 'Raglan Sleeves' },
+  { value: 'kimono-sleeves', label: 'Kimono Sleeves' },
+  { value: 'dolman-sleeves', label: 'Dolman Sleeves' },
+  { value: 'slit-sleeves', label: 'Slit Sleeves' },
+  { value: 'cape-sleeves', label: 'Cape Sleeves' },
+  { value: 'cuff-sleeves', label: 'Cuff Sleeves' },
+  { value: 'balloon-sleeves', label: 'Balloon Sleeves' },
+  { value: 'layered-sleeves', label: 'Layered Sleeves' },
+  { value: 'sheer-sleeves', label: 'Sheer Sleeves' },
+  { value: 'bell-cuff-sleeves', label: 'Bell Cuff Sleeves' },
+  { value: 'petal-sleeves', label: 'Petal Sleeves' },
+  { value: 'roll-up-sleeves', label: 'Roll-Up Sleeves' },
+];
+
+const TOP_PATTERNS = [
+  { value: 'solid', label: 'Solid' },
+  { value: 'printed', label: 'Printed' },
+  { value: 'floral-print', label: 'Floral Print' },
+  { value: 'geometric-print', label: 'Geometric Print' },
+  { value: 'abstract-print', label: 'Abstract Print' },
+  { value: 'striped', label: 'Striped' },
+  { value: 'checked', label: 'Checked' },
+  { value: 'polka-dot', label: 'Polka Dot' },
+  { value: 'embroidered', label: 'Embroidered' },
+  { value: 'chikankari', label: 'Chikankari' },
+  { value: 'block-print', label: 'Block Print' },
+  { value: 'ajrakh-print', label: 'Ajrakh Print' },
+  { value: 'tie-dye', label: 'Tie & Dye' },
+  { value: 'ombre', label: 'Ombre' },
+  { value: 'pleated', label: 'Pleated' },
+  { value: 'ruffled', label: 'Ruffled' },
+  { value: 'layered', label: 'Layered' },
+  { value: 'peplum', label: 'Peplum' },
+  { value: 'wrap-style', label: 'Wrap Style' },
+  { value: 'front-open', label: 'Front Open' },
+  { value: 'button-down', label: 'Button-Down' },
+  { value: 'a-line', label: 'A-Line' },
+  { value: 'straight-fit', label: 'Straight Fit' },
+  { value: 'crop-top-style', label: 'Crop Top Style' },
+  { value: 'high-low-pattern', label: 'High-Low Pattern' },
+  { value: 'asymmetrical-pattern', label: 'Asymmetrical Pattern' },
+  { value: 'panelled-design', label: 'Panelled Design' },
+  { value: 'gathered-design', label: 'Gathered Design' },
+  { value: 'smocked-pattern', label: 'Smocked Pattern' },
+  { value: 'lace-work', label: 'Lace Work' },
+];
+
+const FIT_TYPES = [
+  { value: 'a-line-dress', label: 'A-Line Dress' },
+  { value: 'straight-dress', label: 'Straight Dress' },
+  { value: 'fit-flare-dress', label: 'Fit & Flare Dress' },
+  { value: 'skater-dress', label: 'Skater Dress' },
+  { value: 'shift-dress', label: 'Shift Dress' },
+  { value: 'sheath-dress', label: 'Sheath Dress' },
+  { value: 'empire-waist-dress', label: 'Empire Waist Dress' },
+  { value: 'peplum-dress', label: 'Peplum Dress' },
+  { value: 'wrap-dress', label: 'Wrap Dress' },
+  { value: 'bodycon-dress', label: 'Bodycon Dress' },
+  { value: 'maxi-dress', label: 'Maxi Dress' },
+  { value: 'midi-dress', label: 'Midi Dress' },
+  { value: 'mini-dress', label: 'Mini Dress' },
+  { value: 'high-low-dress', label: 'High-Low Dress' },
+  { value: 'asymmetrical-dress', label: 'Asymmetrical Dress' },
+  { value: 'tiered-dress', label: 'Tiered Dress' },
+  { value: 'layered-dress', label: 'Layered Dress' },
+  { value: 'smocked-dress', label: 'Smocked Dress' },
+  { value: 'panelled-dress', label: 'Panelled Dress' },
+  { value: 'front-open-dress', label: 'Front Open Dress' },
+  { value: 'button-down-dress', label: 'Button-Down Dress' },
+  { value: 'kaftan-dress', label: 'Kaftan Dress' },
+  { value: 'tunic-dress', label: 'Tunic Dress' },
+  { value: 'shirt-dress', label: 'Shirt Dress' },
+  { value: 'anarkali-style-dress', label: 'Anarkali Style Dress' },
+  { value: 'angrakha-style-dress', label: 'Angrakha Style Dress' },
+  { value: 'cold-shoulder-dress', label: 'Cold Shoulder Dress' },
+  { value: 'off-shoulder-dress', label: 'Off-Shoulder Dress' },
+  { value: 'one-piece-dress', label: 'One-Piece Dress' },
+  { value: 'ruffled-dress', label: 'Ruffled Dress' },
+];
+
+const FABRIC_TYPES = [
+  { value: 'cotton', label: 'Cotton' },
+  { value: 'cotton-blend', label: 'Cotton Blend' },
+  { value: 'polyester', label: 'Polyester' },
+  { value: 'cotton-polyester', label: 'Cotton Polyester' },
+  { value: 'lycra-blend', label: 'Lycra Blend' },
+  { value: 'jersey', label: 'Jersey' },
+  { value: 'pique-cotton', label: 'Pique Cotton' },
+  { value: 'linen-blend', label: 'Linen Blend' },
+  { value: 'modal', label: 'Modal' },
+  { value: 'bamboo-fabric', label: 'Bamboo Fabric' },
+  { value: 'silk', label: 'Silk' },
+  { value: 'georgette', label: 'Georgette' },
+  { value: 'chiffon', label: 'Chiffon' },
+  { value: 'crepe', label: 'Crepe' },
+  { value: 'rayon', label: 'Rayon' },
+  { value: 'satin', label: 'Satin' },
+];
+
+const BOTTOM_TYPES = [
+  { value: 'jeans', label: 'Jeans' },
+  { value: 'straight-pants', label: 'Straight Pants' },
+  { value: 'cigarette-pants', label: 'Cigarette Pants' },
+  { value: 'palazzo-pants', label: 'Palazzo Pants' },
+  { value: 'wide-leg-pants', label: 'Wide Leg Pants' },
+  { value: 'flared-pants', label: 'Flared Pants' },
+  { value: 'bell-bottoms', label: 'Bell Bottoms' },
+  { value: 'cargo-pants', label: 'Cargo Pants' },
+  { value: 'jogger-pants', label: 'Jogger Pants' },
+  { value: 'track-pants', label: 'Track Pants' },
+  { value: 'trousers', label: 'Trousers' },
+  { value: 'chinos', label: 'Chinos' },
+  { value: 'leggings', label: 'Leggings' },
+  { value: 'jeggings', label: 'Jeggings' },
+  { value: 'capri-pants', label: 'Capri Pants' },
+  { value: 'culottes', label: 'Culottes' },
+  { value: 'harem-pants', label: 'Harem Pants' },
+  { value: 'dhoti-pants', label: 'Dhoti Pants' },
+  { value: 'sharara-pants', label: 'Sharara Pants' },
+  { value: 'gharara-pants', label: 'Gharara Pants' },
+  { value: 'skirts', label: 'Skirts' },
+  { value: 'a-line-skirt', label: 'A-Line Skirt' },
+  { value: 'pencil-skirt', label: 'Pencil Skirt' },
+  { value: 'pleated-skirt', label: 'Pleated Skirt' },
+  { value: 'wrap-skirt', label: 'Wrap Skirt' },
+  { value: 'mini-skirt', label: 'Mini Skirt' },
+  { value: 'midi-skirt', label: 'Midi Skirt' },
+  { value: 'maxi-skirt', label: 'Maxi Skirt' },
+  { value: 'tulip-pants', label: 'Tulip Pants' },
+  { value: 'paperbag-waist-pants', label: 'Paperbag Waist Pants' },
+];
 
 interface AddProductFormProps {
   initialData?: any;
@@ -184,6 +360,58 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
 
   const [hasDifferentPricing, setHasDifferentPricing] = useState(false);
 
+  // Sync with initialData when it changes (critical for Edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        title: initialData.title || '',
+        description: initialData.description || '',
+        mrp: initialData.price || '',
+        salePrice: initialData.salePrice || '',
+        category: initialData.category || '',
+        subcategory: initialData.subcategory || '',
+        material: initialData.material || initialData.fabric || '',
+        status: initialData.status || 'active',
+        colorName: initialData.colorName || '',
+        color: initialData.colorOptions?.[0]?.code || '#000000',
+        sizes: (initialData.sizes || []) as string[],
+        images: (initialData.imageUrls || []) as (File | string)[],
+        sku: initialData.sku || '',
+        barcode: initialData.barcode || '',
+        videoUrl: initialData.videoUrl || '',
+        metaTitle: initialData.metaTitle || '',
+        metaDescription: initialData.metaDescription || '',
+        tags: initialData.tags?.join(', ') || '',
+        sizeStock: (initialData.sizeStock || {}) as Record<string, number>,
+        sizeSkus: (initialData.sizeSkus || {}) as Record<string, string>,
+        badge: initialData.badge || '',
+        discountBadgeColor: initialData.discountBadgeColor || '#DC2626',
+        brandName: initialData.brandName || 'Nplusone Fashion',
+        styleCode: initialData.styleCode || '',
+        hsnCode: initialData.hsnCode || '',
+        gstPercentage: initialData.gstPercentage || 5,
+        workType: initialData.workType || 'Embroidery',
+        bottomType: initialData.bottomType || '',
+        setContains: initialData.setContains || '',
+        productWeight: initialData.productWeight || '',
+        searchKeywords: initialData.searchKeywords || '',
+      });
+      setAddedColors(initialData.colorOptions?.map((c: any) => ({ name: c.name, color: c.code || '#000000' })) || []);
+      setAttributes({
+        topStyle: initialData.topStyle || '',
+        neckline: initialData.neckline || '',
+        topPattern: initialData.topPattern || '',
+        sleeveDetail: initialData.sleeveDetail || '',
+        fit: initialData.fit || '',
+        occasion: initialData.occasion || '',
+        fabricDupattaStole: initialData.fabricDupattaStole || '',
+        liningFabric: initialData.liningFabric || '',
+        washCare: initialData.washCare || '',
+        bottomFabric: initialData.bottomFabric || ''
+      });
+    }
+  }, [initialData]);
+
   const handleAttributeChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setAttributes({ ...attributes, [e.target.name]: e.target.value });
   };
@@ -228,6 +456,49 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
       // I'll stick to Global price submission for simplicity unless I see `size_pricing` column.
       // I will use a ref or local state to track this if it's just for display/logic, but user wants it.
       // I'll add `sizePrice` to form state for now.
+    }
+  };
+
+  // Auto-Color Selection Map
+  const COLOR_MAP: Record<string, string> = {
+    'black': '#000000', 'jet black': '#0a0a0a', 'charcoal': '#36454F', 'grey': '#808080', 'silver': '#C0C0C0', 'white': '#FFFFFF',
+    'navy': '#000080', 'navy blue': '#000080', 'royal blue': '#4169E1', 'blue': '#0000FF', 'sky blue': '#87CEEB', 'teal': '#008080',
+    'maroon': '#800000', 'burgundy': '#800020', 'red': '#FF0000', 'crimson': '#DC143C',
+    'purple': '#800080', 'violet': '#EE82EE', 'lavender': '#E6E6FA', 'magenta': '#FF00FF',
+    'pink': '#FFC0CB', 'hot pink': '#FF69B4', 'rose': '#FF007F', 'peach': '#FFDAB9',
+    'yellow': '#FFFF00', 'mustard': '#FFDB58', 'gold': '#FFD700', 'lemon': '#FFF700',
+    'orange': '#FFA500', 'rust': '#B7410E', 'coral': '#FF7F50',
+    'green': '#008000', 'emerald': '#50C878', 'olive': '#808000', 'mint': '#98FF98', 'lime': '#00FF00',
+    'brown': '#A52A2A', 'beige': '#F5F5DC', 'tan': '#D2B48C', 'khaki': '#C3B091', 'coffee': '#6F4E37',
+    'cream': '#FFFDD0', 'off white': '#FAF9F6', 'ivory': '#FFFFF0',
+  };
+
+  const handleColorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const lowerValue = value.toLowerCase().trim();
+
+    // Update color name
+    setForm(prev => {
+      const updates: any = { ...prev, colorName: value };
+
+      // Auto-select color if match found
+      if (COLOR_MAP[lowerValue]) {
+        updates.color = COLOR_MAP[lowerValue];
+      }
+      return updates;
+    });
+  };
+
+  // Handler for SearchableSelect
+  const handleSearchableChange = (value: string, name?: string) => {
+    if (!name) return;
+
+    if (name === 'bottomType' || name === 'material') {
+      // These are directly in form state
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else {
+      // Others (neckline, fit, etc.) are in attributes state
+      setAttributes(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -337,7 +608,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           imageUrl: uploadedUrls[0] || initialData?.imageUrl,
           imageUrls: uploadedUrls,
           sizes: form.sizes.map(String),
-          colorName: form.colorName, // Just simple color name now
+          colorName: form.colorName,
+          color: form.color, // Pass selected hex code
           sku: form.sku,
           barcode: form.barcode,
           videoUrl: form.videoUrl,
@@ -738,346 +1010,189 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           <div className="bg-black p-6 rounded-lg border border-gray-800">
             <h3 className="text-lg font-semibold text-white mb-4">Product Attributes</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Color *</label>
-                <input type="text" name="colorName" value={form.colorName} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. Navy Blue" disabled={isSubmitting} />
-              </div>
+              {/* 1. Brand Name */}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Brand Name</label>
                 <input type="text" name="brandName" value={form.brandName} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
+
+              {/* 2. Style Code */}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Style Code</label>
                 <input type="text" name="styleCode" value={form.styleCode} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
+
+              {/* 3. Fabric (Material) */}
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Fabric *</label>
-                {isMensWear ? (
-                  <select name="material" value={form.material} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                    <option value="">Select Fabric</option>
-                    <option value="cotton">Cotton</option>
-                    <option value="cotton-blend">Cotton Blend</option>
-                    <option value="polyester">Polyester</option>
-                    <option value="cotton-polyester">Cotton Polyester</option>
-                    <option value="lycra-blend">Lycra Blend</option>
-                    <option value="jersey">Jersey</option>
-                    <option value="pique-cotton">Pique Cotton</option>
-                    <option value="linen-blend">Linen Blend</option>
-                    <option value="modal">Modal</option>
-                    <option value="bamboo-fabric">Bamboo Fabric</option>
-                  </select>
-                ) : (
-                  <input type="text" name="material" value={form.material} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
-                )}
+                <label className="block text-gray-400 text-sm mb-1">Fabric</label>
+                <SearchableSelect
+                  name="material"
+                  value={form.material}
+                  options={FABRIC_TYPES}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Fabric..."
+                  disabled={isSubmitting}
+                />
                 {errors.material && <div className="text-red-500 text-xs mt-1">{errors.material}</div>}
               </div>
+
+              {/* 4. Pattern */}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Pattern</label>
-                <select name="topPattern" value={attributes.topPattern} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Pattern</option>
-                  {isMensWear ? (
-                    <>
-                      <option value="solid">Solid</option>
-                      <option value="printed">Printed</option>
-                      <option value="graphic-print">Graphic Print</option>
-                      <option value="typography-print">Typography Print</option>
-                      <option value="striped">Striped</option>
-                      <option value="checked">Checked</option>
-                      <option value="color-block">Color Block</option>
-                      <option value="tie-dye">Tie & Dye</option>
-                      <option value="all-over-print">All Over Print</option>
-                      <option value="panelled">Panelled</option>
-                      <option value="washed-acid-wash">Washed / Acid Wash</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="solid">Solid</option>
-                      <option value="printed">Printed</option>
-                      <option value="floral-print">Floral Print</option>
-                      <option value="geometric-print">Geometric Print</option>
-                      <option value="abstract-print">Abstract Print</option>
-                      <option value="striped">Striped</option>
-                      <option value="checked">Checked</option>
-                      <option value="polka-dot">Polka Dot</option>
-                      <option value="embroidered">Embroidered</option>
-                      <option value="chikankari">Chikankari</option>
-                      <option value="block-print">Block Print</option>
-                      <option value="ajrakh-print">Ajrakh Print</option>
-                      <option value="tie-dye">Tie & Dye</option>
-                      <option value="ombre">Ombre</option>
-                      <option value="pleated">Pleated</option>
-                      <option value="ruffled">Ruffled</option>
-                      <option value="layered">Layered</option>
-                      <option value="peplum">Peplum</option>
-                      <option value="wrap-style">Wrap Style</option>
-                      <option value="front-open">Front Open</option>
-                      <option value="button-down">Button-Down</option>
-                      <option value="a-line">A-Line</option>
-                      <option value="straight-fit">Straight Fit</option>
-                      <option value="crop-top-style">Crop Top Style</option>
-                      <option value="high-low-pattern">High-Low Pattern</option>
-                      <option value="asymmetrical-pattern">Asymmetrical Pattern</option>
-                      <option value="panelled-design">Panelled Design</option>
-                      <option value="gathered-design">Gathered Design</option>
-                      <option value="smocked-pattern">Smocked Pattern</option>
-                      <option value="lace-work">Lace Work</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              {/* ... other attributes ... */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Fit</label>
-                <select name="fit" value={attributes.fit} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Fit</option>
-                  {isMensWear ? (
-                    <>
-                      <option value="oversized-fit">Oversized Fit</option>
-                      <option value="regular-fit">Regular Fit</option>
-                      <option value="slim-fit">Slim Fit</option>
-                      <option value="relaxed-fit">Relaxed Fit</option>
-                      <option value="boxy-fit">Boxy Fit</option>
-                      <option value="muscle-fit">Muscle Fit</option>
-                      <option value="longline-fit">Longline Fit</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="a-line-dress">A-Line Dress</option>
-                      <option value="straight-dress">Straight Dress</option>
-                      <option value="fit-flare-dress">Fit & Flare Dress</option>
-                      <option value="skater-dress">Skater Dress</option>
-                      <option value="shift-dress">Shift Dress</option>
-                      <option value="sheath-dress">Sheath Dress</option>
-                      <option value="empire-waist-dress">Empire Waist Dress</option>
-                      <option value="peplum-dress">Peplum Dress</option>
-                      <option value="wrap-dress">Wrap Dress</option>
-                      <option value="bodycon-dress">Bodycon Dress</option>
-                      <option value="maxi-dress">Maxi Dress</option>
-                      <option value="midi-dress">Midi Dress</option>
-                      <option value="mini-dress">Mini Dress</option>
-                      <option value="high-low-dress">High-Low Dress</option>
-                      <option value="asymmetrical-dress">Asymmetrical Dress</option>
-                      <option value="tiered-dress">Tiered Dress</option>
-                      <option value="layered-dress">Layered Dress</option>
-                      <option value="smocked-dress">Smocked Dress</option>
-                      <option value="panelled-dress">Panelled Dress</option>
-                      <option value="front-open-dress">Front Open Dress</option>
-                      <option value="button-down-dress">Button-Down Dress</option>
-                      <option value="kaftan-dress">Kaftan Dress</option>
-                      <option value="tunic-dress">Tunic Dress</option>
-                      <option value="shirt-dress">Shirt Dress</option>
-                      <option value="anarkali-style-dress">Anarkali Style Dress</option>
-                      <option value="angrakha-style-dress">Angrakha Style Dress</option>
-                      <option value="cold-shoulder-dress">Cold Shoulder Dress</option>
-                      <option value="off-shoulder-dress">Off-Shoulder Dress</option>
-                      <option value="one-piece-dress">One-Piece Dress</option>
-                      <option value="ruffled-dress">Ruffled Dress</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Neckline</label>
-                <select name="neckline" value={attributes.neckline} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Neckline</option>
-                  {isMensWear ? (
-                    <>
-                      <option value="crew-neck">Crew Neck</option>
-                      <option value="v-neck">V-Neck</option>
-                      <option value="henley-neck">Henley Neck</option>
-                      <option value="polo-collar-neck">Polo Collar Neck</option>
-                      <option value="scoop-neck">Scoop Neck</option>
-                      <option value="boat-neck">Boat Neck</option>
-                      <option value="high-neck">High Neck</option>
-                      <option value="turtle-neck">Turtle Neck</option>
-                      <option value="hooded-neck">Hooded Neck</option>
-                      <option value="zip-neck">Zip Neck</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="round">Round Neck</option>
-                      <option value="v-neck">V Neck</option>
-                      <option value="deep-v-neck">Deep V Neck</option>
-                      <option value="u-neck">U Neck</option>
-                      <option value="square-neck">Square Neck</option>
-                      <option value="boat-neck">Boat Neck</option>
-                      <option value="scoop-neck">Scoop Neck</option>
-                      <option value="sweetheart-neck">Sweetheart Neck</option>
-                      <option value="halter-neck">Halter Neck</option>
-                      <option value="high-neck">High Neck</option>
-                      <option value="turtle-neck">Turtle Neck</option>
-                      <option value="collar-neck">Collar Neck</option>
-                      <option value="mandarin-chinese-collar">Mandarin / Chinese Collar</option>
-                      <option value="keyhole-neck">Keyhole Neck</option>
-                      <option value="notch-neck">Notch Neck</option>
-                      <option value="angrakha-neck">Angrakha Neck</option>
-                      <option value="off-shoulder-neck">Off-Shoulder Neck</option>
-                      <option value="one-shoulder-neck">One-Shoulder Neck</option>
-                      <option value="strapless-neck">Strapless Neck</option>
-                      <option value="cowl-neck">Cowl Neck</option>
-                      <option value="asymmetrical-neck">Asymmetrical Neck</option>
-                      <option value="queen-anne-neck">Queen Anne Neck</option>
-                      <option value="jewel-neck">Jewel Neck</option>
-                      <option value="surplice-neck">Surplice Neck</option>
-                      <option value="illusion-neck">Illusion Neck</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">{isMensWear ? 'Style / Use' : 'Occasion'}</label>
-                <select name="occasion" value={attributes.occasion} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select {isMensWear ? 'Style' : 'Occasion'}</option>
-                  {isMensWear ? (
-                    <>
-                      <option value="casual-t-shirt">Casual T-Shirt</option>
-                      <option value="sports-t-shirt">Sports T-Shirt</option>
-                      <option value="gym-t-shirt">Gym T-Shirt</option>
-                      <option value="streetwear-t-shirt">Streetwear T-Shirt</option>
-                      <option value="party-wear-t-shirt">Party Wear T-Shirt</option>
-                      <option value="lounge-wear-t-shirt">Lounge Wear T-Shirt</option>
-                      <option value="travel-wear-t-shirt">Travel Wear T-Shirt</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="casual">Casual</option>
-                      <option value="festive">Festive</option>
-                      <option value="formal">Formal</option>
-                      <option value="party">Party</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Sleeve Detail</label>
-                <select name="sleeveDetail" value={attributes.sleeveDetail} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Sleeve Pattern</option>
-                  {isMensWear ? (
-                    <>
-                      <option value="half-sleeve">Half Sleeve</option>
-                      <option value="full-sleeve">Full Sleeve</option>
-                      <option value="sleeveless">Sleeveless</option>
-                      <option value="cap-sleeve">Cap Sleeve</option>
-                      <option value="raglan-sleeve">Raglan Sleeve</option>
-                      <option value="drop-shoulder-sleeve">Drop Shoulder Sleeve</option>
-                      <option value="roll-up-sleeve">Roll-Up Sleeve</option>
-                      <option value="muscle-sleeve">Muscle Sleeve</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="sleeveless">Sleeveless</option>
-                      <option value="cap-sleeves">Cap Sleeves</option>
-                      <option value="short-sleeves">Short Sleeves</option>
-                      <option value="half-sleeves">Half Sleeves</option>
-                      <option value="3-4th-sleeves">3/4th Sleeves</option>
-                      <option value="full-sleeves">Full Sleeves</option>
-                      <option value="puff-sleeves">Puff Sleeves</option>
-                      <option value="bell-sleeves">Bell Sleeves</option>
-                      <option value="bishop-sleeves">Bishop Sleeves</option>
-                      <option value="butterfly-sleeves">Butterfly Sleeves</option>
-                      <option value="flutter-sleeves">Flutter Sleeves</option>
-                      <option value="cold-shoulder-sleeves">Cold Shoulder Sleeves</option>
-                      <option value="off-shoulder-sleeves">Off-Shoulder Sleeves</option>
-                      <option value="raglan-sleeves">Raglan Sleeves</option>
-                      <option value="kimono-sleeves">Kimono Sleeves</option>
-                      <option value="dolman-sleeves">Dolman Sleeves</option>
-                      <option value="slit-sleeves">Slit Sleeves</option>
-                      <option value="cape-sleeves">Cape Sleeves</option>
-                      <option value="cuff-sleeves">Cuff Sleeves</option>
-                      <option value="balloon-sleeves">Balloon Sleeves</option>
-                      <option value="layered-sleeves">Layered Sleeves</option>
-                      <option value="sheer-sleeves">Sheer Sleeves</option>
-                      <option value="bell-cuff-sleeves">Bell Cuff Sleeves</option>
-                      <option value="petal-sleeves">Petal Sleeves</option>
-                      <option value="roll-up-sleeves">Roll-Up Sleeves</option>
-                    </>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Wash Care</label>
-                <input type="text" name="washCare" value={attributes.washCare} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">{isMensWear ? 'Hemline' : 'Work Type'}</label>
-                {isMensWear ? (
-                  <select name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                    <option value="">Select Hemline</option>
-                    <option value="straight-hem">Straight Hem</option>
-                    <option value="curved-hem">Curved Hem</option>
-                    <option value="asymmetrical-hem">Asymmetrical Hem</option>
-                    <option value="split-hem">Split Hem</option>
-                  </select>
-                ) : (
-                  <input type="text" name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
-                )}
+                <SearchableSelect
+                  name="topPattern"
+                  value={attributes.topPattern}
+                  options={TOP_PATTERNS}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Pattern..."
+                  disabled={isSubmitting}
+                />
               </div>
 
-              {isMensWear && (
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Length</label>
-                  <select name="topStyle" value={attributes.topStyle} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                    <option value="">Select Length</option>
-                    <option value="regular-length">Regular Length</option>
-                    <option value="longline">Longline</option>
-                    <option value="cropped">Cropped</option>
-                    <option value="high-low-length">High-Low Length</option>
-                  </select>
-                </div>
-              )}
+              {/* 5. Fit */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Fit</label>
+                <SearchableSelect
+                  name="fit"
+                  value={attributes.fit}
+                  options={FIT_TYPES}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Fit/Design..."
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* 6. Product Weight */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Product Weight</label>
+                <input type="text" name="productWeight" value={form.productWeight} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 500g" disabled={isSubmitting} />
+              </div>
+
+              {/* 7. Bottom Type */}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Bottom Type</label>
-                <select name="bottomType" value={form.bottomType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting}>
-                  <option value="">Select Bottom Type</option>
-                  <option value="jeans">Jeans</option>
-                  <option value="straight-pants">Straight Pants</option>
-                  <option value="cigarette-pants">Cigarette Pants</option>
-                  <option value="palazzo-pants">Palazzo Pants</option>
-                  <option value="wide-leg-pants">Wide Leg Pants</option>
-                  <option value="flared-pants">Flared Pants</option>
-                  <option value="bell-bottoms">Bell Bottoms</option>
-                  <option value="cargo-pants">Cargo Pants</option>
-                  <option value="jogger-pants">Jogger Pants</option>
-                  <option value="track-pants">Track Pants</option>
-                  <option value="trousers">Trousers</option>
-                  <option value="chinos">Chinos</option>
-                  <option value="leggings">Leggings</option>
-                  <option value="jeggings">Jeggings</option>
-                  <option value="capri-pants">Capri Pants</option>
-                  <option value="culottes">Culottes</option>
-                  <option value="harem-pants">Harem Pants</option>
-                  <option value="dhoti-pants">Dhoti Pants</option>
-                  <option value="sharara-pants">Sharara Pants</option>
-                  <option value="gharara-pants">Gharara Pants</option>
-                  <option value="skirts">Skirts</option>
-                  <option value="a-line-skirt">A-Line Skirt</option>
-                  <option value="pencil-skirt">Pencil Skirt</option>
-                  <option value="pleated-skirt">Pleated Skirt</option>
-                  <option value="wrap-skirt">Wrap Skirt</option>
-                  <option value="mini-skirt">Mini Skirt</option>
-                  <option value="midi-skirt">Midi Skirt</option>
-                  <option value="maxi-skirt">Maxi Skirt</option>
-                  <option value="tulip-pants">Tulip Pants</option>
-                  <option value="paperbag-waist-pants">Paperbag Waist Pants</option>
-                </select>
+                <SearchableSelect
+                  name="bottomType"
+                  value={form.bottomType}
+                  options={BOTTOM_TYPES}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Bottom Type..."
+                  disabled={isSubmitting}
+                />
               </div>
+
+              {/* 8. Dupatta/Stole Fabric */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Dupatta/Stole Fabric</label>
+                <input type="text" name="fabricDupattaStole" value={attributes.fabricDupattaStole} onChange={handleAttributeChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+              </div>
+
+              {/* 9. Set Contains */}
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Set Contains</label>
                 <input type="text" name="setContains" value={form.setContains} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
+
+              {/* 10. Work Type */}
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Product Weight</label>
-                <input type="text" name="productWeight" value={form.productWeight} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
+                <label className="block text-gray-400 text-sm mb-1">Work Type</label>
+                <input type="text" name="workType" value={form.workType} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" disabled={isSubmitting} />
               </div>
-              <div className="md:col-span-3">
-                <label className="block text-gray-400 text-sm mb-1">Search Keywords</label>
-                <input type="text" name="searchKeywords" value={form.searchKeywords} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3 PIECE DRESS, Party Wear" disabled={isSubmitting} />
+
+              {/* 11. Neck/Neckline */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Neck/Neckline</label>
+                <SearchableSelect
+                  name="neckline"
+                  value={attributes.neckline}
+                  options={NECK_DESIGNS}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Neckline..."
+                  disabled={isSubmitting}
+                />
               </div>
+
+              {/* 12. Sleeve Detail */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Sleeve Detail</label>
+                <SearchableSelect
+                  name="sleeveDetail"
+                  value={attributes.sleeveDetail}
+                  options={SLEEVE_DESIGNS}
+                  onChange={handleSearchableChange}
+                  placeholder="Search Sleeve..."
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Color is handled separately in a different object but let's keep it here if appropriate or it's up in step 2. 
+                  Wait, form.colorName was in "Product Attributes" in previous code (Line 742). 
+                  The user didn't mention 'Color' in the list of 12 fields to be 'only' there, but Color is usually essential.
+                  However, user said "make sure ki admin panel and in product detail there should be only this Detail...".
+                  If I remove Color, it might break things. I'll add Color back as a 13th essential field or keep it if it was there.
+                  Actually, the user list ended with "Sleeve Detail". 
+                  Let's check if 'Color' should be there. Usually YES.
+                  I will ADD Color back because it is critical for product identification, but I'll put it at the start or keep it.
+                  User said "Detail shouldn be there in product attributes in admin...". 
+                  Perhaps Color is considered a "Variant" not just an "Attribute".
+                  New Design had Color in "Product Attributes" section invoked at line 738.
+                  I will place Color Name at the top of this section as it was before, to be safe, or just below.
+               */}
+              {/* Color Name & Visual Picker */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Color *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="colorName"
+                    value={form.colorName}
+                    onChange={handleColorNameChange}
+                    className="flex-1 bg-gray-900 border border-gray-700 rounded p-2 text-white"
+                    placeholder="e.g. Navy Blue"
+                    disabled={isSubmitting}
+                  />
+                  <div className="relative group">
+                    <input
+                      type="color"
+                      name="color"
+                      value={form.color || '#000000'}
+                      onChange={handleChange}
+                      className="h-10 w-10 p-0 border border-gray-700 bg-transparent rounded cursor-pointer"
+                      disabled={isSubmitting}
+                    />
+                    <div className="absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded shadow-xl z-50 hidden group-hover:block w-48 border border-gray-700">
+                      <p className="text-xs text-gray-400 mb-2">Preset Colors:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          '#000000', '#FFFFFF', '#808080', '#C0C0C0',
+                          '#FF0000', '#800000', '#FFFF00', '#808000',
+                          '#00FF00', '#008000', '#00FFFF', '#008080',
+                          '#0000FF', '#000080', '#FF00FF', '#800080',
+                          '#F5F5DC', '#FFC0CB', '#FFD700', '#A52A2A'
+                        ].map(c => (
+                          <div
+                            key={c}
+                            onClick={() => setForm(prev => ({ ...prev, color: c }))}
+                            style={{ backgroundColor: c }}
+                            className={`w-6 h-6 rounded-sm cursor-pointer border ${form.color === c ? 'border-white border-2' : 'border-gray-600'}`}
+                            title={c}
+                          ></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Visual Preview of selected color under input for clarity */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div style={{ backgroundColor: form.color || '#000000' }} className="w-4 h-4 rounded-full border border-gray-500"></div>
+                  <span className="text-xs text-gray-500">{form.color || '#000000'}</span>
+                </div>
+              </div>
+
             </div>
           </div>
-
           {/* 5. Image Upload - Guided */}
-          <div className="bg-black p-6 rounded-lg border border-gray-800">
+          < div className="bg-black p-6 rounded-lg border border-gray-800" >
             <h3 className="text-lg font-semibold text-white mb-4">Product Images</h3>
             <p className="text-sm text-gray-500 mb-4">Add images with details listed here.</p>
 
@@ -1130,7 +1245,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               ))}
             </div>
             {errors.images && <div className="text-red-500 text-xs mt-1">{errors.images}</div>}
-          </div>
+          </div >
 
           <div className="pt-4 flex gap-4">
             <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded">
@@ -1139,9 +1254,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
             {onCancel && <button type="button" onClick={onCancel} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded" disabled={isSubmitting}>Discard</button>}
           </div>
 
-        </form>
+        </form >
       )}
-    </div>
+    </div >
   );
 };
 
