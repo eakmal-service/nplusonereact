@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { createClient } from '@/lib/supabaseServer'
+import { supabasePublic } from '@/lib/supabasePublic'
 import HeroSlider from '../components/HeroSlider'
 import CategoryCards from '../components/CategoryCards'
 import MyFavorite from '../components/home/MyFavorite'
@@ -10,7 +10,7 @@ import { Product } from '@/types'
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const supabase = createClient()
+  const supabase = supabasePublic
 
   // 1. Fetch CMS Content (Hero, Categories, Collections, Banners)
   // We fetch 'website_content' where section_id IN (...)
