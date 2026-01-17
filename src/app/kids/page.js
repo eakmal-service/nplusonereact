@@ -9,7 +9,7 @@ import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
 
 export default function KidsPage() {
     const { getActiveProductsByCategory, isLoading } = useProducts();
-    const products = getActiveProductsByCategory('kids');
+    const products = getActiveProductsByCategory('kids wear');
 
     return (
         <div className="bg-black min-h-screen pt-24 pb-12">
