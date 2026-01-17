@@ -10,7 +10,7 @@ export default function MensPage() {
     const products = getActiveProductsByCategory('mens wear');
 
     return (
-        <div className="min-h-screen bg-black text-white pt-24 pb-16">
+        <div className="min-h-screen bg-custom-black text-white pt-24 pb-16">
             <div className="container mx-auto px-4">
                 {isLoading ? (
                     <ProductGridSkeleton count={8} />
