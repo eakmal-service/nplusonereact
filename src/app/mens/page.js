@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import EnhancedProductGrid from '../../components/common/EnhancedProductGrid';
 import { useProducts } from '../../contexts/ProductContext';
 import ProductGridSkeleton from '../../components/common/ProductGridSkeleton';
