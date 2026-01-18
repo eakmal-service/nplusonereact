@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+set timeout 30
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+# 1. Stop and Delete old process
+send "pm2 stop nplusone\r"
+expect "#"
+send "pm2 delete nplusone\r"
+expect "#"
+
+# 2. Navigate to Correct Directory (where we deployed)
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# 3. Start New Process
+# Using npm start to ensure it uses the build in this directory
+send "pm2 start npm --name 'nplusone' -- start\r"
+expect "#"
+
+# 4. Save
+send "pm2 save\r"
+expect "#"
+
+# 5. Check status
+send "pm2 status\r"
+expect "#"
+
+send "exit\r"
+expect eof

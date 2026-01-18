@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f
+set timeout 30
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+# Check PM2 detailed info to find directory
+send "pm2 describe nplusone\r"
+expect "#"
+
+# Check Nginx Sites
+send "ls -la /etc/nginx/sites-enabled/\r"
+expect "#"
+
+# Read Nginx Config for nplusone
+send "cat /etc/nginx/sites-enabled/nplusone* || cat /etc/nginx/sites-enabled/default\r"
+expect "#"
+
+send "exit\r"
+expect eof

@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '--- PM2 LIST ---'\r"
+send "pm2 list\r"
+expect "#"
+
+send "echo '--- PM2 LOGS ---'\r"
+send "tail -n 50 /root/.pm2/logs/nplusone-web-error.log\r"
+expect "#"
+
+send "echo '--- BUILD LOG TAIL ---'\r"
+send "tail -n 20 /var/www/nplusone/build.log\r"
+expect "#"
+
+send "exit\r"
+expect eof

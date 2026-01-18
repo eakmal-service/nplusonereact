@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+set timeout 30
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Check latest commit
+send "git log -1 --format='%h %s'\r"
+expect "#"
+
+# Check if new file exists
+send "ls -l src/components/admin/SearchableSelect.tsx\r"
+expect "#"
+
+# Check PM2 status
+send "pm2 status\r"
+expect "#"
+
+# Check active port
+send "lsof -i :3000\r"
+expect "#"
+
+# Create a verification file
+send "echo 'VERIFY_DEPLOYMENT_SUCCESS' > public/verify.txt\r"
+expect "#"
+
+send "exit\r"
+expect eof

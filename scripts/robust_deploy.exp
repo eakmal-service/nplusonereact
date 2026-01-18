@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Ensure we have latest code
+send "git pull origin main\r"
+expect "#"
+
+# Force clean build
+send "rm -rf .next\r"
+expect "#"
+
+# Build with logging
+send "npm run build > build.log 2>&1\r"
+expect "#"
+
+# Check if build succeeded (search for 'Creating an optimized production build')
+send "grep 'Creating an optimized production build' build.log && echo 'BUILD_SUCCESS' || echo 'BUILD_FAILED'\r"
+expect "#"
+
+# Aggressively restart PM2
+send "pm2 delete nplusone-web\r"
+expect "#"
+send "pm2 save\r"
+expect "#"
+
+send "pm2 start npm --name 'nplusone-web' -- start\r"
+expect "#"
+
+send "pm2 save\r"
+expect "#"
+
+# Verify uptime is low
+send "pm2 list\r"
+expect "#"
+
+send "exit\r"
+expect eof

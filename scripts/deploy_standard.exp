@@ -1,0 +1,41 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Pull latest changes
+send "git pull origin main\r"
+expect "#"
+
+# Rebuild (standard build)
+send "rm -rf .next\r"
+expect "#"
+
+send "npm run build\r"
+expect "#"
+
+# Check if process exists and delete it
+send "pm2 delete nplusone-web\r"
+# Ignore error if it doesn't exist
+expect "#"
+
+# Start using npm start
+send "pm2 start npm --name 'nplusone-web' -- start\r"
+expect "#"
+
+send "pm2 save\r"
+expect "#"
+
+send "exit\r"
+expect eof

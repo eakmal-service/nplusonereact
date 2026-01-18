@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+send "echo '--- GIT PULL ---'\r"
+send "git pull origin main\r"
+expect "#"
+
+send "echo '--- NPM INSTALL ---'\r"
+send "npm install\r"
+expect "#"
+
+send "echo '--- NPM RUN BUILD ---'\r"
+send "npm run build\r"
+expect "#"
+
+send "echo '--- RESTART PM2 ---'\r"
+send "pm2 restart nplusone-web\r"
+expect "#"
+
+send "echo '--- STATUS ---'\r"
+send "pm2 list\r"
+expect "#"
+
+send "exit\r"
+expect eof

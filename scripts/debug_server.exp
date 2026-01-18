@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+send "echo '--- FILE START ---'\r"
+send "head -n 5 src/app/mens/page.js\r"
+send "echo '--- FILE END ---'\r"
+expect "#"
+
+send "echo '--- GIT LOG ---'\r"
+send "git log -n 1\r"
+expect "#"
+
+send "pm2 list\r"
+expect "#"
+
+send "exit\r"
+expect eof

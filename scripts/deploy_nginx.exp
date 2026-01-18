@@ -1,0 +1,51 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Upload the new nginx config content (simulated by echoing to file)
+# Since expect can be tricky with multiline, we will just edit it on server or scp. 
+# Simplest here is to use printf or just assume I scp it? 
+# The run_command tool doesn't support file upload easily unless I cat it.
+# Let's use cat with heredoc.
+
+send "cat > /etc/nginx/sites-available/nplusone.conf <<EOF\r"
+send "server {\n"
+send "    listen 80;\n"
+send "    server_name nplusonefashion.com www.nplusonefashion.com;\n"
+send "    \n"
+send "    large_client_header_buffers 4 16k;\n"
+send "    \n"
+send "    location / {\n"
+send "        proxy_pass http://localhost:3000;\n"
+send "        proxy_http_version 1.1;\n"
+send "        proxy_set_header Upgrade \$http_upgrade;\n"
+send "        proxy_set_header Connection 'upgrade';\n"
+send "        proxy_set_header Host \$host;\n"
+send "        proxy_cache_bypass \$http_upgrade;\n"
+send "    }\n"
+send "}\n"
+send "EOF\r"
+expect "#"
+
+# Test nginx config
+send "nginx -t\r"
+expect "#"
+
+# Reload nginx
+send "service nginx reload\r"
+expect "#"
+
+send "exit\r"
+expect eof

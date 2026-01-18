@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Curl the static file from localhost
+send "curl -I http://localhost:3000/_next/static/chunks/main-app-653e40775f4fb464.js\r"
+expect "#"
+
+# Kill all nginx processes
+send "killall nginx\r"
+# Ignore error if none found
+expect "#"
+sleep 2
+
+# Start nginx
+send "service nginx start\r"
+expect "#"
+
+send "exit\r"
+expect eof

@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Modifying Nginx to use 127.0.0.1 and ensure large buffers
+send "cat > /etc/nginx/sites-available/nplusone.conf <<EOF\r"
+send "server {\n"
+send "    listen 80;\n"
+send "    server_name nplusonefashion.com www.nplusonefashion.com;\n"
+send "    \n"
+send "    large_client_header_buffers 8 64k;\n"
+send "    client_header_buffer_size 64k;\n"
+send "    proxy_buffers 16 64k;\n" 
+send "    proxy_buffer_size 128k;\n"
+send "    \n"
+send "    location / {\n"
+send "        proxy_pass http://127.0.0.1:3000;\n"
+send "        proxy_http_version 1.1;\n"
+send "        proxy_set_header Upgrade \$http_upgrade;\n"
+send "        proxy_set_header Connection 'upgrade';\n"
+send "        proxy_set_header Host \$host;\n"
+send "        proxy_cache_bypass \$http_upgrade;\n"
+send "    }\n"
+send "}\n"
+send "EOF\r"
+expect "#"
+
+send "service nginx reload\r"
+expect "#"
+
+# Install sharp to fix image optimization 500 errors
+send "npm install sharp\r"
+expect "#"
+
+# Rebuild and restart
+send "npm run build\r"
+expect "#"
+
+send "pm2 restart nplusone-web\r"
+expect "#"
+
+send "exit\r"
+expect eof

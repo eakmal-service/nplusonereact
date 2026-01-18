@@ -9,7 +9,9 @@ interface SizeChartProps {
 const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category }) => {
     if (!isOpen) return null;
 
-    const isGirls = category === 'GIRLS WEAR';
+    console.log('SizeChart Category:', category);
+    const normalizedCategory = category?.toUpperCase() || '';
+    const isGirls = normalizedCategory.includes('GIRL') || normalizedCategory.includes('KID');
 
     // Girl's Chart Data
     const girlsData = [

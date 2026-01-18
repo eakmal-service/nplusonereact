@@ -319,7 +319,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     ? Math.max(0, Math.round((1 - Number(form.salePrice) / Number(form.mrp)) * 100))
     : '';
 
-  const isGirlsWear = form.category === 'GIRLS WEAR';
+  const isGirlsWear = form.category?.toUpperCase()?.includes('GIRL');
   const availableSizes = isGirlsWear ? SIZES_GIRLS : SIZES_STANDARD;
 
   // Handle Step 1 Selection

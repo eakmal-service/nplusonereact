@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Check PM2 process details
+send "pm2 describe nplusone-web\r"
+expect "#"
+
+# Check if we are using standalone
+send "ls -F .next/standalone\r"
+expect "#"
+
+# Check if static files exist in standalone
+send "ls -F .next/standalone/.next/static\r"
+expect "#"
+
+# Check where pm2 is actually running from (script path)
+# The describe command above hopefully shows it.
+
+send "exit\r"
+expect eof

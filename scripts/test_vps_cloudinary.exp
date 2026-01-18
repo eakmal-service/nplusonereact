@@ -1,0 +1,19 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+# Test connectivity to Cloudinary
+send "curl -I https://res.cloudinary.com/douy8ujry/image/upload/v1768244574/nplusone-fashion/Products%20images/CO-ORD%20SET/General/6204/srtteagmsshn4t8tz42n.webp\r"
+expect "#"
+
+send "exit\r"
+expect eof

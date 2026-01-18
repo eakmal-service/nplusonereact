@@ -1,0 +1,70 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+# Install Certbot and Nginx plugin if not present
+send "apt-get update && apt-get install -y python3-certbot-nginx\r"
+expect "#"
+
+# Create config directory if it doesn't exist (locally we put it in config/nginx, we need to put it in /etc/nginx/sites-available)
+# We will use scp to copy it, but for now let's just write it directly or assume we SCP'd it. 
+# Actually, since I can't easily SCP files *from* here without another tool or complex expect, 
+# I'll just 'cat' the file content into place. It's safer and self-contained.
+
+send "cat > /etc/nginx/sites-available/nplusonefashion.com << 'EOF'\r"
+send "server {\r"
+send "    listen 80;\r"
+send "    server_name nplusonefashion.com www.nplusonefashion.com;\r"
+send "\r"
+send "    location / {\r"
+send "        proxy_pass http://localhost:3000;\r"
+send "        proxy_http_version 1.1;\r"
+send "        proxy_set_header Upgrade \$http_upgrade;\r"
+send "        proxy_set_header Connection 'upgrade';\r"
+send "        proxy_set_header Host \$host;\r"
+send "        proxy_cache_bypass \$http_upgrade;\r"
+send "        proxy_set_header X-Real-IP \$remote_addr;\r"
+send "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\r"
+send "        proxy_set_header X-Forwarded-Proto \$scheme;\r"
+send "    }\r"
+send "}\r"
+send "EOF\r"
+expect "#"
+
+# Enable the site
+send "ln -sf /etc/nginx/sites-available/nplusonefashion.com /etc/nginx/sites-enabled/\r"
+expect "#"
+
+# Test Nginx config
+send "nginx -t\r"
+expect "#"
+
+# Reload Nginx to pick up changes
+send "systemctl reload nginx\r"
+expect "#"
+
+# Run Certbot
+# Using --non-interactive and --agree-tos. 
+# We need an email. I'll use a generic one or ask the user. 
+# For now, I'll use 'admin@nplusonefashion.com' as a constructive default.
+send "certbot --nginx -d nplusonefashion.com -d www.nplusonefashion.com --non-interactive --agree-tos -m admin@nplusonefashion.com --redirect\r"
+
+expect {
+    "Congratulations!" { puts "SSL setup complete!" }
+    "Certificate not yet due for renewal" { puts "Certificate already exists and is valid." }
+    "error" { puts "Certbot encountered an error"; exit 1 }
+    timeout { puts "Certbot timed out"; exit 1 }
+    "#" { }
+}
+
+send "exit\r"
+expect eof

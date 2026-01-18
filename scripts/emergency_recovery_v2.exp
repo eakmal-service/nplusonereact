@@ -1,0 +1,49 @@
+#!/usr/bin/expect -f
+set timeout 1200
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "*?assword:*"
+send "$password\r"
+expect "*#*"
+
+# 1. Stop Everything
+send "pm2 stop all\r"
+expect "*#*"
+send "pm2 delete all\r"
+expect "*#*"
+send "pkill -f node\r"
+expect "*#*"
+
+# 2. Go to App Dir and Clean
+send "cd /root/nplusone/nplus\r"
+expect "*#*"
+send "rm -rf .next node_modules\r"
+expect "*#*"
+
+# 3. Re-Install and Build
+send "npm install --legacy-peer-deps\r"
+expect "*#*"
+send "npm run build\r"
+expect "*#*"
+
+# 4. Copy Assets (Critical for standalone)
+send "mkdir -p .next/standalone/.next/static\r"
+expect "*#*"
+send "cp -r public .next/standalone/\r"
+expect "*#*"
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "*#*"
+
+# 5. Start Fresh
+send "pm2 start ecosystem.config.js --env production\r"
+expect "*#*"
+send "pm2 save\r"
+expect "*#*"
+send "curl -I http://localhost:3000\r"
+expect "*#*"
+
+send "exit\r"
+expect eof

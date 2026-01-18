@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+set timeout 30
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '--- PM2 STATUS ---'\r"
+send "pm2 list\r"
+expect "#"
+
+send "echo '--- CHECKING ARTIFACT ---'\r"
+send "ls -la /var/www/nplusone/.next/BUILD_ID\r"
+expect "#"
+
+send "echo '--- BUILD LOG TAIL ---'\r"
+send "tail -n 20 build_debug.log\r"
+expect "#"
+
+send "exit\r"
+expect eof

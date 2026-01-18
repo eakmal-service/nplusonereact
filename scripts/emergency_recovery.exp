@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+set timeout 120
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '--- CHECKING LOCALHOST ---'\r"
+send "curl -I http://localhost:3000 || echo 'Localhost unreachable'\r"
+expect "#"
+
+send "echo '--- RESTARTING NGINX ---'\r"
+send "systemctl restart nginx\r"
+expect "#"
+
+send "echo '--- RESTARTING PM2 ---'\r"
+send "pm2 restart nplusone-web\r"
+expect "#"
+
+send "echo '--- PM2 STATUS ---'\r"
+send "pm2 list\r"
+expect "#"
+
+send "echo '--- PM2 LOGS ---'\r"
+send "pm2 logs nplusone-web --lines 20 --nostream\r"
+expect "#"
+
+send "exit\r"
+expect eof

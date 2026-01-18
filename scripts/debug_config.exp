@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Increase buffers aggressively
+send "cat > /etc/nginx/sites-available/nplusone.conf <<EOF\r"
+send "server {\n"
+send "    listen 80;\n"
+send "    server_name nplusonefashion.com www.nplusonefashion.com;\n"
+send "    \n"
+send "    large_client_header_buffers 8 64k;\n"
+send "    client_header_buffer_size 64k;\n"
+send "    \n"
+send "    location / {\n"
+send "        proxy_pass http://localhost:3000;\n"
+send "        proxy_http_version 1.1;\n"
+send "        proxy_set_header Upgrade \$http_upgrade;\n"
+send "        proxy_set_header Connection 'upgrade';\n"
+send "        proxy_set_header Host \$host;\n"
+send "        proxy_cache_bypass \$http_upgrade;\n"
+send "    }\n"
+send "}\n"
+send "EOF\r"
+expect "#"
+
+send "service nginx reload\r"
+expect "#"
+
+# Add log to next.config.js to verify it loads
+send "sed -i \"1s/^/console.log('Loading next.config.js: unoptimized=', nextConfig?.images?.unoptimized);\\n/\" next.config.js\r"
+# The above sed is risky if nextConfig isn't defined yet.
+# Better to simply append log at the end before exports, or use a simpler check.
+# Let's just cat the file to be sure what we editing.
+# Actually, I can just use 'grep' to ensure no other file exists.
+
+send "pm2 restart nplusone-web\r"
+expect "#"
+
+send "pm2 logs nplusone-web --lines 20 --nostream\r"
+expect "#"
+
+send "exit\r"
+expect eof

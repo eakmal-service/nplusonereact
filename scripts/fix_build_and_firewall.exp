@@ -1,0 +1,56 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+send "echo '--- STOPPING PM2 ---'\r"
+send "pm2 stop nplusone-web\r"
+expect "#"
+
+send "echo '--- PULLING LATEST CODE ---'\r"
+send "git pull origin main\r"
+expect "#"
+
+send "echo '--- CLEAN INSTALL ---'\r"
+send "rm -rf .next node_modules\r"
+expect "#"
+send "npm install\r"
+expect "#"
+
+send "echo '--- BUILDING PROJECT ---'\r"
+send "npm run build > build_debug.log 2>&1\r"
+expect "#"
+
+send "echo '--- CHECKING BUILD STATUS ---'\r"
+send "if \[ -f .next/BUILD_ID \]; then echo 'BUILD SUCCESS'; else echo 'BUILD FAILED'; fi\r"
+expect "#"
+
+send "echo '--- ERROR LOG (IF FAILED) ---'\r"
+send "grep -C 5 'Error' build_debug.log\r"
+expect "#"
+
+send "echo '--- RESTARTING PM2 ---'\r"
+send "pm2 restart nplusone-web\r"
+expect "#"
+
+send "echo '--- CHECKING FIREWALL ---'\r"
+send "ufw status\r"
+expect "#"
+
+send "echo '--- CHECKING IPTABLES ---'\r"
+send "iptables -L INPUT -n | grep -E 'dpt:(80|443)'\r"
+expect "#"
+
+send "exit\r"
+expect eof
