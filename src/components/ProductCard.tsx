@@ -9,15 +9,11 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
-  // Calculate prices
-  const originalPrice = product.mrp ? parseFloat(product.mrp.toString()) : (product.price ? parseFloat(product.price) : 0);
-  const currentPrice = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : 0);
-
-  // Calculate discount dynamically if not present
+  // Calculate discount if not provided
   const discountDisplay = product.discount
     ? (product.discount.includes('%') ? product.discount : `${product.discount}% OFF`)
-    : (originalPrice > currentPrice)
-      ? `${Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF`
+    : (product.price && product.salePrice && product.price !== product.salePrice)
+      ? `${Math.round(((parseFloat(product.price) - parseFloat(product.salePrice)) / parseFloat(product.price)) * 100)}% OFF`
       : null;
 
   return (
@@ -67,11 +63,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-blue-600">
-                ₹{currentPrice}
+                ₹{product.salePrice || product.price}
               </span>
-              {originalPrice > currentPrice && (
+              {product.salePrice && product.price && product.salePrice !== product.price && (
                 <span className="text-sm text-gray-500 line-through">
-                  ₹{originalPrice}
+                  ₹{product.price}
                 </span>
               )}
             </div>

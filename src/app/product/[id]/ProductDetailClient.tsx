@@ -119,15 +119,6 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
     // Default sizes if not provided
     const sizes = product?.availableSizes || ['S', 'M', 'L', 'XL', 'XXL'];
 
-    // Price Calculation Logic
-    const originalPriceVal = product.mrp ? parseFloat(product.mrp.toString()) : (product.price ? parseFloat(product.price) : 0);
-    const salePriceVal = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : 0);
-    const discountDisplay = product.discount
-        ? (product.discount.includes('%') ? product.discount : `${product.discount}% OFF`)
-        : (originalPriceVal > salePriceVal)
-            ? `${Math.round(((originalPriceVal - salePriceVal) / originalPriceVal) * 100)}%`
-            : null;
-
     // Create thumbnail array from product images
     const thumbnails = (product?.images && product.images.length > 0)
         ? product.images.map((img: { url: string; alt?: string }) => ({
@@ -253,20 +244,17 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
 
                         {/* Price section */}
                         <div className="mb-6">
-                            <div className="flex items-center gap-4">
-                                <span className="text-4xl font-bold text-silver">₹{salePriceVal.toLocaleString('en-IN')}</span>
-                                {originalPriceVal > salePriceVal && (
-                                    <span className="text-2xl text-gray-500 line-through font-medium">
-                                        ₹{originalPriceVal.toLocaleString('en-IN')}
-                                    </span>
+                            <div className="flex items-center">
+                                <p className="text-sm text-gray-400">MRP</p>
+                                <span className="text-4xl font-extrabold ml-2 text-silver">₹{product.salePrice}</span>
+                                {product.price && product.price !== product.salePrice && (
+                                    <span className="text-gray-500 line-through ml-3 text-lg">₹{product.price}</span>
                                 )}
-                                {product.discount && (originalPriceVal > salePriceVal) && (
-                                    <span className="text-red-500 text-lg font-bold">
-                                        {discountDisplay?.includes('OFF') ? discountDisplay : `${discountDisplay} OFF`}
-                                    </span>
+                                {product.discount && (
+                                    <span className="text-red-500 ml-3 bg-red-900 px-2 py-1 text-sm font-bold">{product.discount}</span>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes</p>
+                            <p className="text-sm text-gray-400 mt-1">Inclusive of all taxes</p>
                         </div>
 
                         {/* Color selection */}

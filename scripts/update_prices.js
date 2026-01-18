@@ -7,55 +7,46 @@ const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const UPDATES = [
-    // Suit Sets (Already updated, keeping for reference or re-run safe)
-    // ... (omitting strictly for valid JSON if needed, but here I will just append the new ones effectively)
-
-    // Co-ord Sets
-    // Using IDs for AIR-RAYON-D2 variants to distinguish them (Now uniform MRP requested)
-    { id: '09429e9e-dca3-4e26-8777-9dfcca7bf8bf', style_code: 'AIR-RAYON-D2', title: 'Yellow', selling_price: 691, mrp: 1193 },
-    { id: 'cde5be89-843c-4e86-bbeb-c8dc4a9fd599', style_code: 'AIR-RAYON-D2', title: 'Green', selling_price: 691, mrp: 1193 },
-    { id: '27fc1ac7-8aa4-40fd-955e-e00fdd4de8a8', style_code: 'AIR-RAYON-D2', title: 'Blue', selling_price: 691, mrp: 1193 },
-    { id: '049823f9-ff95-4bb5-8181-008f4896f7ee', style_code: 'AIR-RAYON-D2', title: 'Red', selling_price: 691, mrp: 1193 },
-
-    // Other Co-ord Sets (Unique Style Codes)
-    { style_code: 'AIR-LINEN-D2', selling_price: 1091, mrp: 1901 },
-    { style_code: 'AIR-LINEN-D3', selling_price: 1091, mrp: 1846 },
-    { style_code: 'AIR-LINEN-D1', selling_price: 1091, mrp: 1881 },
-    { style_code: 'AIR-RAYON-D4', selling_price: 1091, mrp: 1914 },
-
-    // Kids Wear
-    { style_code: 'NP-KID-FRK-EMB-01', selling_price: 451, mrp: 815 },
-    { style_code: 'KIDS-FRK-CRM', selling_price: 451, mrp: 768 },
-    { style_code: 'NP-KIDS-OW-07', selling_price: 451, mrp: 815 },
-    { style_code: 'NP-KIDS-BSS-01', selling_price: 351, mrp: 621 },
-    { style_code: 'NP-KIDS-BSS-02', selling_price: 351, mrp: 587 },
+    { style_code: 'D3P-1', selling_price: 571, mrp: 1019, discount: '44.0%' },
+    { style_code: 'D3P-2', selling_price: 571, mrp: 968, discount: '41.0%' },
+    { style_code: 'D3P-4', selling_price: 571, mrp: 1002, discount: '43.0%' },
+    { style_code: 'D3P-5', selling_price: 561, mrp: 976, discount: '42.5%' },
+    { style_code: 'D3P-6', selling_price: 571, mrp: 965, discount: '40.8%' },
+    { style_code: 'D3P-7', selling_price: 601, mrp: 1077, discount: '44.2%' },
+    { style_code: 'D3P-8', selling_price: 551, mrp: 944, discount: '41.6%' },
+    { style_code: 'D3P-9', selling_price: 551, mrp: 993, discount: '44.5%' },
+    { style_code: 'D3P-14', selling_price: 601, mrp: 1007, discount: '40.3%' },
+    { style_code: 'D3P-13', selling_price: 601, mrp: 1068, discount: '43.7%' },
+    { style_code: 'D3P-11', selling_price: 551, mrp: 952, discount: '42.1%' },
+    { style_code: 'D3P-12', selling_price: 611, mrp: 1107, discount: '44.8%' },
+    { style_code: 'D3P-10', selling_price: 551, mrp: 933, discount: '40.9%' },
+    { style_code: 'D3P-15', selling_price: 611, mrp: 1045, discount: '41.5%' },
+    { style_code: 'D3P-16', selling_price: 571, mrp: 1005, discount: '43.2%' },
+    { style_code: 'D3P-17', selling_price: 571, mrp: 960, discount: '40.5%' },
+    { style_code: 'D3P-18', selling_price: 551, mrp: 986, discount: '44.1%' },
 ];
 
 async function updatePrices() {
     console.log('Starting price updates...');
 
     for (const item of UPDATES) {
-        let query = supabase.from('products').update({
-            mrp: item.mrp,
-            selling_price: item.selling_price
-        });
+        console.log(`Updating ${item.style_code}...`);
 
-        if (item.id) {
-            console.log(`Updating by ID: ${item.id} (${item.style_code} - ${item.title || ''})...`);
-            query = query.eq('id', item.id);
-        } else {
-            console.log(`Updating by Style Code: ${item.style_code}...`);
-            query = query.eq('style_code', item.style_code);
-        }
+        // DB has: mrp, selling_price.
+        // 'price' and 'sale_price' might be generated or aliases, we only update core columns.
 
-        const { data, error } = await query.select();
+        const { data, error } = await supabase
+            .from('products')
+            .update({
+                mrp: item.mrp,
+                selling_price: item.selling_price
+            })
+            .eq('style_code', item.style_code);
 
         if (error) {
             console.error(`Error updating ${item.style_code}:`, error);
-        } else if (data.length === 0) {
-            console.warn(`Product not found: ${item.style_code} (ID: ${item.id})`);
         } else {
-            console.log(`Updated successfully: MRP ${item.mrp}, SP ${item.selling_price}`);
+            console.log(`Updated ${item.style_code} successfully.`);
         }
     }
 

@@ -49,7 +49,6 @@ async function getProduct(id: string): Promise<Product | null> {
       styleCode: product.style_code,
       category: product.category,
       subcategory: product.subcategory,
-      mrp: product.mrp, // Explicitly map MRP
       originalPrice: product.mrp,
       price: product.selling_price || product.mrp, // Prefer selling_price
       salePrice: product.sale_price,
@@ -142,7 +141,6 @@ async function getSimilarProducts(id: string, category: string): Promise<Product
         id: p.id,
         title: p.title,
         category: p.category,
-        mrp: p.mrp, // Explicitly map MRP
         originalPrice: p.mrp,
         price: p.selling_price || p.mrp,
         salePrice: p.selling_price, // Ensure salePrice is mapped for compatibility

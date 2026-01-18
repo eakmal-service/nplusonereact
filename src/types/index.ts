@@ -6,7 +6,6 @@ export interface Product {
   imageUrl?: string;
   imageUrls?: string[]; // Array of image URLs
   price: string;
-  mrp?: string | number; // Added for correct discount calc
   salePrice?: string;
   originalPrice?: string;
   discount?: string;
