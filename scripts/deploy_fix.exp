@@ -13,40 +13,25 @@ expect "*#*"
 send "pm2 stop all\r"
 expect "*#*"
 
-# 2. Sync Code (We assume we are in root/nplusone/nplus)
+# 2. Sync Code 
 send "cd /root/nplusone/nplus\r"
 expect "*#*"
-
-# 3. Pull Latest (or we just rebuild if code is there, but let's assume git pull if possible. 
-# actually, previous deploy was rsync/copy based? User provided context says git. 
-# Let's try git pull origin main - but we might need credentials or it might be rsync. 
-# To be safe and quick, we will just rebuild because I already edited files locally and I need to push them first.
-# Wait, I need to push my local changes to the remote. 
-# The user environment has a 'deploy_vps_final.exp' which likely handles this. 
-# I should inspect it or just use git to push to origin and then pull on server.
-# Let's assume standard flow: Local Commit -> Push -> Server Pull -> Build.
-# BUT, I edited files on the server earlier? No, I edited local files.
-
-# So step 1 is I must commit and push from LOCAL machine first.
-# Then I run this script to pull and build on server.
-"
-
-# AUTOMATION SCRIPT FOR SERVER SIDE ONLY
-# USER MUST PUSH CHANGES FIRST
-
 send "git fetch --all\r"
 expect "*#*"
 send "git reset --hard origin/main\r"
 expect "*#*"
 
-# 4. Install & Build
+# 3. Clean and Install
+send "rm -rf .next node_modules\r"
+expect "*#*"
 send "npm install --legacy-peer-deps\r"
 expect "*#*"
+
+# 4. Build
 send "npm run build\r"
 expect "*#*"
 
-# 5. CRITICAL FIX: COPY PUBLIC ASSETS TO STANDALONE
-# The standalone build DOES NOT copy public folder automatically by default in all versions or configs
+# 5. COPY ASSETS (Fixes broken images)
 send "cp -r public .next/standalone/\r"
 expect "*#*"
 send "cp -r .next/static .next/standalone/.next/\r"

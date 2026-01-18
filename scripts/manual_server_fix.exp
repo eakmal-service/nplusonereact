@@ -1,55 +1,34 @@
 #!/usr/bin/expect -f
-set timeout 600
+set timeout 1200
 set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
 
 spawn ssh -o StrictHostKeyChecking=no $user@$host
-expect {
-    "password:" { send "$password\r" }
-    timeout { puts "SSH connection timed out"; exit 1 }
-}
-expect "#"
+expect "*?assword:*"
+send "$password\r"
+expect "*#*"
 
-send "cd /var/www/nplusone\r"
-expect "#"
+send "cd /root/nplusone/nplus\r"
+expect "*#*"
 
-send "echo '--- GIT PULL ---'\r"
-send "git pull origin main\r"
-expect "#"
+# Create parent dir if missing
+send "mkdir -p .next/standalone/.next\r"
+expect "*#*"
 
-send "echo '--- CLEANING ---'\r"
-send "rm -rf .next\r"
-expect "#"
+# Explicitly copy public to standalone root
+send "cp -r public .next/standalone/\r"
+expect "*#*"
 
-# Not removing node_modules unless necessary to save time, unless build fails
-# But user wants a sure fix. Let's try build first. 
+# Explicitly copy static to standalone/.next/static
+send "cp -r .next/static .next/standalone/.next/\r"
+expect "*#*"
 
-send "echo '--- BUILDING ---'\r"
-send "npm run build\r"
-expect {
-    "Compiled successfully" { 
-        puts "Build Successful" 
-    }
-    "Failed to compile" { 
-        puts "Build Failed"; 
-        send "tail -n 20 .next/build-manifest.json\r"; # dummy command to continue
-    }
-    timeout { puts "Build Timed Out" }
-}
-expect "#"
-
-send "echo '--- RESTARTING PM2 ---'\r"
-send "pm2 restart nplusone-web\r"
-expect "#"
-
-send "echo '--- PM2 STATUS ---'\r"
-send "pm2 list\r"
-expect "#"
-
-send "echo '--- SAVING PM2 ---'\r"
+# Restart
+send "pm2 restart all\r"
+expect "*#*"
 send "pm2 save\r"
-expect "#"
+expect "*#*"
 
 send "exit\r"
 expect eof

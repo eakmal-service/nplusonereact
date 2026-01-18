@@ -2,11 +2,16 @@
 
 A modern, high-performance fashion e-commerce application built with Next.js 13 (App Router), Supabase, and Stripe.
 
-## 🚀 Recent Major Updates (Jan 2026)
-- **Server-Side Rendering (SSR)**: Product Listing and Detail pages now fetch data on the server for superior SEO and initial load performance.
-- **Image Optimization**: Fully migrated to `next/image` with `remotePatterns` for secure and optimized serving of assets from Supabase.
-- **Admin Panel Isolation**: Separated Admin data fetching logic to ensure the public storefront remains fast while the Admin Panel loads heavy data independently.
-- **Security**: Row Level Security (RLS) policies configured for secure database access.
+## 🚀 Recent Major Updates (Jan 18, 2026)
+
+- **Kid's Wear Module**:
+    - **Separate Categories**: Explicit "Boy's Wear" and "Girl's Wear" subcategories.
+    - **Logic Separation**: "Girl's Wear" now uses sizes **1-9**, while others use StandardXS-3XL.
+    - **Custom Size Charts**: Implemented a dark-themed (Black/Silver) size chart specifically for Girl's Wear with updated dimensions.
+- **Infrastructure & Reliability**:
+    - **Server Recovery**: Fixed critical crash loop caused by port conflicts (`EADDRINUSE`) and missing build artifacts.
+    - **Asset Synchronization**: Implemented robust deployment scripts (`manual_server_fix.exp`) to ensure static assets (icons, images) are correctly served in Next.js Standalone mode.
+    - **DNS Restoration**: Restored missing A Records to bring the site back online.
 
 ## 📊 Project Status & Feature Audit
 
@@ -15,25 +20,25 @@ Currently, the application runs on a **Hybrid Data Model** (Supabase DB + Local 
 
 | Category | Product Count | Status | Notes |
 |----------|:-------------:|:------:|-------|
-| **Suit Set** | ~18 | ✅ Active | Fully populated with images, descriptions, and variants. |
+| **Suit Set** | ~39 | ✅ Active | Fully populated with images, descriptions, and variants. |
+| **Kid's Wear** | ~10 | ✅ Active | **New!** Split into Boy's/Girl's. Size logic (1-9) active. |
+| **Co-ord Set** | ~8 | ✅ Active | **New!** Active category with initial products. |
 | **Western Wear** | 0 | 🚧 Empty | Placeholder category. |
-| **Co-ord Set** | 0 | 🚧 Empty | Placeholder category. |
-| **Kid's Wear** | 0 | 🚧 Empty | Placeholder category. |
 | **Indo-Western** | 0 | 🚧 Empty | Placeholder category. |
 | **Men's Wear** | 0 | 🚧 Empty | Placeholder category. |
 
-> **Note**: Products are managed via the Admin Panel and stored in Supabase. Local fallbacks (`additionalProducts.ts`) exist for development but are being phased out in favor of real DB data.
+> **Note**: Products are managed via the Admin Panel. existing `Girl's Wear` products may need to be re-saved in the Admin Panel to reflect the new Size (1-9) options on the frontend.
 
 ### 🛠️ Features Functionality (Zara/H&M Style Analysis)
 
 | Feature | Status | Implementation Details |
 |---------|:------:|------------------------|
 | **User Auth** | ✅ Working | Supabase Auth (Email/Video OTP login flow). |
-| **Payments** | ✅ Working | **Stripe** integration is fully set up in `/api/payment`. |
+| **Payments** | ✅ Working | **Stripe** & **PhonePe** integration is fully set up. |
 | **Order Tracking** | ✅ Working | Custom tracking APIs (`/api/order/[id]/tracking`) implementing detailed courier status. |
-| **Admin Panel** | ✅ Working | comprehensive dashboard for Product Management, Order Processing, and Content Management (Hero Slider, banners). |
+| **Admin Panel** | ✅ Working | Dashboard for Product Management, Order Processing, and Content Management. |
 | **Search & Filter** | ✅ Working | Fast filtering by Category, Price, and Search terms. |
-| **Wishlist & Cart** | ✅ Working | Persistent state management for shopping bag and favorites. |
+| **Wishlist & Cart** | ✅ Working | Persistent state management. Fixed broken icons issue (Jan 18). |
 | **Product Zoom** | ✅ Working | High-quality image zoom on hover (Desktop) and modal view. |
 | **Mobile UX** | ✅ Working | Fully responsive design with mobile-optimized Hero Slider and Navigation. |
 
@@ -41,11 +46,8 @@ Currently, the application runs on a **Hybrid Data Model** (Supabase DB + Local 
 - **Framework**: Next.js 13.5 (App Router)
 - **Language**: TypeScript
 - **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
-- **Payments**: Stripe
-- **Styling**: Tailwind CSS
-- **State**: React Context + SWR
-- **Deployment**: VPS (Hostinger) with Docker
+- **Logistics**: iThinkLogistics Integration
+- **Deployment**: VPS (Hostinger) with PM2 & Nginx (Standalone Build)
 
 ## 🔧 Setup & Installation
 
@@ -78,4 +80,4 @@ Currently, the application runs on a **Hybrid Data Model** (Supabase DB + Local 
 - `src/types`: TypeScript interfaces (`Product`, `Order`, etc.).
 
 ---
-*Documentation updated on Jan 5, 2026.*
+*Documentation updated on Jan 18, 2026.*

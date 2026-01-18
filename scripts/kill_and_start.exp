@@ -1,32 +1,36 @@
 #!/usr/bin/expect -f
-set timeout 300
+set timeout 60
 set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
 
 spawn ssh -o StrictHostKeyChecking=no $user@$host
-expect {
-    "password:" { send "$password\r" }
-    timeout { puts "SSH connection timed out"; exit 1 }
-}
-expect "#"
+expect "*?assword:*"
+send "$password\r"
+expect "*#*"
 
-send "cd /var/www/nplusone\r"
-expect "#"
+send "pm2 stop all\r"
+expect "*#*"
+send "pm2 delete all\r"
+expect "*#*"
 
-# Kill everything matching nplusone
-send "pm2 delete nplusone\r"
-# Ignore error
-expect "#"
-send "pm2 delete nplusone-web\r"
-expect "#"
+# Force kill any lingering node processes
+send "pkill -f node\r"
+expect "*#*"
+send "fuser -k 3000/tcp\r"
+expect "*#*"
+
+# Wait a moment
+send "sleep 2\r"
+expect "*#*"
 
 # Start fresh
-send "pm2 start npm --name 'nplusone-web' -- start\r"
-expect "#"
-
+send "cd /root/nplusone/nplus\r"
+expect "*#*"
+send "pm2 start ecosystem.config.js --env production\r"
+expect "*#*"
 send "pm2 save\r"
-expect "#"
+expect "*#*"
 
 send "exit\r"
 expect eof

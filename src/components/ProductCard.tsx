@@ -9,6 +9,13 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
+  // Calculate discount if not provided
+  const discountDisplay = product.discount
+    ? (product.discount.includes('%') ? product.discount : `${product.discount}% OFF`)
+    : (product.price && product.salePrice && product.price !== product.salePrice)
+      ? `${Math.round(((parseFloat(product.price) - parseFloat(product.salePrice)) / parseFloat(product.price)) * 100)}% OFF`
+      : null;
+
   return (
     <Link
       href={`/product/${product.id}`}
@@ -53,21 +60,37 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </p>
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-lg font-bold text-blue-600">
-            {product.salePrice || product.price}
-          </span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-blue-600">
+                ₹{product.salePrice || product.price}
+              </span>
+              {product.salePrice && product.price && product.salePrice !== product.price && (
+                <span className="text-sm text-gray-500 line-through">
+                  ₹{product.price}
+                </span>
+              )}
+            </div>
+          </div>
 
           {(product.stockQuantity || 0) > 0 ? (
             <span className="text-sm text-green-600">
-              In Stock ({product.stockQuantity})
+              In Stock
             </span>
           ) : (
             <span className="text-sm text-red-600">
-              {product.stockQuantity === 0 ? 'Out of Stock' : ''}
+              Out of Stock
             </span>
           )}
         </div>
       </div>
+
+      {/* Discount Badge */}
+      {discountDisplay && (
+        <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+          {discountDisplay}
+        </div>
+      )}
     </Link>
   );
 } 

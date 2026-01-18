@@ -41,6 +41,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
   const isInWishlistState = isInWishlist(product.id);
 
+  // Calculate discount dynamically if not present
+  const discountDisplay = product.discount
+    ? (product.discount.includes('%') ? product.discount : `${product.discount}% OFF`)
+    : (product.price && product.salePrice && product.price !== product.salePrice)
+      ? `${Math.round(((parseFloat(product.price) - parseFloat(product.salePrice)) / parseFloat(product.price)) * 100)}% OFF`
+      : null;
+
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -120,9 +127,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover object-top hover:scale-105 transition-transform duration-500"
             />
-            {product.discount && (
-              <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
-                {product.discount}
+            {discountDisplay && (
+              <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                {// Remove double OFF if variable includes it 
+                  discountDisplay.includes('OFF') ? discountDisplay : `${discountDisplay} OFF`
+                }
               </div>
             )}
             {product.stockQuantity === 0 && (
