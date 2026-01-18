@@ -59,10 +59,16 @@ const categoryHierarchy: CategoryNode[] = [
     label: "KID'S WEAR",
     children: [
       {
-        id: 'kids-cat',
-        label: "KID'S WEAR",
-        value: 'KIDS WEAR', // Schema: KID'S WEAR or KIDS WEAR? Checking schema said 'KIDS WEAR'
-        children: [{ id: 'all-kids', label: "All Kid's Wear", value: 'KIDS WEAR' }]
+        id: 'boys',
+        label: "BOY'S WEAR",
+        value: 'BOYS WEAR',
+        children: [{ id: 'all-boys', label: "All Boy's Wear", value: 'BOYS WEAR' }]
+      },
+      {
+        id: 'girls',
+        label: "GIRL'S WEAR",
+        value: 'GIRLS WEAR',
+        children: [{ id: 'all-girls', label: "All Girl's Wear", value: 'GIRLS WEAR' }]
       }
     ]
   }
@@ -76,7 +82,8 @@ const subcategories = [
   { value: 'oversized', label: 'Oversized' },
 ];
 
-const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+const SIZES_STANDARD = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+const SIZES_GIRLS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 // --- Attribute Options Data ---
 const NECK_DESIGNS = [
@@ -312,7 +319,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     ? Math.max(0, Math.round((1 - Number(form.salePrice) / Number(form.mrp)) * 100))
     : '';
 
-  const isMensWear = form.category === 'MENS WEAR';
+  const isGirlsWear = form.category === 'GIRLS WEAR';
+  const availableSizes = isGirlsWear ? SIZES_GIRLS : SIZES_STANDARD;
 
   // Handle Step 1 Selection
   const handleSuperCatSelect = (cat: CategoryNode) => {
@@ -882,7 +890,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(size => {
+                  {availableSizes.map(size => {
                     const isEnabled = form.sizes.includes(size);
                     return (
                       <tr key={size} className={isEnabled ? 'bg-blue-900/10' : ''}>

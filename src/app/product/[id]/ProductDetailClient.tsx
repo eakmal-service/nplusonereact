@@ -691,7 +691,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             )}
 
             {/* Size Chart Modal */}
-            <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} />
+            <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} category={product.category} />
             {/* Reviews Section */}
             <ProductReviews productId={product.id.toString()} />
         </div >
