@@ -53,7 +53,8 @@ export const convertToTypeProduct = (product: any): any => {
     imageUrl: product.imageUrl || product.image,
     price: product.price,
     salePrice: product.salePrice,
-    originalPrice: product.price,
+    mrp: product.mrp, // Map MRP
+    originalPrice: product.mrp || product.price, // Use MRP as original price if available
     discount: product.discount,
     link: `/product/${product.id}`,
     alt: product.alt || product.title,

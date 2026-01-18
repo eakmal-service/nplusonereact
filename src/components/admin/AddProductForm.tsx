@@ -307,6 +307,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     setContains: initialData?.setContains || '',
     productWeight: initialData?.productWeight || '',
     searchKeywords: initialData?.searchKeywords || '',
+    discount: initialData?.discount ? initialData.discount.replace('%', '') : '',
   });
 
   const [addedColors, setAddedColors] = useState<{ name: string; color: string }[]>(
@@ -314,10 +315,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
   );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Discount calculation
-  const discount = form.mrp && form.salePrice
-    ? Math.max(0, Math.round((1 - Number(form.salePrice) / Number(form.mrp)) * 100))
-    : '';
+  // Discount is now part of form state, logic moved to handlePriceChange
 
   const isGirlsWear = form.category?.toUpperCase()?.includes('GIRL');
   const availableSizes = isGirlsWear ? SIZES_GIRLS : SIZES_STANDARD;
@@ -403,6 +401,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         setContains: initialData.setContains || '',
         productWeight: initialData.productWeight || '',
         searchKeywords: initialData.searchKeywords || '',
+        discount: initialData.discount ? initialData.discount.replace('%', '') : '',
       });
       setAddedColors(initialData.colorOptions?.map((c: any) => ({ name: c.name, color: c.code || '#000000' })) || []);
       setAttributes({
@@ -541,6 +540,59 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     }
   };
 
+  // Price Calculation Logic
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Allow empty string to clear field
+    if (value === '') {
+      setForm(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+
+    const numVal = parseFloat(value);
+    if (isNaN(numVal) || numVal < 0) return; // Prevent invalid input
+
+    setForm(prev => {
+      const updates: any = { ...prev, [name]: value };
+      const mrp = parseFloat(name === 'mrp' ? value : prev.mrp || '0');
+      const sp = parseFloat(name === 'salePrice' ? value : prev.salePrice || '0');
+      const disc = parseFloat(name === 'discount' ? value : prev.discount || '0');
+
+      if (name === 'mrp') {
+        // Change MRP:
+        // If Discount exists -> Recalculate SP
+        // If SP exists but no Discount -> Recalculate Discount?
+        // Logic: Prioritize Discount consistency if available.
+        if (disc > 0) {
+          // SP = MRP - (MRP * Disc / 100)
+          const newSp = Math.round(mrp - (mrp * disc / 100));
+          updates.salePrice = newSp.toString();
+        } else if (sp > 0 && sp < mrp) {
+          // Recalculate Discount 
+          const newDisc = Math.round(((mrp - sp) / mrp) * 100);
+          updates.discount = newDisc.toString();
+        }
+      }
+      else if (name === 'discount') {
+        // Change Discount:
+        // Calculate SP based on MRP
+        if (mrp > 0) {
+          const newSp = Math.round(mrp - (mrp * numVal / 100));
+          updates.salePrice = newSp.toString();
+        }
+      }
+      else if (name === 'salePrice') {
+        // Change SP:
+        // Calculate Discount based on MRP
+        if (mrp > 0 && numVal <= mrp) {
+          const newDisc = Math.round(((mrp - numVal) / mrp) * 100);
+          updates.discount = newDisc.toString();
+        }
+      }
+      return updates;
+    });
+  };
+
   // Add color (This function is no longer used with the new UI)
   const handleAddColor = () => {
     if (!form.colorName) return;
@@ -564,6 +616,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     if (!form.material) newErrors.material = 'Material is required.';
     if (form.images.filter(Boolean).length === 0) newErrors.images = 'At least one image is required.';
     if (form.sizes.length === 0) newErrors.sizes = 'Select at least one size.';
+
+    // Pricing Validation
+    if (Number(form.discount) > 51) {
+      newErrors.discount = 'Discount cannot exceed 51%.';
+    }
+    if (Number(form.salePrice) > Number(form.mrp)) {
+      newErrors.salePrice = 'Selling Price cannot be greater than MRP.';
+    }
+
     return newErrors;
   };
 
@@ -608,7 +669,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           description: form.description,
           price: form.mrp,
           salePrice: form.salePrice,
-          discount: discount ? `${discount}%` : '',
+          discount: form.discount ? `${form.discount}%` : '',
           category: form.category,
           subcategory: form.subcategory,
           material: form.material,
@@ -679,7 +740,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
               bottomType: '',
               setContains: '',
               productWeight: '',
-              searchKeywords: ''
+              searchKeywords: '',
+              discount: ''
             });
             setAddedColors([]); // This will be removed
             setAttributes({
@@ -950,16 +1012,17 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
                 <label className="block text-gray-400 text-sm mb-1">MRP (₹) *</label>
-                <input type="number" name="mrp" value={form.mrp} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 5999" disabled={isSubmitting} />
+                <input type="number" name="mrp" value={form.mrp} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 5999" disabled={isSubmitting} />
                 {errors.mrp && <div className="text-red-500 text-xs mt-1">{errors.mrp}</div>}
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Discount (%)</label>
-                <input type="text" value={discount !== '' ? discount + '%' : '0%'} readOnly className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-500" />
+                <input type="number" name="discount" value={form.discount} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 40" disabled={isSubmitting} />
+                {errors.discount && <div className="text-red-500 text-xs mt-1">{errors.discount}</div>}
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Selling Price (₹) *</label>
-                <input type="number" name="salePrice" value={form.salePrice} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3999" disabled={isSubmitting} />
+                <input type="number" name="salePrice" value={form.salePrice} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3999" disabled={isSubmitting} />
                 {errors.salePrice && <div className="text-red-500 text-xs mt-1">{errors.salePrice}</div>}
               </div>
             </div>

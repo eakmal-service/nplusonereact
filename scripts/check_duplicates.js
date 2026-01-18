@@ -1,37 +1,34 @@
-#!/usr/bin/env node
-
-require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = "https://jdwzdwkkmqaaycgjuipn.supabase.co";
+const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0";
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-async function checkDuplicates() {
-    console.log('🔍 Checking for potential duplicates (Hyphen vs Underscore)...\n');
+async function checkproducts() {
+    const styleCodes = [
+        'AIR-RAYON-D2',
+        'AIR-LINEN-D2',
+        'AIR-LINEN-D3',
+        'AIR-LINEN-D1',
+        'AIR-RAYON-D4'
+    ];
 
-    const codesToCheck = ['D3P-10', 'D3P_10', 'D3P-11', 'D3P_11', 'D3P-12', 'D3P_12', 'D3P-13', 'D3P_13'];
+    console.log(`Checking products...`);
 
-    const { data: products, error } = await supabase
+    const { data, error } = await supabase
         .from('products')
-        .select('id, style_code, title, selling_price, price')
-        .in('style_code', codesToCheck);
+        .select('id, title, style_code, mrp, selling_price')
+        .in('style_code', styleCodes);
 
     if (error) {
         console.error('Error:', error);
         return;
     }
 
-    console.log('Found these products:');
-    console.log('ID                                   | STYLE_CODE | PRICE | TITLE');
-    console.log('='.repeat(80));
-
-    products.forEach(p => {
-        console.log(`${p.id} | ${p.style_code.padEnd(10)} | ${String(p.price).padEnd(5)} | ${p.title.substring(0, 30)}`);
+    data.forEach(p => {
+        console.log(`Code: ${p.style_code} | Title: ${p.title} | MRP: ${p.mrp} | SP: ${p.selling_price}`);
     });
-
-    process.exit(0);
 }
 
-checkDuplicates().catch(console.error);
+checkproducts();

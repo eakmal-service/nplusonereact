@@ -14,7 +14,9 @@ interface ProductCardProps {
     id: number;
     title: string;
     imageUrl: string;
+    imageUrl: string;
     price: string;
+    mrp?: string | number;
     salePrice: string;
     discount?: string;
     stockQuantity: number;
@@ -41,11 +43,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
   const isInWishlistState = isInWishlist(product.id);
 
+  // Calculate prices
+  const originalPrice = product.mrp ? parseFloat(product.mrp.toString()) : (product.price ? parseFloat(product.price) : 0);
+  const currentPrice = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : 0);
+
   // Calculate discount dynamically if not present
   const discountDisplay = product.discount
     ? (product.discount.includes('%') ? product.discount : `${product.discount}% OFF`)
-    : (product.price && product.salePrice && product.price !== product.salePrice)
-      ? `${Math.round(((parseFloat(product.price) - parseFloat(product.salePrice)) / parseFloat(product.price)) * 100)}% OFF`
+    : (originalPrice > currentPrice)
+      ? `${Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF`
       : null;
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -150,8 +156,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
 
           <div className="mt-2 flex items-center">
             <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-xl">₹{product.salePrice}</span>
-              <span className="text-gray-500 line-through text-sm">₹{product.price}</span>
+              <span className="text-white font-bold text-xl">₹{currentPrice}</span>
+              {originalPrice > currentPrice && (
+                <span className="text-gray-500 line-through text-sm">₹{originalPrice}</span>
+              )}
             </div>
 
             {/* Rating - Left aligned next to price */}

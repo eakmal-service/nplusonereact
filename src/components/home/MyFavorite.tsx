@@ -53,10 +53,10 @@ const MyFavorite = ({ favorites }: { favorites?: any[] }) => {
       <div className="max-w-[1400px] mx-auto">
         <div className="w-full py-4 overflow-hidden relative group">
 
-          {/* Mobile Scroll Buttons */}
+          {/* Mobile/Tablet Scroll Buttons (Optional, can be removed if swipe is sufficient) */}
           <button
             onClick={scrollLeft}
-            className="md:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-all"
+            className="lg:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-all"
             aria-label="Scroll Left"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -66,7 +66,7 @@ const MyFavorite = ({ favorites }: { favorites?: any[] }) => {
 
           <button
             onClick={scrollRight}
-            className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-all"
+            className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-all"
             aria-label="Scroll Right"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -74,12 +74,12 @@ const MyFavorite = ({ favorites }: { favorites?: any[] }) => {
             </svg>
           </button>
 
-          {/* Responsive container: Grid on desktop, Horizontal slider on mobile */}
+          {/* Responsive container: Grid on desktop (lg), Horizontal slider on mobile/tablet */}
           <div
             ref={scrollContainerRef}
             className="
-            flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:pb-0 scrollbar-hide
-            md:grid md:grid-cols-5 md:gap-4 md:overflow-visible
+            flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 lg:pb-0 scrollbar-hide
+            lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible
           ">
             {/* Silver box with Favorites text and Shop Now button */}
             <div className="
