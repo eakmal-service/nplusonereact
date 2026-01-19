@@ -8,20 +8,13 @@ export default function ShippingPolicy() {
                 <p className="mb-4 text-sm text-gray-500">Last Updated: Jan 2026</p>
 
                 <div className="space-y-8">
-
-                    {/* 1. Shipping Methods & Costs */}
+                    {/* Processing Time */}
                     <section>
-                        <h2 className="text-xl font-bold mb-3 uppercase tracking-wide text-silver">1. General Shipping Information</h2>
-                        <ul className="list-disc pl-5 space-y-1 text-gray-400">
-                            <li>The orders for the user are shipped through registered domestic courier companies and/or speed post only.</li>
-                            <li>Orders are shipped within 4 days from the date of the order and/or payment or as per the delivery date agreed at the time of order confirmation and delivering of the shipment, subject to courier company / post office norms.</li>
-                            <li>Platform Owner shall not be liable for any delay in delivery by the courier company / postal authority.</li>
-                            <li>Delivery of all orders will be made to the address provided by the buyer at the time of purchase.</li>
-                            <li>Delivery of our services will be confirmed on your email ID as specified at the time of registration.</li>
-                            <li>If there are any shipping cost(s) levied by the seller or the Platform Owner (as the case be), the same is not refundable.</li>
-                        </ul>
+                        <h2 className="text-xl font-bold mb-3 uppercase tracking-wide text-silver">Processing Time</h2>
+                        <p className="text-gray-400">
+                            All orders are delivered within 2-3 business days. Orders are not shipped or delivered on weekends or holidays. If we are experiencing a high volume of orders, shipments may be delayed by a few days. Please allow additional days in transit for delivery. If there will be a significant delay in the shipment of your order, we will contact you via email or phone.
+                        </p>
                     </section>
-
                 </div>
             </div>
         </div>

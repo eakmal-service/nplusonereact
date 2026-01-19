@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import QuickViewModal from '../QuickViewModal';
+import ProductPrice from './ProductPrice';
 import { convertToTypeProduct } from '@/utils/productUtils';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -27,6 +28,7 @@ interface ProductCardProps {
     availableSizes?: string[];
     rating?: number;
     colorOptions?: Array<{ name: string, code: string }>;
+    imageUrls?: string[];
   };
   priority?: boolean;
 }
@@ -91,6 +93,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
     }
   };
 
+
+
+  // Make sure we have a valid product detail page URL
+  const productUrl = `/product/${product.id}`;
+
   // Helper to render stars
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
@@ -98,27 +105,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
     return (
-      <div className="flex items-center">
+      <span className="flex items-center ml-1 text-xs">
         {[...Array(fullStars)].map((_, i) => (
-          <span key={`full-${i}`} className="text-yellow-400 text-sm">★</span>
+          <span key={`full-${i}`} className="text-yellow-400">★</span>
         ))}
-        {hasHalfStar && <span className="text-yellow-400 text-sm">☆</span>}
+        {hasHalfStar && <span className="text-yellow-400">☆</span>}
         {[...Array(emptyStars)].map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-600 text-sm">★</span>
+          <span key={`empty-${i}`} className="text-gray-600">★</span>
         ))}
-      </div>
+      </span>
     );
   };
 
-  // Make sure we have a valid product detail page URL
-  const productUrl = `/product/${product.id}`;
-
   return (
     <>
-      <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition relative group">
-        {/* Product Image */}
-        <Link href={productUrl}>
-          <div className="relative aspect-[3/4] w-full bg-gray-100 overflow-hidden">
+      <div className="group relative block bg-transparent">
+        {/* Image Container - Full Bleed */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md">
+          <Link href={productUrl} className="block w-full h-full">
             <Image
               src={product.imageUrl}
               alt={product.alt || product.title}
@@ -127,83 +131,83 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover object-top hover:scale-105 transition-transform duration-500"
             />
-            {discountDisplay && (
-              <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                {// Remove double OFF if variable includes it 
-                  discountDisplay.includes('OFF') ? discountDisplay : `${discountDisplay} OFF`
-                }
-              </div>
-            )}
-            {product.stockQuantity === 0 && (
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">OUT OF STOCK</span>
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Product Details */}
-        <div className="p-4">
-          <Link href={productUrl}>
-            <h3 className="text-silver font-medium text-lg hover:text-gray-300 transition truncate">{product.title}</h3>
           </Link>
 
-          <div className="mt-2 flex items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-xl">₹{product.salePrice}</span>
-              <span className="text-gray-500 line-through text-sm">₹{product.price}</span>
+          {/* Discount Badge - Top Left */}
+          {discountDisplay && (
+            <div className="absolute top-0 left-0 bg-[#DC2626] text-white text-xs font-bold px-3 py-1 z-10">
+              {discountDisplay.includes('OFF') ? discountDisplay : `${discountDisplay} OFF`}
             </div>
+          )}
 
-            {/* Rating - Left aligned next to price */}
-            {(product.rating || 0) > 0 && (
-              <div className="flex items-center gap-1 ml-2">
-                {renderStars(product.rating || 0)}
-              </div>
-            )}
-
+          {/* Icons - Top Right (Column) */}
+          <div className="absolute top-2 right-2 flex flex-col gap-2">
+            {/* Wishlist Button */}
+            <button
+              onClick={handleWishlist}
+              className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition"
+              aria-label={isInWishlistState ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isInWishlistState ? 'text-red-500 fill-current' : 'text-black'}`} viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            {/* Quick View Button (Eye) */}
             <button
               onClick={handleQuickView}
-              className="text-gray-400 hover:text-white transition p-1 ml-auto"
+              className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition"
               aria-label="Quick View"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </button>
           </div>
 
-          {/* Add to Cart Button */}
-          <div className="mt-3">
-            <button
-              onClick={handleAddToCart}
-              className="w-full bg-silver hover:bg-gray-300 text-black font-medium py-2 rounded transition"
-              disabled={product.stockQuantity === 0}
-            >
-              {product.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
-            </button>
-          </div>
-
-          {/* Wishlist Button */}
-          <button
-            onClick={handleWishlist}
-            className={`mt-2 w-full border ${isInWishlistState ? 'border-red-500 text-red-500' : 'border-gray-600 text-silver'} hover:border-silver hover:text-white font-medium py-2 rounded transition flex items-center justify-center`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-1 ${isInWishlistState ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            {isInWishlistState ? 'Remove from Wishlist' : 'Add to Wishlist'}
-          </button>
+          {/* Out of stock overlay */}
+          {product.stockQuantity === 0 && (
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center pointer-events-none">
+              <span className="text-white font-bold text-xl">OUT OF STOCK</span>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* QuickView Modal */}
-      {showQuickView && (
-        <QuickViewModal
-          product={convertToTypeProduct(product)}
-          onClose={closeQuickView}
-        />
-      )}
+        {/* Info Section - Below Image */}
+        <div className="mt-3 text-left">
+          <Link href={productUrl}>
+            <h3 className="text-white text-sm font-normal leading-tight truncate hover:text-gray-300 transition w-full">
+              {product.title}
+            </h3>
+          </Link>
+
+          {/* Price & Rating Line */}
+          <div className="mt-1 flex items-center justify-between">
+            <ProductPrice
+              salePrice={product.salePrice}
+              price={product.price}
+              discount={product.discount}
+              size="sm"
+              showDiscount={false}
+            />
+            {/* Rating */}
+            {(product.rating || 0) > 0 && (
+              <div className="flex items-center text-gray-400 text-xs">
+                <span>({product.rating})</span>
+                {renderStars(product.rating || 0)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* QuickView Modal */}
+        {showQuickView && (
+          <QuickViewModal
+            product={convertToTypeProduct(product)}
+            onClose={closeQuickView}
+          />
+        )}
+      </div>
     </>
   );
 };

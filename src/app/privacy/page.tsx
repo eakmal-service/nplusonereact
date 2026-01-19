@@ -79,16 +79,6 @@ export default function PrivacyPolicy() {
                             Please check our Privacy Policy periodically for changes. We may update this Privacy Policy to reflect changes to our information practices. We may alert / notify you about the significant changes to the Privacy Policy, in the manner as may be required under applicable laws.
                         </p>
                     </section>
-
-                    {/* Grievance Officer */}
-                    <section>
-                        <h2 className="text-xl font-bold mb-3 uppercase tracking-wide text-silver">Grievance Officer</h2>
-                        <p className="text-gray-400">
-                            Name and Address of the Company: NPlusOne Fashion Pvt Ltd, Plot no 99 100 bhindi bazar unn patiya, Surat <br />
-                            Contact us: +91 8329208323 <br />
-                            Time: Monday - Friday(9:00 - 18:00)
-                        </p>
-                    </section>
                 </div>
             </div>
         </div>

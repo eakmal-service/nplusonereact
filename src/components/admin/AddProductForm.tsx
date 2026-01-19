@@ -2,77 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
 import { uploadImage } from '@/utils/uploadService';
 import SearchableSelect from './SearchableSelect';
+import { supabase } from '@/lib/supabaseClient';
 
 // --- Category Data Hierarchy ---
+// Renamed to match DB structure roughly, but keeping interface for compatibility
 interface CategoryNode {
   id: string;
   label: string;
-  value?: string; // Only leaf nodes need a value
+  value?: string;
   children?: CategoryNode[];
+  level?: number;
+  is_visible?: boolean;
 }
 
-const categoryHierarchy: CategoryNode[] = [
-  {
-    id: 'women',
-    label: "WOMEN'S WEAR",
-    children: [
-      {
-        id: 'suit-set',
-        label: 'Suit Set',
-        value: 'SUIT SET',
-        children: [{ id: 'all-suit-set', label: 'All Suit Sets', value: 'SUIT SET' }]
-      },
-      {
-        id: 'western-dress',
-        label: 'Western Wear',
-        value: 'WESTERN WEAR',
-        children: [{ id: 'all-western', label: 'All Western Wear', value: 'WESTERN WEAR' }]
-      },
-      {
-        id: 'co-ord-sets',
-        label: 'Co-ord Sets',
-        value: 'CO-ORD SET',
-        children: [{ id: 'all-coord', label: 'All Co-ord Sets', value: 'CO-ORD SET' }]
-      },
-      {
-        id: 'indi-western',
-        label: 'Indo-Western',
-        value: 'INDO-WESTERN',
-        children: [{ id: 'all-indi', label: 'All Indo-Western', value: 'INDO-WESTERN' }]
-      },
-    ]
-  },
-  {
-    id: 'men',
-    label: "MEN'S WEAR",
-    children: [
-      {
-        id: 'mens',
-        label: "MEN'S WEAR",
-        value: 'MENS WEAR',
-        children: [{ id: 'all-mens', label: "All Men's Wear", value: 'MENS WEAR' }]
-      }
-    ]
-  },
-  {
-    id: 'kids',
-    label: "KID'S WEAR",
-    children: [
-      {
-        id: 'boys',
-        label: "BOY'S WEAR",
-        value: 'BOYS WEAR',
-        children: [{ id: 'all-boys', label: "All Boy's Wear", value: 'BOYS WEAR' }]
-      },
-      {
-        id: 'girls',
-        label: "GIRL'S WEAR",
-        value: 'GIRLS WEAR',
-        children: [{ id: 'all-girls', label: "All Girl's Wear", value: 'GIRLS WEAR' }]
-      }
-    ]
-  }
-];
+// Removed hardcoded categoryHierarchy
+
+
+// Hardcoded hierarchy removed in favor of dynamic fetch
+
 
 const subcategories = [
   { value: '', label: 'Select Subcategory' },
@@ -84,10 +31,15 @@ const subcategories = [
 
 const SIZES_STANDARD = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
 const SIZES_GIRLS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const SIZES_BOYS = ['20', '22', '24', '26', '28'];
 
 // --- Attribute Options Data ---
 const NECK_DESIGNS = [
   { value: 'round-neck', label: 'Round Neck' },
+  // ...
+  // (We don't need to replace the middle content if we just target the top and bottom separately?)
+  // Let's try replacing just the top constants first.
+
   { value: 'v-neck', label: 'V Neck' },
   { value: 'deep-v-neck', label: 'Deep V Neck' },
   { value: 'u-neck', label: 'U Neck' },
@@ -260,6 +212,8 @@ const BOTTOM_TYPES = [
   { value: 'paperbag-waist-pants', label: 'Paperbag Waist Pants' },
 ];
 
+import { Clipboard } from 'lucide-react';
+
 interface AddProductFormProps {
   initialData?: any;
   onCancel?: () => void;
@@ -269,17 +223,158 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
   const { saveNewProduct, updateExistingProduct } = useProducts();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Paste Logic
+  const handlePaste = () => {
+    const copiedData = localStorage.getItem('copied_product');
+    if (!copiedData) {
+      alert('No product data found in clipboard. Please copy a product from "Manage Products" first.');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(copiedData);
+      if (confirm(`Paste data for "${parsed.title}"? This will overwrite current form.`)) {
+        // Populate Form
+        setForm({
+          title: `${parsed.title} (Copy)`,
+          description: parsed.description || '',
+          mrp: parsed.mrp || parsed.price || '',
+          salePrice: parsed.salePrice || '',
+          discount: parsed.discount?.replace('%', '').replace(' OFF', '') || '',
+          category: parsed.category || '',
+          subcategory: parsed.subcategory || '',
+          material: parsed.material || parsed.fabric || '',
+          status: 'active', // Default to active or parsed.status
+          colorName: parsed.colorName || '',
+          color: parsed.color || '#000000',
+          sizes: (parsed.sizes || []) as string[],
+          images: (parsed.imageUrls || []) as (File | string)[],
+          sku: parsed.sku || '',
+          barcode: parsed.barcode || '',
+          videoUrl: parsed.videoUrl || '',
+          metaTitle: parsed.metaTitle || '',
+          metaDescription: parsed.metaDescription || '',
+          tags: Array.isArray(parsed.tags) ? parsed.tags.join(', ') : (parsed.tags || ''),
+          sizeStock: parsed.sizeStock || {},
+          sizeSkus: parsed.sizeSkus || {},
+          badge: parsed.badge || '',
+          discountBadgeColor: parsed.discountBadgeColor || '#DC2626',
+          brandName: parsed.brandName || 'Nplusone Fashion',
+          styleCode: parsed.styleCode || '',
+          hsnCode: parsed.hsnCode || '',
+          gstPercentage: parsed.gstPercentage || 5,
+          workType: parsed.workType || 'Embroidery',
+          bottomType: parsed.bottomType || '',
+          setContains: parsed.setContains || '',
+          productWeight: parsed.productWeight || '',
+          searchKeywords: parsed.searchKeywords || '',
+        });
+
+        // Populate Attributes
+        setAttributes({
+          topStyle: parsed.topStyle || '',
+          neckline: parsed.neckline || '',
+          topPattern: parsed.topPattern || '',
+          sleeveDetail: parsed.sleeveDetail || '',
+          fit: parsed.fit || '',
+          occasion: parsed.occasion || '',
+          fabricDupattaStole: parsed.fabricDupattaStole || '',
+          liningFabric: parsed.liningFabric || '',
+          washCare: parsed.washCare || '',
+          bottomFabric: parsed.bottomFabric || ''
+        });
+
+        // Ensure category selection state is somewhat synced if possible, 
+        // essentially satisfying step 1 so user can proceed or just jump to step 2.
+        // For now, we will auto-advance to step 2 if category is present.
+        if (parsed.category) {
+          setCurrentStep(2);
+        }
+      }
+    } catch (e) {
+      console.error("Paste error", e);
+      alert("Failed to paste data. Invalid format.");
+    }
+  };
+
+  // Dynamic Categories State
+  const [dynamicCategories, setDynamicCategories] = useState<CategoryNode[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Fetch Categories
+  const fetchCategories = async () => {
+    setLoadingCategories(true);
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+    } else {
+      const tree = buildCategoryTree(data || []);
+      setDynamicCategories(tree);
+    }
+    setLoadingCategories(false);
+  };
+
+  const buildCategoryTree = (flatList: any[]): CategoryNode[] => {
+    const map: Record<string, CategoryNode> = {};
+    const roots: CategoryNode[] = [];
+
+    // First pass
+    flatList.forEach(item => {
+      // Map DB fields to UI fields
+      // label = name
+      // value = slug (or name? original code used UPPERCASE value or slug-like)
+      // Let's use name or value? Original used: id='men', label='MEN...', value='MENS WEAR'
+      // Let's use: id=id, label=name, value=name (or slug?)
+      // The form uses `category` field. If I change value format, I might break existing product edit.
+      // Existing products have 'SUIT SET', 'BOYS WEAR'.
+      // So I should try to preserve that if possible, OR migrate products.
+      // For new system, maybe use the 'name' as value? Or 'slug'?
+      // Let's use 'name' as value for simplicity, assuming names are unique enough or just string match.
+      // Wait, original `value` was mostly for leaf nodes.
+      map[item.id] = {
+        id: item.id,
+        label: item.name,
+        value: item.name, // Use name as value for now
+        children: [],
+        level: item.level,
+        is_visible: item.is_visible
+      };
+    });
+
+    // Second pass
+    flatList.forEach(item => {
+      if (item.parent_id && map[item.parent_id]) {
+        map[item.parent_id].children?.push(map[item.id]);
+      } else {
+        roots.push(map[item.id]);
+      }
+    });
+
+    return roots;
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   // Wizard State
   const [currentStep, setCurrentStep] = useState<1 | 2>(initialData ? 2 : 1);
   const [selectedSuperCat, setSelectedSuperCat] = useState<CategoryNode | null>(null);
   const [selectedParentCat, setSelectedParentCat] = useState<CategoryNode | null>(null);
   const [selectedChildCat, setSelectedChildCat] = useState<CategoryNode | null>(null);
 
+
   const [form, setForm] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
     mrp: initialData?.price || '',
     salePrice: initialData?.salePrice || '',
+    discount: initialData?.discount?.replace('%', '').replace(' OFF', '') || '',
     category: initialData?.category || '',
     subcategory: initialData?.subcategory || '',
     material: initialData?.material || initialData?.fabric || '',
@@ -314,13 +409,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
   );
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Discount calculation
-  const discount = form.mrp && form.salePrice
-    ? Math.max(0, Math.round((1 - Number(form.salePrice) / Number(form.mrp)) * 100))
-    : '';
+
 
   const isGirlsWear = form.category?.toUpperCase()?.includes('GIRL');
-  const availableSizes = isGirlsWear ? SIZES_GIRLS : SIZES_STANDARD;
+  const isBoysWear = form.category?.toUpperCase()?.includes('BOY');
+
+  const availableSizes = isGirlsWear ? SIZES_GIRLS : (isBoysWear ? SIZES_BOYS : SIZES_STANDARD);
 
   // Handle Step 1 Selection
   const handleSuperCatSelect = (cat: CategoryNode) => {
@@ -376,6 +470,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         description: initialData.description || '',
         mrp: initialData.price || '',
         salePrice: initialData.salePrice || '',
+        discount: initialData.discount?.replace('%', '').replace(' OFF', '') || '',
         category: initialData.category || '',
         subcategory: initialData.subcategory || '',
         material: initialData.material || initialData.fabric || '',
@@ -514,8 +609,6 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox' && name === 'sizes') {
-      // This block is now handled by handleSizeDataChange for the table
-      // Keeping it here for other potential checkboxes if any, but it won't be hit for sizes anymore.
       const size = value;
       setForm((prev) => ({
         ...prev,
@@ -523,13 +616,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           ? prev.sizes.filter((s) => s !== size)
           : [...prev.sizes, size],
       }));
-
     } else if (type === 'file') {
-      // This block is now handled by specific image slots
-      // Keeping it here for other potential file inputs if any, but it won't be hit for product images anymore.
       const files = (e.target as HTMLInputElement).files;
       if (files) {
-        // This will now append to the existing images, up to 5
         const newImages = [...form.images];
         for (let i = 0; i < files.length && newImages.length < 5; i++) {
           newImages.push(files[i]);
@@ -539,6 +628,59 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  // Price Calculation Logic
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Allow empty string to clear field
+    if (value === '') {
+      setForm(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+
+    const numVal = parseFloat(value);
+    if (isNaN(numVal) || numVal < 0) return; // Prevent invalid input
+
+    setForm(prev => {
+      const updates: any = { ...prev, [name]: value };
+      const mrp = parseFloat(name === 'mrp' ? value : prev.mrp || '0');
+      const sp = parseFloat(name === 'salePrice' ? value : prev.salePrice || '0');
+      const disc = parseFloat(name === 'discount' ? value : prev.discount || '0');
+
+      if (name === 'mrp') {
+        // Change MRP:
+        // If Discount exists -> Recalculate SP
+        // If SP exists but no Discount -> Recalculate Discount?
+        // Logic: Prioritize Discount consistency if available.
+        if (disc > 0) {
+          // SP = MRP - (MRP * Disc / 100)
+          const newSp = Math.round(mrp - (mrp * disc / 100));
+          updates.salePrice = newSp.toString();
+        } else if (sp > 0 && sp < mrp) {
+          // Recalculate Discount 
+          const newDisc = Math.round(((mrp - sp) / mrp) * 100);
+          updates.discount = newDisc.toString();
+        }
+      }
+      else if (name === 'discount') {
+        // Change Discount:
+        // Calculate SP based on MRP
+        if (mrp > 0) {
+          const newSp = Math.round(mrp - (mrp * numVal / 100));
+          updates.salePrice = newSp.toString();
+        }
+      }
+      else if (name === 'salePrice') {
+        // Change SP:
+        // Calculate Discount based on MRP
+        if (mrp > 0 && numVal <= mrp) {
+          const newDisc = Math.round(((mrp - numVal) / mrp) * 100);
+          updates.discount = newDisc.toString();
+        }
+      }
+      return updates;
+    });
   };
 
   // Add color (This function is no longer used with the new UI)
@@ -608,7 +750,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           description: form.description,
           price: form.mrp,
           salePrice: form.salePrice,
-          discount: discount ? `${discount}%` : '',
+          discount: form.discount ? `${form.discount}%` : '',
           category: form.category,
           subcategory: form.subcategory,
           material: form.material,
@@ -665,7 +807,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           if (!initialData) {
             // Reset everything
             setForm({
-              title: '', description: '', mrp: '', salePrice: '', category: '',
+              title: '', description: '', mrp: '', salePrice: '', discount: '', category: '',
               subcategory: '', material: '', status: 'active', colorName: '',
               color: '#000000', sizes: [], images: [],
               sku: '', barcode: '', videoUrl: '', metaTitle: '', metaDescription: '', tags: '', sizeStock: {},
@@ -719,81 +861,88 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
   return (
     <div className="space-y-6">
       {/* Stepper Header */}
-      <div className="flex items-center space-x-4 border-b border-gray-800 pb-4">
-        <div className={`flex items-center ${currentStep === 1 ? 'text-blue-500' : 'text-green-500'}`}>
-          <span className={`w-8 h-8 flex items-center justify-center rounded-full border-2 mr-2 ${currentStep === 1 ? 'border-blue-500 bg-blue-500/10' : 'border-green-500 bg-green-500/10'}`}>1</span>
-          <span className="font-semibold">Select Category</span>
+      <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div className="flex items-center space-x-4">
+          <div className={`flex items-center ${currentStep === 1 ? 'text-blue-500' : 'text-green-500'}`}>
+            <span className={`w-8 h-8 flex items-center justify-center rounded-full border-2 mr-2 ${currentStep === 1 ? 'border-blue-500 bg-blue-500/10' : 'border-green-500 bg-green-500/10'}`}>1</span>
+            <span className="font-semibold">Select Category</span>
+          </div>
+          <div className="h-0.5 w-16 bg-gray-700"></div>
+          <div className={`flex items-center ${currentStep === 2 ? 'text-blue-500' : 'text-gray-500'}`}>
+            <span className={`w-8 h-8 flex items-center justify-center rounded-full border-2 mr-2 ${currentStep === 2 ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600'}`}>2</span>
+            <span className="font-semibold">Add Details</span>
+          </div>
         </div>
-        <div className="h-0.5 w-16 bg-gray-700"></div>
-        <div className={`flex items-center ${currentStep === 2 ? 'text-blue-500' : 'text-gray-500'}`}>
-          <span className={`w-8 h-8 flex items-center justify-center rounded-full border-2 mr-2 ${currentStep === 2 ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600'}`}>2</span>
-          <span className="font-semibold">Add Details</span>
-        </div>
+
+        {!initialData && (
+          <button
+            onClick={handlePaste}
+            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-blue-400 px-4 py-2 rounded border border-gray-700 transition"
+          >
+            <Clipboard size={16} />
+            Paste Copied Data
+          </button>
+        )}
       </div>
 
       {currentStep === 1 ? (
         // Step 1: Category Selection (Unchanged)
         <div className="bg-black p-6 rounded-lg border border-gray-800">
           <h2 className="text-xl font-bold text-white mb-6">Search Category</h2>
-          <input
-            type="text"
-            placeholder="Search category..."
-            className="w-full p-2 mb-6 rounded bg-gray-900 text-white border border-gray-700"
-            // Search logic can be added later
-            disabled
-          />
+          <div className="flex gap-6">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search category..."
+                className="w-full p-2 mb-6 rounded bg-gray-900 text-white border border-gray-700"
+                disabled
+              />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-gray-700 rounded-md overflow-hidden h-96">
-            {/* Column 1: Super Category */}
-            <div className="border-r border-gray-700 bg-gray-900 overflow-y-auto">
-              {categoryHierarchy.map((cat) => (
-                <div
-                  key={cat.id}
-                  onClick={() => handleSuperCatSelect(cat)}
-                  className={`p-3 cursor-pointer hover:bg-gray-800 flex justify-between items-center ${selectedSuperCat?.id === cat.id ? 'bg-blue-900/40 text-blue-400 font-medium' : 'text-gray-300'}`}
-                >
-                  {cat.label}
-                  <span className="text-gray-500">&gt;</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-gray-700 rounded-md overflow-hidden h-96">
+                {/* Column 1: Super Category */}
+                <div className="border-r border-gray-700 overflow-y-auto bg-gray-900/50">
+                  {dynamicCategories.map(cat => (
+                    <div
+                      key={cat.id}
+                      onClick={() => handleSuperCatSelect(cat)}
+                      className={`p-3 cursor-pointer hover:bg-gray-800 border-b border-gray-800 ${selectedSuperCat?.id === cat.id ? 'bg-blue-900/30 text-blue-400 border-l-4 border-l-blue-500' : 'text-gray-300'}`}
+                    >
+                      {cat.label}
+                    </div>
+                  ))}
                 </div>
-              ))}
+
+                {/* Column 2: Parent Category */}
+                <div className="border-r border-gray-700 overflow-y-auto bg-gray-900/30">
+                  {selectedSuperCat?.children?.map(cat => (
+                    <div
+                      key={cat.id}
+                      onClick={() => handleParentCatSelect(cat)}
+                      className={`p-3 cursor-pointer hover:bg-gray-800 border-b border-gray-800 ${selectedParentCat?.id === cat.id ? 'bg-blue-900/30 text-blue-400 border-l-4 border-l-blue-500' : 'text-gray-300'}`}
+                    >
+                      {cat.label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Column 3: Child Category */}
+                <div className="overflow-y-auto bg-black">
+                  {selectedParentCat?.children?.map(cat => (
+                    <div
+                      key={cat.id}
+                      onClick={() => handleChildCatSelect(cat)}
+                      className={`p-3 cursor-pointer hover:bg-gray-800 border-b border-gray-800 ${selectedChildCat?.id === cat.id ? 'bg-green-900/30 text-green-400 border-l-4 border-l-green-500 font-bold' : 'text-gray-300'}`}
+                    >
+                      {cat.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Column 2: Parent Category */}
-            <div className="border-r border-gray-700 bg-gray-900 overflow-y-auto">
-              {selectedSuperCat ? (
-                selectedSuperCat.children?.map((cat) => (
-                  <div
-                    key={cat.id}
-                    onClick={() => handleParentCatSelect(cat)}
-                    className={`p-3 cursor-pointer hover:bg-gray-800 flex justify-between items-center ${selectedParentCat?.id === cat.id ? 'bg-blue-900/40 text-blue-400 font-medium' : 'text-gray-300'}`}
-                  >
-                    {cat.label}
-                    <span className="text-gray-500">&gt;</span>
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-gray-500 text-sm italic">Select a category from the left...</div>
-              )}
-            </div>
-
-            {/* Column 3: Child Category */}
-            <div className="bg-gray-900 overflow-y-auto">
-              {selectedParentCat ? (
-                selectedParentCat.children?.map((cat) => (
-                  <div
-                    key={cat.id}
-                    onClick={() => handleChildCatSelect(cat)}
-                    className={`p-3 cursor-pointer hover:bg-gray-800 flex justify-between items-center ${selectedChildCat?.id === cat.id ? 'bg-blue-600 text-white' : 'text-gray-300'}`}
-                  >
-                    {cat.label}
-                    {selectedChildCat?.id === cat.id && <span>&#10003;</span>}
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-gray-500 text-sm italic">Select from middle column...</div>
-              )}
-            </div>
+            {/* Category Manager Side Panel Removed */}
           </div>
+
 
           <div className="flex justify-end mt-6">
             <button
@@ -950,16 +1099,16 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
                 <label className="block text-gray-400 text-sm mb-1">MRP (₹) *</label>
-                <input type="number" name="mrp" value={form.mrp} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 5999" disabled={isSubmitting} />
+                <input type="number" name="mrp" value={form.mrp} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 5999" disabled={isSubmitting} />
                 {errors.mrp && <div className="text-red-500 text-xs mt-1">{errors.mrp}</div>}
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Discount (%)</label>
-                <input type="text" value={discount !== '' ? discount + '%' : '0%'} readOnly className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-500" />
+                <input type="number" name="discount" value={form.discount} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="0" disabled={isSubmitting} />
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-1">Selling Price (₹) *</label>
-                <input type="number" name="salePrice" value={form.salePrice} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3999" disabled={isSubmitting} />
+                <input type="number" name="salePrice" value={form.salePrice} onChange={handlePriceChange} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white" placeholder="e.g. 3999" disabled={isSubmitting} />
                 {errors.salePrice && <div className="text-red-500 text-xs mt-1">{errors.salePrice}</div>}
               </div>
             </div>
@@ -1263,7 +1412,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           </div>
 
         </form >
-      )}
+      )
+      }
     </div >
   );
 };

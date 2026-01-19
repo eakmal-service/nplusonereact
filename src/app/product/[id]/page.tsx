@@ -49,9 +49,8 @@ async function getProduct(id: string): Promise<Product | null> {
       styleCode: product.style_code,
       category: product.category,
       subcategory: product.subcategory,
-      originalPrice: product.mrp,
-      price: product.selling_price || product.mrp, // Prefer selling_price
-      salePrice: product.sale_price,
+      price: product.mrp, // Map MRP to price (matches Strikethrough logic)
+      salePrice: product.selling_price || product.mrp, // Map Selling Price to salePrice (matches Main Price)
       discount: product.mrp && product.selling_price ? `${Math.round(((product.mrp - product.selling_price) / product.mrp) * 100)}% OFF` : undefined,
       image: getImageUrl(product.image_url),
       imageUrl: getImageUrl(product.image_url),
@@ -142,7 +141,7 @@ async function getSimilarProducts(id: string, category: string): Promise<Product
         title: p.title,
         category: p.category,
         originalPrice: p.mrp,
-        price: p.selling_price || p.mrp,
+        price: p.mrp,
         salePrice: p.selling_price, // Ensure salePrice is mapped for compatibility
         discount: badge && badge.includes('%') ? badge : undefined,
         badge: badge,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
 interface ReviewFormProps {
@@ -9,31 +9,45 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ productId, onReviewSubmitted }) => {
-    const [name, setName] = useState('');
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setLoading(false);
+        };
+        checkUser();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) {
+            setError('You must be logged in to submit a review');
+            return;
+        }
+
         setIsSubmitting(true);
         setError(null);
 
-        if (!name.trim() || !comment.trim()) {
-            setError('Please fill in your name and review');
+        if (!comment.trim()) {
+            setError('Please write a review');
             setIsSubmitting(false);
             return;
         }
 
         try {
-            // Simple insert without image logic
             const { error: insertError } = await supabase
                 .from('reviews')
                 .insert([
                     {
                         product_id: productId,
-                        user_name: name,
+                        user_id: user.id,
                         rating: rating,
                         comment: comment,
                     }
@@ -42,7 +56,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, onReviewSubmitted })
             if (insertError) throw insertError;
 
             // Reset form
-            setName('');
             setRating(5);
             setComment('');
             onReviewSubmitted();
@@ -54,6 +67,19 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, onReviewSubmitted })
         }
     };
 
+    if (loading) return <div>Loading...</div>;
+
+    if (!user) {
+        return (
+            <div className="bg-black p-6 rounded-lg text-center border border-gray-800">
+                <p className="text-gray-400 mb-4">Please log in to write a review.</p>
+                <a href="/login" className="inline-block bg-white text-black px-6 py-2 rounded font-bold hover:bg-gray-200 transition">
+                    Log In
+                </a>
+            </div>
+        );
+    }
+
     return (
         <form onSubmit={handleSubmit} className="bg-black p-0 rounded-lg">
 
@@ -64,14 +90,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ productId, onReviewSubmitted })
             )}
 
             <div className="mb-6">
-                <label className="block text-gray-300 text-sm font-medium mb-2">What's your name?</label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-black border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-600 focus:border-silver outline-none transition-colors"
-                    placeholder="First and Last Name"
-                />
+                <p className="text-gray-400 text-sm mb-2">Reviewing as <span className="text-white font-semibold">{user.email}</span></p>
             </div>
 
             <div className="mb-6">

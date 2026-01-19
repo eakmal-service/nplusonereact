@@ -55,7 +55,7 @@ export default function HelpPage() {
                             </div>
                             <div>
                                 <h3 className="font-medium text-white mb-1">What is the return policy?</h3>
-                                <p className="text-sm text-gray-400">We offer a 7-day return policy for unused items with original tags.</p>
+                                <p className="text-sm text-gray-400">We offer a 5-day return policy for unused items with original tags.</p>
                             </div>
                             <div>
                                 <h3 className="font-medium text-white mb-1">Do you ship internationally?</h3>

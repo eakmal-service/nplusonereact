@@ -47,9 +47,9 @@ const CartPopup: React.FC<CartPopupProps> = ({ isVisible }) => {
                     <span>Qty: {item.quantity}</span>
                   </div>
                   <div className="flex justify-between items-center mt-1">
-                    <span className="text-white text-sm">₹{parsePrice(item.product.price)}</span>
+                    <span className="text-white text-sm">₹{parsePrice(item.product.salePrice || item.product.price)}</span>
                     <span className="text-white text-xs">
-                      Subtotal: ₹{(parsePrice(item.product.price) * item.quantity).toFixed(2)}
+                      Subtotal: ₹{(parsePrice(item.product.salePrice || item.product.price) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 </div>

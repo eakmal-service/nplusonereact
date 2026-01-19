@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 import { useProducts } from '@/contexts/ProductContext';
-import Link from 'next/link';
 import Image from 'next/image';
+import { Edit2, Trash2, Eye, ShoppingCart, ShoppingBag, Copy, Maximize2, Search, Filter, X } from 'lucide-react';
 
 const categories = [
   'All Categories',
   'Suit Set',
   'Western Wear',
-  'Co-ord Set', // Fixed: Singular to match DB "CO-ORD SET"
-  "Kid's Wear", // Normalized case
+  'Co-ord Set',
+  "Kid's Wear",
   'Indo-Western',
   "Men's Wear",
 ];
@@ -31,8 +31,8 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
   const [stock, setStock] = useState('All Products');
   const [sort, setSort] = useState('Newest First');
   const [isLoading, setIsLoading] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
 
-  // Fetch products on mount for Admin Panel
   React.useEffect(() => {
     const fetchAdminProducts = async () => {
       setIsLoading(true);
@@ -42,21 +42,18 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
     fetchAdminProducts();
   }, []);
 
-  // Helper to parse price string to number
   const parsePrice = (priceStr: string | undefined): number => {
     if (!priceStr) return 0;
     return parseInt(priceStr.replace(/[^0-9]/g, '')) || 0;
   };
 
-  // Filtered products
   let filtered = products.filter((p) =>
     (category === 'All Categories' || (p.category && p.category.toLowerCase() === category.toLowerCase()) || (!p.category && category === 'All Categories')) &&
     (status === 'All Statuses' || (p.status && p.status.toLowerCase() === status.toLowerCase())) &&
     (stock === 'All Products' || (stock === 'In Stock' ? (p.stockQuantity || 0) > 0 : (p.stockQuantity || 0) === 0)) &&
-    (p.title.toLowerCase().includes(search.toLowerCase()) || (p.category && p.category.toLowerCase().includes(search.toLowerCase())))
+    (p.title.toLowerCase().includes(search.toLowerCase()) || (p.category && p.category.toLowerCase().includes(search.toLowerCase())) || String(p.id).includes(search))
   );
 
-  // Sorting
   if (sort === 'Price Low to High') filtered = filtered.sort((a, b) => parsePrice(a.salePrice || a.price) - parsePrice(b.salePrice || b.price));
   if (sort === 'Price High to Low') filtered = filtered.sort((a, b) => parsePrice(b.salePrice || b.price) - parsePrice(a.salePrice || a.price));
   if (sort === 'Newest First') filtered = filtered.sort((a, b) => b.id - a.id);
@@ -72,103 +69,177 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
     updateStatus(id, newStatus as 'active' | 'inactive' | 'draft');
   };
 
+  const handleDuplicate = (product: any) => {
+    if (onEdit) {
+      // Create a copy without ID and created_at
+      const { id, created_at, ...rest } = product;
+      const duplicate = {
+        ...rest,
+        title: `${rest.title} (Copy)`,
+        // Ensure we trigger "Add New" mode logic but with pre-filled data.
+        // Since AddProductForm checks for `id` to determine Edit mode, passing an object WITHOUT id is key.
+      };
+      onEdit(duplicate);
+    }
+  };
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6 text-silver">Manage Products ({filtered.length})</h1>
-      <div className="flex flex-wrap gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search by name, category..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-[220px] p-2 rounded bg-gray-900 text-white border border-gray-700"
-        />
-        <select value={category} onChange={e => setCategory(e.target.value)} className="p-2 rounded bg-gray-900 text-white border border-gray-700">
-          {categories.map(c => <option key={c}>{c}</option>)}
-        </select>
-        <select value={status} onChange={e => setStatus(e.target.value)} className="p-2 rounded bg-gray-900 text-white border border-gray-700">
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-silver">Manage Products ({filtered.length})</h1>
+        <button onClick={() => { setSearch(''); setCategory('All Categories'); setStatus('All Statuses'); setStock('All Products'); }} className="text-sm text-blue-400 hover:text-blue-300">
+          Reset Filters
+        </button>
+      </div>
+
+      {/* Filters Bar */}
+      <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800 mb-6 flex flex-wrap gap-4 items-center">
+        <div className="relative flex-1 min-w-[250px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+          <input
+            type="text"
+            placeholder="Search by ID, Name, or Category..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 p-2.5 rounded bg-black text-white border border-gray-700 focus:border-blue-500 outline-none transition-colors"
+          />
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Filter size={16} className="text-gray-500" />
+          <select value={category} onChange={e => setCategory(e.target.value)} className="p-2.5 rounded bg-black text-white border border-gray-700 outline-none focus:border-blue-500 text-sm">
+            {categories.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <select value={status} onChange={e => setStatus(e.target.value)} className="p-2.5 rounded bg-black text-white border border-gray-700 outline-none focus:border-blue-500 text-sm">
           {statuses.map(s => <option key={s}>{s}</option>)}
         </select>
-        <select value={stock} onChange={e => setStock(e.target.value)} className="p-2 rounded bg-gray-900 text-white border border-gray-700">
+
+        <select value={stock} onChange={e => setStock(e.target.value)} className="p-2.5 rounded bg-black text-white border border-gray-700 outline-none focus:border-blue-500 text-sm">
           {stockFilters.map(s => <option key={s}>{s}</option>)}
         </select>
-        <select value={sort} onChange={e => setSort(e.target.value)} className="p-2 rounded bg-gray-900 text-white border border-gray-700">
-          {sortOptions.map(s => <option key={s}>{s}</option>)}
-        </select>
+
+        <div className="ml-auto">
+          <select value={sort} onChange={e => setSort(e.target.value)} className="p-2.5 rounded bg-black text-white border border-gray-700 outline-none focus:border-blue-500 text-sm">
+            {sortOptions.map(s => <option key={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
         {filtered.map((p) => (
-          <div key={p.id} className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden flex flex-col">
-            <div className="relative h-40 flex items-center justify-center bg-gray-800">
+          <div key={p.id} className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden flex flex-col group relative hover:border-blue-500/50 transition-colors">
+
+            {/* Quick Actions Overlay (Top Right) */}
+            <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => handleDuplicate(p)}
+                className="p-1.5 bg-gray-800 text-white rounded hover:bg-blue-600 transition-colors shadow-lg border border-gray-700"
+                title="Duplicate Product"
+              >
+                <Copy size={14} />
+              </button>
+              <button
+                onClick={() => setQuickViewProduct(p)}
+                className="p-1.5 bg-gray-800 text-white rounded hover:bg-blue-600 transition-colors shadow-lg border border-gray-700"
+                title="Quick View"
+              >
+                <Maximize2 size={14} />
+              </button>
+            </div>
+
+            <div className="relative h-48 flex items-center justify-center bg-gray-800 cursor-pointer" onClick={() => setQuickViewProduct(p)}>
               {p.discount && (
-                <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">{p.discount} OFF</span>
+                <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded z-10 font-bold">{p.discount} OFF</span>
               )}
               {p.imageUrl ? (
                 <Image
                   src={p.imageUrl || '/placeholder.png'}
                   alt={p.title}
                   fill
-                  className="object-contain"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
                 <span className="text-gray-400 text-2xl">🖼️</span>
               )}
             </div>
+
             <div className="p-4 flex-1 flex flex-col">
-              <div className="font-semibold text-white mb-1 line-clamp-1" title={p.title}>{p.title}</div>
-              <div className="text-xs text-gray-400 mb-2">Category: {p.category} &bull; {p.subcategory}</div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="font-semibold text-white mb-1 line-clamp-1 hover:text-blue-400 cursor-pointer" title={p.title} onClick={() => onEdit && onEdit(p)}>{p.title}</div>
+              <div className="text-xs text-gray-400 mb-3 flex items-center gap-2">
+                <span className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">{p.category}</span>
+                {p.subcategory && <span>&bull; {p.subcategory}</span>}
+              </div>
+
+              <div className="flex items-baseline gap-2 mb-4">
                 <span className="text-lg text-white font-bold">{p.salePrice || p.price}</span>
                 {p.salePrice && p.salePrice !== p.price && (
-                  <span className="text-sm text-gray-400 line-through">{p.price}</span>
+                  <span className="text-xs text-gray-500 line-through">{p.price}</span>
                 )}
               </div>
-              <div className="flex items-center gap-6 mb-2">
-                <span className="text-xs text-gray-400">👁️ {p.viewCount || 0} Views</span>
-                <span className="text-xs text-gray-400">🛒 {p.cartCount || 0} Cart</span>
-                <span className="text-xs text-gray-400">🛍️ {p.purchaseCount || 0} Sold</span>
+
+              {/* Stats Row with Icons */}
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-800">
+                <div className="flex items-center gap-1.5 text-xs text-gray-400" title="Total Views">
+                  <Eye size={14} className="text-blue-400" />
+                  <span>{p.viewCount || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-400" title="Added to Cart">
+                  <ShoppingCart size={14} className="text-green-400" />
+                  <span>{p.cartCount || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-400" title="Units Sold">
+                  <ShoppingBag size={14} className="text-purple-400" />
+                  <span>{p.purchaseCount || 0}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs ${(p.stockQuantity || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(p.stockQuantity || 0) > 0 ? `In Stock: ${p.stockQuantity}` : 'Out of Stock'}
-                </span>
-                {p.sizes && p.sizes.length > 0 && (
-                  <span className="text-xs text-silver ml-2 border border-gray-700 px-1 rounded">
-                    Sizes: {p.sizes.join(', ')}
-                  </span>
-                )}
-              </div>
+
               <div className="flex items-center gap-2 mt-auto">
-                <select
-                  value={p.status || 'active'}
-                  onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                  className="p-1 rounded bg-gray-800 text-white border border-gray-700 text-xs"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                <div className={`text-xs font-medium px-2 py-1 rounded border ${(p.stockQuantity || 0) > 0
+                    ? 'bg-green-900/20 text-green-400 border-green-900'
+                    : 'bg-red-900/20 text-red-400 border-red-900'
+                  }`}>
+                  {(p.stockQuantity || 0) > 0 ? `Stock: ${p.stockQuantity}` : 'Out of Stock'}
+                </div>
+
                 <div className="ml-auto flex gap-2">
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center transition"
-                    title="Delete Product"
+                  <select
+                    value={p.status || 'active'}
+                    onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                    className={`w-24 p-1 rounded text-xs border outline-none cursor-pointer ${(p.status === 'active' || !p.status)
+                        ? 'bg-gray-800 text-gray-300 border-gray-700'
+                        : 'bg-gray-800 text-gray-500 border-gray-700'
+                      }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    🗑️
-                  </button>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+
                   <button
                     onClick={() => onEdit && onEdit(p)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-7 h-7 flex items-center justify-center transition"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded p-1.5 transition"
                     title="Edit Product"
                   >
-                    ✏️
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded p-1.5 transition"
+                    title="Delete Product"
+                  >
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
             </div>
           </div>
         ))}
+
         {filtered.length === 0 && (
-          <div className="col-span-full py-12 text-center bg-gray-900 rounded border border-gray-800">
+          <div className="col-span-full py-20 text-center bg-gray-900 rounded border border-gray-800">
             <p className="text-gray-400 mb-4">No products found matching your filters.</p>
             <button
               onClick={() => {
@@ -177,15 +248,100 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                 setStock('All Products');
                 setSearch('');
               }}
-              className="text-silver underline"
+              className="text-silver underline hover:text-white"
             >
               Clear Filters
             </button>
           </div>
         )}
       </div>
+
+      {/* Quick View Modal */}
+      {quickViewProduct && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setQuickViewProduct(null)}>
+          <div className="bg-gray-900 border border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
+              <h2 className="text-xl font-bold text-white">Quick View</h2>
+              <button onClick={() => setQuickViewProduct(null)} className="text-gray-400 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Image */}
+              <div className="aspect-[3/4] relative rounded-lg overflow-hidden border border-gray-800">
+                {quickViewProduct.imageUrl ? (
+                  <Image src={quickViewProduct.imageUrl} alt={quickViewProduct.title} fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">No Image</div>
+                )}
+              </div>
+              {/* Details */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">{quickViewProduct.title}</h3>
+                  <p className="text-sm text-gray-400">ID: {quickViewProduct.id}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="bg-blue-900/30 text-blue-400 text-xs px-2 py-1 rounded border border-blue-900">{quickViewProduct.category}</span>
+                  {quickViewProduct.subcategory && <span className="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded border border-gray-700">{quickViewProduct.subcategory}</span>}
+                </div>
+
+                <div className="flex items-baseline gap-3 border-b border-gray-800 pb-4">
+                  <span className="text-3xl font-bold text-white">{quickViewProduct.salePrice || quickViewProduct.price}</span>
+                  {quickViewProduct.salePrice && quickViewProduct.salePrice !== quickViewProduct.price && (
+                    <span className="text-gray-500 line-through">{quickViewProduct.price}</span>
+                  )}
+                  {quickViewProduct.discount && <span className="text-red-400 font-bold ml-auto">{quickViewProduct.discount} OFF</span>}
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Inventory</h4>
+                  <div className="flex justify-between text-sm p-3 bg-gray-800 rounded">
+                    <span className={quickViewProduct.stockQuantity > 0 ? "text-green-400" : "text-red-400"}>
+                      {quickViewProduct.stockQuantity > 0 ? `In Stock (${quickViewProduct.stockQuantity})` : "Out of Stock"}
+                    </span>
+                    <span className="text-gray-400">Status: {quickViewProduct.status || 'Active'}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Available Sizes</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? (
+                      quickViewProduct.sizes.map((s: string) => (
+                        <span key={s} className="px-3 py-1 bg-gray-800 border border-gray-700 text-gray-300 rounded text-sm">{s}</span>
+                      ))
+                    ) : <span className="text-gray-500 italic">No sizes specified</span>}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-300 mb-1">Description</h4>
+                  <p className="text-gray-400 text-sm leading-relaxed max-h-32 overflow-y-auto pr-2">
+                    {quickViewProduct.description || "No description provided."}
+                  </p>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    onClick={() => { setQuickViewProduct(null); onEdit && onEdit(quickViewProduct); }}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium flex items-center justify-center gap-2"
+                  >
+                    <Edit2 size={16} /> Edit Product
+                  </button>
+                  <button
+                    onClick={() => { setQuickViewProduct(null); handleDuplicate(quickViewProduct); }}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded font-medium flex items-center justify-center gap-2 border border-gray-700"
+                  >
+                    <Copy size={16} /> Duplicate
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default ManageProductsSection; 
+export default ManageProductsSection;

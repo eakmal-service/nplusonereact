@@ -12,10 +12,12 @@ import CouponsSection from '@/components/admin/CouponsSection';
 import ErrorLogsSection from '@/components/admin/ErrorLogsSection';
 import ContentManagementSection from '@/components/admin/ContentManagementSection';
 import LogisticsSection from '../../../components/admin/LogisticsSection';
+import CategoryManager from '../../../components/admin/CategoryManager';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('addProduct');
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null); // State for CategoryManager interaction
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -81,6 +83,17 @@ const AdminDashboard = () => {
                 </li>
                 <li>
                   <button
+                    onClick={() => setActiveTab('categories')}
+                    className={`w-full text-left px-4 py-2 rounded ${activeTab === 'categories'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`}
+                  >
+                    📂 Manage Categories
+                  </button>
+                </li>
+                <li>
+                  <button
                     onClick={() => setActiveTab('orders')}
                     className={`w-full text-left px-4 py-2 rounded ${activeTab === 'orders'
                       ? 'bg-gray-800 text-white'
@@ -90,7 +103,6 @@ const AdminDashboard = () => {
                     📦 Orders
                   </button>
                 </li>
-                {/* Logistics Tab */}
                 <li>
                   <button
                     onClick={() => setActiveTab('logistics')}
@@ -157,7 +169,6 @@ const AdminDashboard = () => {
                     📝 Website Content
                   </button>
                 </li>
-                {/* System Errors Tab */}
                 <li>
                   <button
                     onClick={() => setActiveTab('errors')}
@@ -196,6 +207,18 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {activeTab === 'categories' && (
+              <div>
+                <h1 className="text-2xl font-bold mb-6 text-silver">📂 Manage Categories</h1>
+                <div className="bg-black p-6 rounded-lg border border-gray-800">
+                  <CategoryManager
+                    onCategorySelect={setSelectedCategory}
+                    selectedCategory={selectedCategory}
+                  />
+                </div>
+              </div>
+            )}
+
             {activeTab === 'orders' && (
               <div>
                 <h1 className="text-2xl font-bold mb-6 text-silver">📦 Orders</h1>
@@ -205,7 +228,6 @@ const AdminDashboard = () => {
 
             {activeTab === 'logistics' && (
               <div>
-                {/* Removed Header inside section as it has its own inside the component */}
                 <LogisticsSection />
               </div>
             )}
@@ -217,7 +239,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* ... other tabs ... */}
             {activeTab === 'coupons' && (
               <div>
                 <CouponsSection />

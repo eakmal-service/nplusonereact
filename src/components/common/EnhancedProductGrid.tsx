@@ -4,14 +4,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ProductFilters, { FilterState } from './ProductFilters';
 import ProductSort from './ProductSort';
 import ProductCard from './ProductCard';
+import KidsProductCard from './KidsProductCard';
 import { Product } from '@/types';
 
 interface EnhancedProductGridProps {
     products: Product[];
     title: string;
+    cardVariant?: 'default' | 'kids';
 }
 
-const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: initialProducts, title }) => {
+const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: initialProducts, title, cardVariant = 'default' }) => {
     const [activeFilters, setActiveFilters] = useState<FilterState>({
         priceRange: [0, 100000],
         sizes: [],
@@ -215,25 +217,49 @@ const EnhancedProductGrid: React.FC<EnhancedProductGridProps> = ({ products: ini
                 {filteredAndSortedProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredAndSortedProducts.map((product, index) => (
-                            <ProductCard
-                                key={product.id}
-                                priority={true}
-                                product={{
-                                    id: product.id,
-                                    title: product.title,
-                                    imageUrl: product.imageUrl || product.image,
-                                    price: product.price,
-                                    salePrice: product.salePrice || product.price,
-                                    discount: product.discount,
-                                    stockQuantity: product.stockQuantity || 10,
-                                    status: product.status || 'active',
-                                    description: product.description,
-                                    alt: product.alt || product.title,
-                                    availableSizes: product.sizes,
-                                    colorOptions: product.colorOptions,
-                                    rating: (product as any).rating
-                                }}
-                            />
+                            cardVariant === 'kids' ? (
+                                <KidsProductCard
+                                    key={product.id}
+                                    priority={true}
+                                    product={{
+                                        id: product.id,
+                                        title: product.title,
+                                        imageUrl: product.imageUrl || product.image,
+                                        price: product.price,
+                                        salePrice: product.salePrice || product.price,
+                                        discount: product.discount,
+                                        stockQuantity: product.stockQuantity || 10,
+                                        status: product.status || 'active',
+                                        description: product.description,
+                                        alt: product.alt || product.title,
+                                        availableSizes: product.sizes,
+                                        colorOptions: product.colorOptions,
+                                        imageUrls: product.imageUrls,
+                                        rating: (product as any).rating
+                                    }}
+                                />
+                            ) : (
+                                <ProductCard
+                                    key={product.id}
+                                    priority={true}
+                                    product={{
+                                        id: product.id,
+                                        title: product.title,
+                                        imageUrl: product.imageUrl || product.image,
+                                        price: product.price,
+                                        salePrice: product.salePrice || product.price,
+                                        discount: product.discount,
+                                        stockQuantity: product.stockQuantity || 10,
+                                        status: product.status || 'active',
+                                        description: product.description,
+                                        alt: product.alt || product.title,
+                                        availableSizes: product.sizes,
+                                        colorOptions: product.colorOptions,
+                                        imageUrls: product.imageUrls,
+                                        rating: (product as any).rating
+                                    }}
+                                />
+                            )
                         ))}
                     </div>
                 ) : (

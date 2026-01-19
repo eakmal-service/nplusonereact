@@ -11,6 +11,8 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import SearchBar from './common/SearchBar';
 import UserMenu from './navbar/UserMenu';
 
+import { supabase } from '@/lib/supabaseClient';
+
 const Header = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -20,9 +22,38 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showCartPopup, setShowCartPopup] = useState(false);
+  const [navCategories, setNavCategories] = useState<any[]>([]);
 
   const { getCartCount } = useCart();
   const { wishlist } = useWishlist();
+
+  // Fetch Categories for Navigation
+  useEffect(() => {
+    const fetchNavCategories = async () => {
+      // Fetch all visible categories
+      const { data } = await supabase
+        .from('categories')
+        .select('id, name, slug, level, parent_id')
+        .eq('is_visible', true)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (data) {
+        // Build Hierarchy
+        // We only want to show Level 0 (Roots) and their Level 1 children.
+        const parents = data.filter(c => c.level === 0);
+        const children = data.filter(c => c.level === 1);
+
+        const tree = parents.map(parent => ({
+          ...parent,
+          children: children.filter(child => child.parent_id === parent.id)
+        }));
+
+        setNavCategories(tree);
+      }
+    };
+    fetchNavCategories();
+  }, []);
 
   // Hide header on admin pages
   if (pathname?.startsWith('/admin')) {
@@ -215,24 +246,36 @@ const Header = () => {
 
             {/* Desktop Navigation - show only on xl screens */}
             <nav className="hidden xl:flex items-center space-x-6">
-              <Link href="/suit-set" className="text-white hover:text-silver py-2 font-medium">
-                SUIT SET
-              </Link>
-              <Link href="/western-dress" className="text-white hover:text-silver py-2 font-medium">
-                WESTERN WEAR
-              </Link>
-              <Link href="/co-ord-sets" className="text-white hover:text-silver py-2 font-medium">
-                CO-ORD SET
-              </Link>
-              <Link href="/kids" className="text-white hover:text-silver py-2 font-medium">
-                KID'S WEAR
-              </Link>
-              <Link href="/indi-western" className="text-white hover:text-silver py-2 font-medium">
-                INDO-WESTERN
-              </Link>
-              <Link href="/mens" className="text-white hover:text-silver py-2 font-medium">
-                MEN'S WEAR
-              </Link>
+              {navCategories.map((category) => (
+                <div key={category.id} className="relative group">
+                  <Link
+                    href={`/category/${category.slug}`}
+                    className="text-white hover:text-silver py-2 font-medium uppercase inline-block"
+                  >
+                    {category.name}
+                  </Link>
+
+                  {/* Dropdown Menu */}
+                  {category.children && category.children.length > 0 && (
+                    <div className="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50">
+                      <div className="bg-black border border-gray-800 rounded-md shadow-xl py-2 flex flex-col">
+                        {category.children.map((child: any) => (
+                          <Link
+                            key={child.id}
+                            href={`/category/${child.slug}`}
+                            className="text-gray-300 hover:text-white hover:bg-gray-900 px-4 py-2 text-sm uppercase transition-colors"
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {navCategories.length === 0 && (
+                <span className="text-gray-500">Loading...</span>
+              )}
             </nav>
 
             {/* Right side icons - show only on xl screens */}
@@ -249,42 +292,32 @@ const Header = () => {
             <div className="mb-4">
               <SearchBar />
             </div>
-            <Link href="/suit-set"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              SUIT SET
-            </Link>
-            <Link href="/western-dress"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              WESTERN WEAR
-            </Link>
-            <Link href="/co-ord-sets"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              CO-ORD SET
-            </Link>
-            <Link href="/kids"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              KID'S WEAR
-            </Link>
-            <Link href="/indi-western"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              INDO-WESTERN
-            </Link>
-            <Link href="/mens"
-              className="block px-3 py-2 text-base font-medium hover:text-silver"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              MEN'S WEAR
-            </Link>
+            {navCategories.map((category) => (
+              <div key={category.id} className="mb-2">
+                <Link
+                  href={`/category/${category.slug}`}
+                  className="block px-3 py-2 text-base font-medium hover:text-silver uppercase"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {category.name}
+                </Link>
+                {/* Mobile Subcategories */}
+                {category.children && category.children.length > 0 && (
+                  <div className="pl-6 space-y-1">
+                    {category.children.map((child: any) => (
+                      <Link
+                        key={child.id}
+                        href={`/category/${child.slug}`}
+                        className="block py-1 text-sm text-gray-400 hover:text-white uppercase"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
 
             {/* Mobile icons */}
             {mobileCartAndWishlistSection}

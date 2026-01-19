@@ -37,6 +37,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load cart data from localStorage when component mounts
   useEffect(() => {
@@ -49,12 +50,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('cart');
       }
     }
+    setIsInitialized(true);
   }, []);
 
   // Save cart data to localStorage whenever it changes
   useEffect(() => {
+    if (!isInitialized) return;
     localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, isInitialized]);
 
   const addToCart = (product: Product, quantity: number, size: string | null) => {
     setCart(prevCart => {
@@ -99,7 +102,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => {
-      const price = parsePrice(item.product.price);
+      const price = parsePrice(item.product.salePrice || item.product.price);
       return total + (price * item.quantity);
     }, 0);
   };

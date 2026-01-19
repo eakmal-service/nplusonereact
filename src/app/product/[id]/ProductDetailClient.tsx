@@ -117,7 +117,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
     };
 
     // Default sizes if not provided
-    const sizes = product?.availableSizes || ['S', 'M', 'L', 'XL', 'XXL'];
+    const sizes = product?.sizes?.length ? product.sizes : (product?.availableSizes || ['S', 'M', 'L', 'XL', 'XXL']);
 
     // Create thumbnail array from product images
     const thumbnails = (product?.images && product.images.length > 0)
@@ -138,16 +138,16 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
         <div className="bg-black text-silver">
             <Header />
 
-            <div className="bg-gray-900 py-3 shadow-sm mt-28">
+            <div className="bg-black py-4 mt-28 hidden md:block">
                 <div className="container mx-auto px-4">
-                    <div className="flex text-sm text-gray-400">
-                        <Link href="/" className="hover:text-silver">HOME</Link>
-                        <span className="mx-2">/</span>
-                        <Link href={getCategoryUrl(product?.category)} className="hover:text-silver">
-                            {(product?.category || 'PRODUCTS').toUpperCase().replace('-', ' ')}
+                    <div className="flex text-[#C0C0C0] text-[18px] items-center">
+                        <Link href="/" className="hover:underline">Home</Link>
+                        <span className="mx-1 text-[14px]">&gt;</span>
+                        <Link href={getCategoryUrl(product?.category)} className="hover:underline">
+                            {(product?.category || 'Clothing').replace('-', ' ')}
                         </Link>
-                        <span className="mx-2">/</span>
-                        <span className="text-silver font-medium">{product?.title}</span>
+                        <span className="mx-1 text-[14px]">&gt;</span>
+                        <span className="truncate max-w-[200px] md:max-w-none hover:underline cursor-pointer">{product?.title}</span>
                     </div>
                 </div>
             </div>
@@ -691,7 +691,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             )}
 
             {/* Size Chart Modal */}
-            <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} category={product.category} />
+            <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} category={product.category} title={product.title} />
             {/* Reviews Section */}
             <ProductReviews productId={product.id.toString()} />
         </div >

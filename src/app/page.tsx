@@ -33,6 +33,23 @@ export default async function HomePage() {
     .order('created_at', { ascending: false })
     .limit(8);
 
+  // 3. Fetch Dynamic Categories
+  const { data: categoriesData } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_visible', true)
+    .eq('level', 0) // Only fetch top-level categories (Women, Men, Kids)
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  const dynamicCategories = (categoriesData || []).map((cat: any) => ({
+    id: cat.id,
+    title: cat.name,
+    image: cat.image_url || '/placeholder.png', // Add placeholder logic if needed
+    link: `/category/${cat.slug}`,
+    alt: cat.name
+  }));
+
   // Transform products to match Frontend 'Product' type
   // Note: We use a helper similar to ProductContext but adapted for Server
   const getImageUrl = (path: string | null) => {
@@ -102,7 +119,7 @@ export default async function HomePage() {
 
       {/* Pass CMS Data & New Arrivals to CategoryCards (which contains Recommended Section) */}
       <CategoryCards
-        categories={contentMap['categories']}
+        categories={dynamicCategories.length > 0 ? dynamicCategories : contentMap['categories']}
         collections={contentMap['collections']}
         banner={contentMap['home_banner']}
         recommended={newArrivals}

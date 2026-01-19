@@ -7,6 +7,7 @@ import { optimizeCloudinaryUrl } from '@/utils/imageUtils';
 import { Product } from '@/types';
 import QuickViewModal from '../QuickViewModal';
 import SectionTitle from './SectionTitle';
+import ProductCard from '../common/ProductCard';
 
 import { useWishlist } from '@/contexts/WishlistContext';
 
@@ -116,72 +117,19 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
 
         <div className="flex justify-center sm:justify-start items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
           {getCurrentRecommended().map((product) => (
-            <div key={product.id} className="relative group w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
-              <div className="relative">
-                <Link href={`/product/${product.id}`} className="block relative">
-                  {product.badge && (
-                    <div className={`absolute top-0 left-0 z-10 px-2 sm:px-4 py-1 text-xs text-white font-medium ${product.badge === 'New' ? 'bg-blue-600' : 'bg-red-600'}`}>
-                      {product.badge}
-                    </div>
-                  )}
-                  <div className="relative overflow-hidden aspect-[3/4] w-full bg-gray-100">
-                    <Image
-                      src={optimizeCloudinaryUrl(product.image) || '/placeholder.png'}
-                      alt={product.alt || product.title}
-                      fill
-                      priority={true}
-                      loading="eager"
-                      quality={90}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-10"></div>
-                  </div>
-                </Link>
-
-                <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
-                  {/* Wishlist Button */}
-                  <button
-                    className={`p-2 rounded-full shadow-md transition-colors duration-300 ${isInWishlist(product.id)
-                      ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                      : 'bg-white text-gray-800 hover:bg-red-50 hover:text-red-500'
-                      }`}
-                    aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-                    onClick={(e) => handleWishlistToggle(e, product)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                  </button>
-
-                  {/* Quick View Button */}
-                  <button
-                    className="bg-white text-gray-800 p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors duration-300"
-                    onClick={(e) => openQuickView(e, product)}
-                    aria-label="Quick view"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="mt-3">
-                  <Link href={`/product/${product.id}`} className="block">
-                    <h4 className="text-sm font-medium text-[#CDCDCD] line-clamp-1 hover:text-white mb-1">{product.title}</h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#CDCDCD]">₹{product.price}</span>
-                      {product.originalPrice && (
-                        <>
-                          <span className="text-xs text-gray-500 line-through">₹{String(product.originalPrice).replace('₹', '')}</span>
-                          <span className="text-xs text-red-600 font-medium">{product.discount}</span>
-                        </>
-                      )}
-                    </div>
-                  </Link>
-                </div>
-              </div>
+            <div key={product.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
+              <ProductCard
+                product={{
+                  ...product,
+                  imageUrl: product.image || (product as any).imageUrl,
+                  price: product.originalPrice || (product as any).price,
+                  salePrice: product.price || (product as any).salePrice || (product as any).price,
+                  stockQuantity: product.stockQuantity || 10,
+                  status: product.status || 'active',
+                  availableSizes: product.sizes || (product as any).availableSizes,
+                  colorOptions: (product as any).colorOptions
+                }}
+              />
             </div>
           ))}
         </div>

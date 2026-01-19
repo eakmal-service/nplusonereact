@@ -73,7 +73,7 @@ const CartPage = () => {
                 </div>
 
                 {cart.map((item) => {
-                  const itemPrice = parsePrice(item.product.price);
+                  const itemPrice = parsePrice(item.product.salePrice || item.product.price);
                   const itemTotal = itemPrice * item.quantity;
 
                   return (

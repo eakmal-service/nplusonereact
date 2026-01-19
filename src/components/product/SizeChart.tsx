@@ -4,14 +4,30 @@ interface SizeChartProps {
     isOpen: boolean;
     onClose: () => void;
     category?: string;
+    title?: string;
 }
 
-const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category }) => {
+const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category, title }) => {
     if (!isOpen) return null;
 
-    console.log('SizeChart Category:', category);
+    console.log('SizeChart Category:', category, 'Title:', title);
     const normalizedCategory = category?.toUpperCase() || '';
-    const isGirls = normalizedCategory.includes('GIRL') || normalizedCategory.includes('KID');
+    const normalizedTitle = title?.toUpperCase() || '';
+
+    // Check both Category and Title for 'BOY'
+    const isBoys = normalizedCategory.includes('BOY') || normalizedTitle.includes('BOY');
+
+    // Girls logic: If 'GIRL' is found, OR 'KID' is found but NOT 'BOY' (fallback for generic Kids Wear that isn't explicitly Boy)
+    // Actually, 'KID' in category/title + 'BOY' not present -> might be safe to default to Girl? 
+    // Or we should be stricter.
+    // Let's mirror the script logic:
+    // Boy if BOY in cat/title.
+    // Girl if GIRL in cat/title.
+    // If neither, but KID is present? The old logic was "KID" -> Girls. 
+    // If I have "Boys Cotton" (Title has BOY), isBoys=true.
+    // isGirls should be false.
+
+    const isGirls = (normalizedCategory.includes('GIRL') || normalizedTitle.includes('GIRL') || normalizedCategory.includes('KID')) && !isBoys;
 
     // Girl's Chart Data
     const girlsData = [
@@ -26,13 +42,23 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category }) => {
         { size: '9', chest: '26', length: '19-21' },
     ];
 
+    // Boy's Chart Data (corrected waist based on progression)
+    // Added 'size' column as per request: 20, 22, 24, 26, 28
+    const boysData = [
+        { size: '20', age: '1-2Y', chest: '20 - 21', topLength: '13-14', waist: '17-18', bottomLength: '10-11', weight: '10-12' },
+        { size: '22', age: '2-3Y', chest: '21 - 22', topLength: '14-15', waist: '18-19', bottomLength: '11-12', weight: '11-12' },
+        { size: '24', age: '3-4Y', chest: '22 - 23', topLength: '15-16', waist: '19-20', bottomLength: '12-13', weight: '12-13' },
+        { size: '26', age: '4-5Y', chest: '23 - 24', topLength: '16-17', waist: '20-21', bottomLength: '13-14', weight: '13-14' },
+        { size: '28', age: '5-6Y', chest: '24 - 25', topLength: '17-18', waist: '21 - 22', bottomLength: '14-15', weight: '18-20' },
+    ];
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className={`rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200 ${isGirls ? 'bg-black text-silver border border-gray-700' : 'bg-white text-black'}`}>
+            <div className={`rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200 ${isGirls || isBoys ? 'bg-black text-silver border border-gray-700' : 'bg-white text-black'}`}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className={`absolute top-4 right-4 transition-colors ${isGirls ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
+                    className={`absolute top-4 right-4 transition-colors ${isGirls || isBoys ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -42,7 +68,39 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category }) => {
                 <div className="p-6 md:p-8">
                     <h2 className="text-2xl font-bold mb-6 text-center uppercase tracking-wide">Size Guide</h2>
 
-                    {isGirls ? (
+                    {isBoys ? (
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">BOYS SHIRT & SHORT SIZE CHART (1-6 YEARS)</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left border-collapse border border-gray-700">
+                                    <thead>
+                                        <tr className="bg-gray-900">
+                                            <th className="p-3 border border-gray-700 text-silver">SIZE</th>
+                                            <th className="p-3 border border-gray-700 text-silver">AGE (YEARS)</th>
+                                            <th className="p-3 border border-gray-700 text-silver">CHEST (IN)</th>
+                                            <th className="p-3 border border-gray-700 text-silver">TOP LENGTH (IN)</th>
+                                            <th className="p-3 border border-gray-700 text-silver">WAIST (IN)</th>
+                                            <th className="p-3 border border-gray-700 text-silver">BOTTOM LENGTH (IN)</th>
+                                            <th className="p-3 border border-gray-700 text-silver">WEIGHT (KGS)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {boysData.map((row) => (
+                                            <tr key={row.age} className="hover:bg-gray-900/50">
+                                                <td className="p-3 border border-gray-700 font-bold text-white">{row.size}</td>
+                                                <td className="p-3 border border-gray-700 font-medium">{row.age}</td>
+                                                <td className="p-3 border border-gray-700">{row.chest}</td>
+                                                <td className="p-3 border border-gray-700">{row.topLength}</td>
+                                                <td className="p-3 border border-gray-700">{row.waist}</td>
+                                                <td className="p-3 border border-gray-700">{row.bottomLength}</td>
+                                                <td className="p-3 border border-gray-700">{row.weight}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : isGirls ? (
                         <>
                             <div className="mb-8">
                                 <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Girls Size Chart</h3>

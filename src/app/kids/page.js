@@ -18,7 +18,7 @@ export default function KidsPage() {
                 {isLoading ? (
                     <ProductGridSkeleton count={8} />
                 ) : products.length > 0 ? (
-                    <EnhancedProductGrid products={products} title="Kid's Wear" />
+                    <EnhancedProductGrid products={products} title="Kid's Wear" cardVariant="kids" />
                 ) : (
                     <div className="text-center py-16">
                         <h1 className="text-3xl font-bold mb-6 text-silver">Kid's Wear</h1>

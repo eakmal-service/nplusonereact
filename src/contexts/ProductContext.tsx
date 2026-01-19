@@ -16,6 +16,7 @@ interface ProductContextType {
   refreshProducts: () => Promise<void>;
   getProductsByCategory: (category: string) => Product[];
   getActiveProductsByCategory: (category: string) => Product[];
+  getActiveProductsByCategories: (categories: string[]) => Product[];
 }
 
 // Create context with default values
@@ -30,6 +31,7 @@ const ProductContext = createContext<ProductContextType>({
   refreshProducts: async () => { },
   getProductsByCategory: () => [],
   getActiveProductsByCategory: () => [],
+  getActiveProductsByCategories: () => [],
 });
 
 // Provider component
@@ -98,9 +100,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             styleCode: p.style_code,
             category: p.category,
             subcategory: p.subcategory,
-            price: p.price,
-            salePrice: p.sale_price,
-            discount: p.discount ? `${p.discount}` : undefined,
+            price: p.mrp || p.price,
+            salePrice: p.selling_price || p.sale_price || p.mrp || p.price,
+            discount: p.discount ? `${p.discount}` : (p.mrp && p.selling_price && p.mrp > p.selling_price ? `${Math.round(((p.mrp - p.selling_price) / p.mrp) * 100)}% OFF` : undefined),
             image: getImageUrl(p.image_url),
             imageUrl: getImageUrl(p.image_url),
             imageUrls: (p.image_urls || p.images || []).map((img: string) => getImageUrl(img)),
@@ -372,31 +374,25 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Get active products by category
   const getActiveProductsByCategory = (category: string) => {
-    // Normalize input category: "suit set" -> "suit-set"
-    const normalizedCategory = category.toLowerCase().trim().replace(/\s+/g, '-');
+    // Reuse the multiple category logic for single category
+    return getActiveProductsByCategories([category]);
+  };
 
-    // Debug filtering
-    const allMatches = products.filter(p => {
-      const prodCat = (p.category || '').toLowerCase().trim().replace(/\s+/g, '-');
-      return prodCat === normalizedCategory;
-    });
+  // Get active products by multiple categories (for hierarchical display)
+  const getActiveProductsByCategories = (categories: string[]) => {
+    const normalize = (str: string) => str.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
 
-    console.log(`[ProductContext] Filtering for category: "${category}" (norm: "${normalizedCategory}")`);
-    console.log(`[ProductContext] Total products in context: ${products.length}`);
-    console.log(`[ProductContext] Found ${allMatches.length} matches by name BEFORE status checks.`);
+    const normalizedCategories = categories.map(c => normalize(c));
+
 
     return products.filter(product => {
-      const prodCat = (product.category || '').toLowerCase().trim().replace(/\s+/g, '-');
-      // Relaxed matching - check if it INCLUDES the category to handle "Women's Suit Set" matching "Suit Set" if needed
-      // But for now, strict equality on normalized string is best.
+      const prodCat = normalize(product.category || '');
+      const prodSub = normalize(product.subcategory || '');
 
-      const isMatch = prodCat === normalizedCategory;
+      // Check if product category OR subcategory matches ANY of the target categories
+      const isMatch = normalizedCategories.includes(prodCat) || normalizedCategories.includes(prodSub);
       const isActive = product.status === 'active';
       const hasStock = (product.stockQuantity || 0) > 0;
-
-      if (isMatch && (!isActive || !hasStock)) {
-        console.log(`[ProductContext] Skipped "${product.title}" - Status: ${product.status}, Stock: ${product.stockQuantity}`);
-      }
 
       return isMatch && isActive && hasStock;
     });
@@ -413,6 +409,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     refreshProducts,
     getProductsByCategory,
     getActiveProductsByCategory,
+    getActiveProductsByCategories,
   };
 
   return (

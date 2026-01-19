@@ -18,7 +18,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         try {
             const { data, error } = await supabase
                 .from('reviews')
-                .select('*')
+                .select('*, profiles(full_name)')
                 .eq('product_id', productId)
                 .eq('is_visible', true)
                 .order('created_at', { ascending: false });
@@ -26,7 +26,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
             if (error) {
                 console.error('Error fetching reviews:', error);
             } else {
-                setReviews(data || []);
+                const formattedReviews = (data || []).map((review: any) => ({
+                    ...review,
+                    user_name: review.profiles?.full_name || 'Anonymous User'
+                }));
+                setReviews(formattedReviews);
             }
         } finally {
             setLoading(false);

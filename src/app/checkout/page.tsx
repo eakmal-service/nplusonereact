@@ -388,7 +388,7 @@ const CheckoutPage = () => {
                                             <p className="text-sm font-medium text-white line-clamp-2">{item.product.title}</p>
                                             <p className="text-xs text-gray-500">Size: {item.size} | Qty: {item.quantity}</p>
                                         </div>
-                                        <span className="text-sm text-gray-300">₹{item.product.price}</span>
+                                        <span className="text-sm text-gray-300">₹{item.product.salePrice || item.product.price}</span>
                                     </div>
                                 ))}
                             </div>
