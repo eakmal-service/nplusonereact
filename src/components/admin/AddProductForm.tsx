@@ -644,39 +644,48 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
 
     setForm(prev => {
       const updates: any = { ...prev, [name]: value };
-      const mrp = parseFloat(name === 'mrp' ? value : prev.mrp || '0');
-      const sp = parseFloat(name === 'salePrice' ? value : prev.salePrice || '0');
-      const disc = parseFloat(name === 'discount' ? value : prev.discount || '0');
+      let mrp = parseFloat(name === 'mrp' ? value : prev.mrp || '0');
+      let sp = parseFloat(name === 'salePrice' ? value : prev.salePrice || '0');
+      let disc = parseFloat(name === 'discount' ? value : prev.discount || '0');
 
       if (name === 'mrp') {
-        // Change MRP:
+        // Case A: MRP Changed
         // If Discount exists -> Recalculate SP
-        // If SP exists but no Discount -> Recalculate Discount?
-        // Logic: Prioritize Discount consistency if available.
         if (disc > 0) {
-          // SP = MRP - (MRP * Disc / 100)
           const newSp = Math.round(mrp - (mrp * disc / 100));
           updates.salePrice = newSp.toString();
-        } else if (sp > 0 && sp < mrp) {
-          // Recalculate Discount 
+        }
+        // If SP exists but no Discount -> Recalculate Discount
+        else if (sp > 0 && sp < mrp) {
           const newDisc = Math.round(((mrp - sp) / mrp) * 100);
           updates.discount = newDisc.toString();
         }
       }
       else if (name === 'discount') {
-        // Change Discount:
-        // Calculate SP based on MRP
+        // Discount Changed
+        // Case A: If MRP exists -> Calculate SP
         if (mrp > 0) {
           const newSp = Math.round(mrp - (mrp * numVal / 100));
           updates.salePrice = newSp.toString();
         }
+        // Case C (Reverse): If no MRP but SP exists -> Calculate MRP
+        // Formula: MRP = SP / (1 - (Discount / 100))
+        else if (mrp === 0 && sp > 0 && numVal < 100) {
+          const newMrp = Math.round(sp / (1 - (numVal / 100)));
+          updates.mrp = newMrp.toString();
+        }
       }
       else if (name === 'salePrice') {
-        // Change SP:
-        // Calculate Discount based on MRP
+        // SP Changed
+        // Case B: If MRP exists -> Calculate Discount
         if (mrp > 0 && numVal <= mrp) {
           const newDisc = Math.round(((mrp - numVal) / mrp) * 100);
           updates.discount = newDisc.toString();
+        }
+        // Case C (Reverse): If no MRP but Discount exists -> Calculate MRP
+        else if (mrp === 0 && disc > 0 && disc < 100) {
+          const newMrp = Math.round(numVal / (1 - (disc / 100)));
+          updates.mrp = newMrp.toString();
         }
       }
       return updates;
