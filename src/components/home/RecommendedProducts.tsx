@@ -103,11 +103,11 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
     <div className="mt-10 md:mt-16 mb-8">
       <SectionTitle title={title} />
 
-      <div className="overflow-hidden relative px-6 sm:px-8 md:px-10 mt-0">
-        {/* Prev button */}
+      <div className="relative px-0 md:px-10 mt-0">
+        {/* Helper buttons for Desktop only */}
         <button
           onClick={prevRecommended}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Previous recommended products"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -115,9 +115,10 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
           </svg>
         </button>
 
-        <div className="flex justify-center sm:justify-start items-center gap-2 md:gap-4 lg:gap-6 w-full pointer-events-none">
-          {getCurrentRecommended().map((product) => (
-            <div key={product.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-1 sm:px-2 pointer-events-auto">
+        {/* Mobile View: Horizontal Scroll (Snap) */}
+        <div className="md:hidden flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
+          {products.map((product) => (
+            <div key={product.id} className="min-w-[45%] snap-start">
               <ProductCard
                 product={{
                   ...product,
@@ -134,10 +135,30 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
           ))}
         </div>
 
-        {/* Next button */}
+        {/* Desktop View: Grid/Carousel */}
+        <div className="hidden md:flex justify-start items-center gap-6 w-full pointer-events-none">
+          {getCurrentRecommended().map((product) => (
+            <div key={product.id} className="w-1/4 px-2 pointer-events-auto">
+              <ProductCard
+                product={{
+                  ...product,
+                  imageUrl: product.image || (product as any).imageUrl,
+                  price: product.originalPrice || (product as any).price,
+                  salePrice: product.price || (product as any).salePrice || (product as any).price,
+                  stockQuantity: product.stockQuantity || 10,
+                  status: product.status || 'active',
+                  availableSizes: product.sizes || (product as any).availableSizes,
+                  colorOptions: (product as any).colorOptions
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Helper buttons for Desktop only */}
         <button
           onClick={nextRecommended}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-2 md:p-3 rounded-full shadow-md hover:bg-opacity-100"
+          className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 z-30 bg-white bg-opacity-70 p-3 rounded-full shadow-md hover:bg-opacity-100"
           aria-label="Next recommended products"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -145,13 +166,13 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
           </svg>
         </button>
 
-        {/* Slider pagination */}
-        <div className="flex justify-center mt-4 z-30 relative">
+        {/* Slider pagination (Desktop Only) */}
+        <div className="hidden md:flex justify-center mt-4 z-30 relative">
           {Array.from({ length: totalRecommendedPages }).map((_, idx) => (
             <button
               key={idx}
               onClick={() => setRecommendedIndex(idx)}
-              className={`mx-1 w-2 h-2 md:w-3 md:h-3 rounded-full ${idx === recommendedIndex ? 'bg-orange-500' : 'bg-gray-300'
+              className={`mx-1 w-3 h-3 rounded-full ${idx === recommendedIndex ? 'bg-orange-500' : 'bg-gray-300'
                 }`}
               aria-label={`Go to recommended page ${idx + 1}`}
             />

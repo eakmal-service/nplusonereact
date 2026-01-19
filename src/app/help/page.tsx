@@ -36,9 +36,9 @@ export default function HelpPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-white">Call Us</h3>
-                                    <p className="text-sm text-gray-400 mb-1">Mon - Sat, 10am - 7pm</p>
-                                    <a href="tel:+911234567890" className="text-silver hover:underline">
-                                        +91 123 456 7890
+                                    <p className="text-sm text-gray-400 mb-1">Mon - Sat, 10:30 AM - 7:00 PM</p>
+                                    <a href="tel:+918329208323" className="text-silver hover:underline">
+                                        +91 8329208323
                                     </a>
                                 </div>
                             </div>

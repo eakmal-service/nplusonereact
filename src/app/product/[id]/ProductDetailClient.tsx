@@ -153,7 +153,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             </div>
 
             {/* Product Detail Section */}
-            <div className="container mx-auto px-4 pt-8 pb-8 mt-4">
+            <div className="container mx-auto px-4 pt-24 md:pt-8 pb-8 mt-4 md:mt-28">
                 <div className="flex flex-col md:flex-row -mx-4">
                     {/* Left side - Product images */}
                     <div className="md:w-1/2 px-4 mb-8 md:mb-0">
@@ -306,8 +306,8 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                             </div>
                         </div>
 
-                        {/* Action buttons */}
-                        <div className="mb-6 grid grid-cols-2 gap-4">
+                        {/* Action buttons (Desktop) */}
+                        <div className="hidden md:grid mb-6 grid-cols-2 gap-4">
                             <button
                                 onClick={handleAddToCart}
                                 className="bg-silver hover:bg-gray-300 text-black py-3 px-6 font-medium transition-all"
@@ -603,7 +603,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-silver flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>Call Time: 9:30am - 6:30pm</span>
+                            <span>Call Time: 10:30 AM - 7:00 PM</span>
                         </div>
 
                         {/* Email - Envelope Icon */}
@@ -694,6 +694,25 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             <SizeChart isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} category={product.category} title={product.title} />
             {/* Reviews Section */}
             <ProductReviews productId={product.id.toString()} />
+
+            {/* Mobile Sticky Action Buttons */}
+            <div className="fixed bottom-0 left-0 w-full z-50 bg-black border-t border-gray-800 p-2 md:hidden grid grid-cols-2 gap-2">
+                <button
+                    onClick={handleAddToCart}
+                    className="bg-white text-black py-3 font-bold text-sm tracking-wide uppercase"
+                >
+                    ADD TO BAG
+                </button>
+                <button
+                    onClick={handleBuyNow}
+                    className="bg-red-600 text-white py-3 font-bold text-sm tracking-wide uppercase"
+                >
+                    BUY NOW
+                </button>
+            </div>
+
+            {/* Spacer for sticky buttons */}
+            <div className="h-16 md:hidden"></div>
         </div >
     );
 };
