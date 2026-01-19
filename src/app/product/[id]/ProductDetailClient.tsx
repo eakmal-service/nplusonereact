@@ -153,7 +153,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
             </div>
 
             {/* Product Detail Section */}
-            <div className="container mx-auto px-4 pt-24 md:pt-8 pb-8 mt-4 md:mt-28">
+            <div className="container mx-auto px-4 pt-24 md:pt-4 pb-8 mt-4 md:mt-4">
                 <div className="flex flex-col md:flex-row -mx-4">
                     {/* Left side - Product images */}
                     <div className="md:w-1/2 px-4 mb-8 md:mb-0">
