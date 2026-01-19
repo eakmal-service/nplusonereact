@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function ShippingPolicy() {
     return (
-        <div className="bg-black min-h-screen">
-            <div className="container mx-auto px-4 py-12 max-w-4xl text-gray-300">
+        <div className="bg-black min-h-screen pt-32">
+            <div className="container mx-auto px-4 pb-12 max-w-4xl text-gray-300">
                 <h1 className="text-3xl font-bold mb-8 text-silver border-b border-gray-800 pb-4">Shipping Policy</h1>
                 <p className="mb-4 text-sm text-gray-500">Last Updated: Jan 2026</p>
 
