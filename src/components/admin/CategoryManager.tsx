@@ -142,7 +142,42 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onCategorySelect, sel
             imageUrl = publicUrl;
         }
 
-        const slug = formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        // Generate a base slug
+        const baseSlug = formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        let slug = baseSlug;
+
+        // Ensure uniqueness for new categories
+        if (modalMode === 'add') {
+            let isUnique = false;
+            let counter = 0;
+
+            while (!isUnique) {
+                // Check if slug exists
+                const { data, error } = await supabase
+                    .from('categories')
+                    .select('id')
+                    .eq('slug', slug)
+                    .maybeSingle(); // Use maybeSingle to avoid error if 0 rows
+
+                if (error) {
+                    console.error("Error checking slug uniqueness", error);
+                    return alert("Error checking slug: " + error.message);
+                }
+
+                if (!data) {
+                    isUnique = true;
+                } else {
+                    counter++;
+                    slug = `${baseSlug}-${counter}`; // Append counter if duplicate
+                }
+
+                // Safety break to prevent infinite loops (though unlikely)
+                if (counter > 20) {
+                    slug = `${baseSlug}-${Date.now()}`; // Fallback to timestamp
+                    isUnique = true;
+                }
+            }
+        }
 
         if (modalMode === 'add') {
             const { error } = await supabase.from('categories').insert({
