@@ -430,8 +430,17 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
 
   const handleChildCatSelect = (cat: CategoryNode) => {
     setSelectedChildCat(cat);
-    // Auto-update form category
-    setForm(prev => ({ ...prev, category: cat.value || '' }));
+    // GENERIC FIX: Set category to the Super Category (e.g. Mens Wear) and subcategory to the specific item
+    // This defines the app_category as the high-level parent, and the specific item as subcategory.
+    if (selectedSuperCat) {
+      setForm(prev => ({
+        ...prev,
+        category: selectedSuperCat.value || '',
+        subcategory: cat.value || ''
+      }));
+    } else {
+      setForm(prev => ({ ...prev, category: cat.value || '' }));
+    }
   };
 
   const handleNextStep = () => {
@@ -769,9 +778,13 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           "boy's wear": 'KIDS WEAR',
           "girl's wear": 'KIDS WEAR',
           "men's wear": 'MENS WEAR',
+          "Cargo pants": 'MENS WEAR',
+          "Cargo": 'MENS WEAR',
         };
 
-        const mappedCategory = CATEGORY_ENUM_MAP[form.category] || CATEGORY_ENUM_MAP[form.category?.toLowerCase()] || form.category;
+
+        const cleanCategory = form.category?.trim();
+        const mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[cleanCategory?.toLowerCase()] || cleanCategory;
 
         // 2. Prepare Product Data with new attributes
         const productData = {
