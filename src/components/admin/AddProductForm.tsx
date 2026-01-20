@@ -465,7 +465,11 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     occasion: initialData?.occasion || '',
     fabricDupattaStole: initialData?.fabricDupattaStole || '',
     liningFabric: initialData?.liningFabric || '',
-    washCare: initialData?.washCare || '',
+    washCare: initialData?.washCare || `🧼 Machine Wash Cold: (Gentle Cycle)
+🚫 Do Not Bleach
+☀️ Dry in Shade: (Avoid direct sun for dark colors)
+💨 Steam Iron: (Best for Linen)
+🧺 Dry Clean Recommended: (For heavy suits)`,
     bottomFabric: initialData?.bottomFabric || ''
   });
 
@@ -518,7 +522,11 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         occasion: initialData.occasion || '',
         fabricDupattaStole: initialData.fabricDupattaStole || '',
         liningFabric: initialData.liningFabric || '',
-        washCare: initialData.washCare || '',
+        washCare: initialData.washCare || `🧼 Machine Wash Cold: (Gentle Cycle)
+🚫 Do Not Bleach
+☀️ Dry in Shade: (Avoid direct sun for dark colors)
+💨 Steam Iron: (Best for Linen)
+🧺 Dry Clean Recommended: (For heavy suits)`,
         bottomFabric: initialData.bottomFabric || ''
       });
     }

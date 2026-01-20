@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+set timeout 300
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+# Navigate to project
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Pull latest changes
+send "git pull origin main\r"
+expect "#"
+
+# Install dependencies logic
+send "npm install --legacy-peer-deps\r"
+expect "#"
+
+# Build (might take time, hence increased timeout)
+send "npm run build\r"
+expect "#"
+
+# Restart Application
+send "pm2 restart nplusone\r"
+expect "#"
+
+# Check status
+send "pm2 status\r"
+expect "#"
+
+send "exit\r"
+expect eof
