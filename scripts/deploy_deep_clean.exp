@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+set timeout 1200
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Stop PM2
+send "pm2 stop nplusone\r"
+expect "#"
+
+# Deep clean
+send "rm -rf .next node_modules package-lock.json\r"
+expect "#"
+
+# Reinstall
+send "npm install --legacy-peer-deps\r"
+expect "#"
+
+# Build
+send "npm run build\r"
+expect "#"
+
+# Restart
+send "pm2 restart nplusone\r"
+expect "#"
+
+send "exit\r"
+expect eof

@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+# Check free memory
+send "free -h\r"
+expect "#"
+
+# Create swapfile if it doesn't exist
+send "if [ ! -f /swapfile ]; then fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile; fi\r"
+expect "#"
+
+# Verify swap
+send "free -h\r"
+expect "#"
+
+# Now try to build again (stop pm2 first just in case)
+send "cd /var/www/nplusone\r"
+send "pm2 stop nplusone\r"
+expect "#"
+send "npm run build\r"
+expect "#"
+send "pm2 restart nplusone\r"
+expect "#"
+
+send "exit\r"
+expect eof
