@@ -752,6 +752,27 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           return;
         }
 
+        // Map dynamic category names to valid DB Enums
+        // Valid Enums: 'SUIT SET' | 'WESTERN WEAR' | 'CO-ORD SET' | 'KIDS WEAR' | 'INDO-WESTERN' | 'MENS WEAR'
+        const CATEGORY_ENUM_MAP: Record<string, string> = {
+          "All Boy's Wear": 'KIDS WEAR',
+          "Boy's Wear": 'KIDS WEAR',
+          "Girl's Wear": 'KIDS WEAR',
+          "Men's Wear": 'MENS WEAR',
+          "Suit Set": 'SUIT SET',
+          "Western Wear": 'WESTERN WEAR',
+          "Co-ord Set": 'CO-ORD SET',
+          "Kid's Wear": 'KIDS WEAR',
+          "Indo-Western": 'INDO-WESTERN',
+          // Add lowercase/variations just in case
+          "all boy's wear": 'KIDS WEAR',
+          "boy's wear": 'KIDS WEAR',
+          "girl's wear": 'KIDS WEAR',
+          "men's wear": 'MENS WEAR',
+        };
+
+        const mappedCategory = CATEGORY_ENUM_MAP[form.category] || CATEGORY_ENUM_MAP[form.category?.toLowerCase()] || form.category;
+
         // 2. Prepare Product Data with new attributes
         const productData = {
           id: initialData?.id,
@@ -760,7 +781,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           price: form.mrp,
           salePrice: form.salePrice,
           discount: form.discount ? `${form.discount}%` : '',
-          category: form.category,
+          category: mappedCategory, // Use mapped category
           subcategory: form.subcategory,
           material: form.material,
           status: form.status,
