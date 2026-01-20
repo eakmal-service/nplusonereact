@@ -503,7 +503,13 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                     {washCareOpen && (
                         <div className="pb-4">
                             <ul className="list-disc pl-5 text-gray-400 space-y-1">
-                                <li>{product?.washCare}</li>
+                                {product?.washCare ? (
+                                    product.washCare.split('\n').filter((line: string) => line.trim() !== '').map((line: string, index: number) => (
+                                        <li key={index}>{line}</li>
+                                    ))
+                                ) : (
+                                    <li>No wash & care instructions available.</li>
+                                )}
                             </ul>
                         </div>
                     )}

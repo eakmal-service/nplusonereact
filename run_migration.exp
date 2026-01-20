@@ -1,0 +1,24 @@
+#!/usr/bin/expect -f
+set timeout 600
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Pull latest (to get JS file)
+send "git pull origin main\r"
+expect "#"
+
+# Run JS migration with explicit env vars
+send "NEXT_PUBLIC_SUPABASE_URL=https://jdwzdwkkmqaaycgjuipn.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE node scripts/update_wash_care.js\r"
+expect "#"
+
+send "exit\r"
+expect eof

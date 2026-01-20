@@ -532,7 +532,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
     }
   }, [initialData]);
 
-  const handleAttributeChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+  const handleAttributeChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
     setAttributes({ ...attributes, [e.target.name]: e.target.value });
   };
 
@@ -1063,7 +1063,6 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                   />
                 </div>
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-sm mb-1">Description *</label>
                 <textarea
@@ -1397,10 +1396,22 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
                 </div>
               </div>
 
+              {/* 13. Wash Care */}
+              <div className="md:col-span-3">
+                <label className="block text-gray-400 text-sm mb-1">Wash & Care *</label>
+                <textarea
+                  name="washCare"
+                  value={attributes.washCare}
+                  onChange={handleAttributeChange}
+                  rows={5}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
           {/* 5. Image Upload - Guided */}
-          < div className="bg-black p-6 rounded-lg border border-gray-800" >
+          <div className="bg-black p-6 rounded-lg border border-gray-800" >
             <h3 className="text-lg font-semibold text-white mb-4">Product Images</h3>
             <p className="text-sm text-gray-500 mb-4">Add images with details listed here.</p>
 
