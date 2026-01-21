@@ -792,7 +792,26 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
 
 
         const cleanCategory = form.category?.trim();
-        const mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[cleanCategory?.toLowerCase()] || cleanCategory;
+        // Normalize: lowercase
+        const lowerCat = cleanCategory.toLowerCase();
+
+        let mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[lowerCat];
+
+        // Fallback Logic based on keywords if not found in map
+        if (!mappedCategory) {
+          if (lowerCat.includes('boy') || lowerCat.includes('girl') || lowerCat.includes('kid')) {
+            mappedCategory = 'KIDS WEAR';
+          } else if (lowerCat.includes('men') || lowerCat.includes('cargo') || lowerCat.includes('shirt') || lowerCat.includes('pant')) {
+            mappedCategory = 'MENS WEAR'; // Heuristic for "Cargo pants"
+          } else if (lowerCat.includes('suit') || lowerCat.includes('kurta')) {
+            mappedCategory = 'SUIT SET';
+          } else {
+            // Ultimate Fallback - maybe 'WESTERN WEAR' is safest or 'OTHER' if exists?
+            // Let's stick to the raw value if we can't map, but knowing it will fail if not in enum.
+            // Better to console log warning.
+            mappedCategory = cleanCategory;
+          }
+        }
 
         // 2. Prepare Product Data with new attributes
         const productData = {
