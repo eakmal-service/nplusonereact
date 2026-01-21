@@ -1,0 +1,40 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+# Credentials (hardcoded from local .env.local)
+set sup_url "https://jdwzdwkkmqaaycgjuipn.supabase.co"
+set sup_anon "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE"
+set sup_service "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Create .env file
+send "echo 'NEXT_PUBLIC_SUPABASE_URL=$sup_url' > .env\r"
+expect "#"
+send "echo 'NEXT_PUBLIC_SUPABASE_ANON_KEY=$sup_anon' >> .env\r"
+expect "#"
+send "echo 'SUPABASE_SERVICE_ROLE_KEY=$sup_service' >> .env\r"
+expect "#"
+
+# Verify
+send "cat .env\r"
+expect "#"
+
+# Build and Restart
+send "npm run build\r"
+expect "#"
+
+send "pm2 restart nplusone\r"
+expect "#"
+
+send "exit\r"
+expect eof

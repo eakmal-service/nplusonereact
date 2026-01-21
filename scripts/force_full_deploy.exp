@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+set timeout 1200
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect "password:"
+send "$password\r"
+expect "#"
+
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Kill everything
+send "pm2 delete nplusone\r"
+expect "#"
+
+# Ensure fresh start
+send "rm -rf .next node_modules package-lock.json\r"
+expect "#"
+
+send "npm install --legacy-peer-deps\r"
+expect "#"
+
+send "npm run build\r"
+expect "#"
+
+# Start fresh
+send "pm2 start npm --name 'nplusone' -- start\r"
+expect "#"
+
+# Save PM2 list so it restarts on reboot
+send "pm2 save\r"
+expect "#"
+
+send "exit\r"
+expect eof
