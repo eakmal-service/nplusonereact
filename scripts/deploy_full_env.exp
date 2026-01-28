@@ -12,9 +12,17 @@ expect "#"
 send "cd /var/www/nplusone\r"
 expect "#"
 
-# Cloudinary
-send "rm -f .env\r"
+# 1. Clean up ALL existing env files to prevent conflicts
+send "rm -f .env .env.local .env.production\r"
 expect "#"
+
+# 2. Write NEW .env with ALL Production Keys
+
+# --- Hostinger ---
+send "echo 'HOSTINGER_API_TOKEN=tdOfGugxiLNVrBK5BM7fFe335l18EiihaqYMKDqu1f23dcbb' >> .env\r"
+expect "#"
+
+# --- Cloudinary ---
 send "echo 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=douy8ujry' >> .env\r"
 expect "#"
 send "echo 'CLOUDINARY_API_KEY=279443238934183' >> .env\r"
@@ -24,7 +32,17 @@ expect "#"
 send "echo 'CLOUDINARY_URL=cloudinary://279443238934183:4mcVRmTfKjMV2DBK4MZQb0jMb6o@douy8ujry' >> .env\r"
 expect "#"
 
-# iThink Logistics
+# --- Supabase ---
+send "echo 'NEXT_PUBLIC_SUPABASE_URL=https://jdwzdwkkmqaaycgjuipn.supabase.co' >> .env\r"
+expect "#"
+send "echo 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE' >> .env\r"
+expect "#"
+send "echo 'NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNTg3NjcsImV4cCI6MjA4MDkzNDc2N30.TFHOTHsoI3mR8yJjFYeyfSAdfXhYsr9X8E9AAS68huE' >> .env\r"
+expect "#"
+send "echo 'SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd3pkd2trbXFhYXljZ2p1aXBuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTM1ODc2NywiZXhwIjoyMDgwOTM0NzY3fQ.pYp1VzVgPx3-HKbYw7U7XilcEAmM7MvKqVc8yROpsR0' >> .env\r"
+expect "#"
+
+# --- iThink Logistics ---
 send "echo 'ITHINK_BASE_URL=https://my.ithinklogistics.com/api_v3' >> .env\r"
 expect "#"
 send "echo 'ITHINK_ACCESS_TOKEN=96f80a961d63f99dd060b6ede5cc979e' >> .env\r"
@@ -34,29 +52,25 @@ expect "#"
 send "echo 'ITHINK_PICKUP_ID=1027720' >> .env\r"
 expect "#"
 
-# PhonePe
+# --- PhonePe (PRODUCTION) ---
 send "echo 'PHONEPE_CLIENT_ID=SU2601231901396918031448' >> .env\r"
 expect "#"
 send "echo 'PHONEPE_CLIENT_SECRET=c0f08c59-9c47-4f8f-88a9-05a9a782be74' >> .env\r"
 expect "#"
 send "echo 'PHONEPE_CLIENT_VERSION=1' >> .env\r"
 expect "#"
-# send "echo 'PHONEPE_MERCHANT_ID=M23MML14I7ZCI' >> .env\r"
-expect "#"
 send "echo 'PHONEPE_ENV=PRODUCTION' >> .env\r"
 expect "#"
 send "echo 'NEXT_PUBLIC_APP_URL=https://nplusonefashion.com' >> .env\r"
 expect "#"
 
-# Verify
+# 3. Verify
 send "cat .env\r"
 expect "#"
 
-# Rebuild (Just in case Next.js inlines public vars)
+# 4. Rebuild & Restart
 send "npm run build\r"
 expect "#"
-
-# Restart
 send "pm2 restart nplusone\r"
 expect "#"
 
