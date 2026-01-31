@@ -123,12 +123,12 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                 product={{
                   ...product,
                   imageUrl: product.image || (product as any).imageUrl,
-                  price: product.originalPrice || (product as any).price,
-                  salePrice: product.price || (product as any).salePrice || (product as any).price,
+                  price: product.originalPrice || (product as any).mrp || (product as any).price,
+                  salePrice: product.salePrice || (product as any).sale_price || product.price,
                   stockQuantity: product.stockQuantity || 10,
                   status: product.status || 'active',
                   availableSizes: product.sizes || (product as any).availableSizes,
-                  colorOptions: (product as any).colorOptions
+                  colorOptions: product.colorOptions || (product as any).colorOptions
                 }}
               />
             </div>
@@ -143,12 +143,12 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({ products = []
                 product={{
                   ...product,
                   imageUrl: product.image || (product as any).imageUrl,
-                  price: product.originalPrice || (product as any).price,
-                  salePrice: product.price || (product as any).salePrice || (product as any).price,
+                  price: product.originalPrice || (product as any).mrp || (product as any).price,
+                  salePrice: product.salePrice || (product as any).sale_price || product.price,
                   stockQuantity: product.stockQuantity || 10,
                   status: product.status || 'active',
                   availableSizes: product.sizes || (product as any).availableSizes,
-                  colorOptions: (product as any).colorOptions
+                  colorOptions: product.colorOptions || (product as any).colorOptions
                 }}
               />
             </div>

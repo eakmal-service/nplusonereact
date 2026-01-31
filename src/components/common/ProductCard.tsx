@@ -17,6 +17,7 @@ interface ProductCardProps {
     imageUrl: string;
     price: string;
     salePrice: string;
+    originalPrice?: string;
     discount?: string;
     stockQuantity: number;
     status: string;
@@ -49,6 +50,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
     : (product.price && product.salePrice && product.price !== product.salePrice)
       ? `${Math.round(((parseFloat(product.price) - parseFloat(product.salePrice)) / parseFloat(product.price)) * 100)}% OFF`
       : null;
+
+
 
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -182,21 +185,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
           </Link>
 
           {/* Price & Rating Line */}
+          {/* Price & Rating Line - Just Price now */}
           <div className="mt-1 flex items-center justify-between">
             <ProductPrice
-              salePrice={product.salePrice}
-              price={product.price}
+              salePrice={product.salePrice || product.price}
+              price={product.originalPrice || product.price}
               discount={product.discount}
-              size="sm"
+              size="md"
               showDiscount={false}
             />
-            {/* Rating */}
-            {(product.rating || 0) > 0 && (
-              <div className="flex items-center text-gray-400 text-xs">
-                <span>({product.rating})</span>
-                {renderStars(product.rating || 0)}
-              </div>
-            )}
           </div>
         </div>
 

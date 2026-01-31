@@ -144,57 +144,7 @@ const Header = () => {
     </div>
   );
 
-  // Replace the cart and wishlist section in mobile view
-  const mobileCartAndWishlistSection = (
-    <div className="flex space-x-4 mt-4 border-t border-gray-700 pt-4">
-      <div className="flex items-center">
-        <UserMenu onLoginClick={openLoginModal} />
-      </div>
 
-      <Link
-        href="/wishlist"
-        className="text-white hover:text-silver relative"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        <span className="sr-only">Wishlist</span>
-        <div className="relative h-6 w-6">
-          <Image
-            src={pathname === '/wishlist' ? '/icons/wishlist-filled.png' : '/icons/wishlist-outline.png'}
-            alt="Wishlist"
-            fill
-            className="object-contain invert"
-            unoptimized
-          />
-        </div>
-        {wishlist.length > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {wishlist.length}
-          </span>
-        )}
-      </Link>
-
-      <Link
-        href="/cart"
-        className="text-white hover:text-silver relative"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        <span className="sr-only">Cart</span>
-        <div className="relative h-6 w-6">
-          <Image
-            src={pathname === '/cart' ? '/icons/cart-filled.png' : '/icons/cart-outline.png'}
-            alt="Cart"
-            fill
-            className="object-contain invert"
-          />
-        </div>
-        {getCartCount() > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {getCartCount()}
-          </span>
-        )}
-      </Link>
-    </div>
-  );
 
   return (
     <>
@@ -224,8 +174,52 @@ const Header = () => {
               </Link>
             </div>
 
-            {/* Mobile/Tablet menu button - hide only on xl screens */}
-            <div className="xl:hidden">
+            {/* Mobile/Tablet menu button & Icons - hide only on xl screens */}
+            <div className="xl:hidden flex items-center gap-4">
+              <div className="flex items-center space-x-4">
+                <UserMenu onLoginClick={openLoginModal} />
+
+                <Link
+                  href="/wishlist"
+                  className="text-white hover:text-silver relative"
+                >
+                  <span className="sr-only">Wishlist</span>
+                  <div className="relative h-6 w-6">
+                    <Image
+                      src={pathname === '/wishlist' ? '/icons/wishlist-filled.png' : '/icons/wishlist-outline.png'}
+                      alt="Wishlist"
+                      fill
+                      className="object-contain invert"
+                    />
+                  </div>
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  href="/cart"
+                  className="text-white hover:text-silver relative"
+                >
+                  <span className="sr-only">Cart</span>
+                  <div className="relative h-6 w-6">
+                    <Image
+                      src={pathname === '/cart' ? '/icons/cart-filled.png' : '/icons/cart-outline.png'}
+                      alt="Cart"
+                      fill
+                      className="object-contain invert"
+                    />
+                  </div>
+                  {getCartCount() > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {getCartCount()}
+                    </span>
+                  )}
+                </Link>
+              </div>
+
               <button
                 type="button"
                 className="text-white hover:text-gray-300 focus:outline-none"
@@ -319,8 +313,7 @@ const Header = () => {
               </div>
             ))}
 
-            {/* Mobile icons */}
-            {mobileCartAndWishlistSection}
+            {/* Mobile icons removed from here - moved to header */}
           </div>
         </div>
       )}

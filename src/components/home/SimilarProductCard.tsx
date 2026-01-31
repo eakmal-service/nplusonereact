@@ -19,8 +19,9 @@ const SimilarProductCard: React.FC<SimilarProductCardProps> = ({ product, onQuic
         product={{
           ...product,
           imageUrl: product.image || (product as any).imageUrl,
-          price: product.originalPrice || (product as any).price || '0', // Fallback to avoid error
-          salePrice: product.price || (product as any).salePrice || (product as any).price || '0',
+          price: (product as any).selling_price || product.price, // Map selling_price -> price (active price)
+          salePrice: (product as any).sale_price || product.salePrice,
+          originalPrice: (product as any).mrp || product.originalPrice,
           stockQuantity: product.stockQuantity || 10,
           status: product.status || 'active',
           availableSizes: product.sizes || (product as any).availableSizes,

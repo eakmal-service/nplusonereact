@@ -88,6 +88,7 @@ export default async function HomePage() {
       subcategory: p.subcategory,
       price: p.selling_price || p.price,
       salePrice: p.sale_price,
+      originalPrice: p.mrp,
       discount: p.mrp && p.selling_price ? `${Math.round(((p.mrp - p.selling_price) / p.mrp) * 100)}% OFF` : undefined,
       image: getImageUrl(p.image_url),
       imageUrl: getImageUrl(p.image_url),

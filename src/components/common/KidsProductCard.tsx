@@ -141,7 +141,7 @@ const KidsProductCard: React.FC<KidsProductCardProps> = ({ product, priority = f
                             salePrice={product.salePrice}
                             price={product.price}
                             discount={product.discount || discountDisplay || undefined}
-                            size="sm"
+                            size="md"
                             showDiscount={false}
                         />
                     </div>
