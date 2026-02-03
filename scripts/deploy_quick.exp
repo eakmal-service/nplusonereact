@@ -16,7 +16,7 @@ send "cd /var/www/nplusone\r"
 expect "#"
 
 # 1. Create ecosystem.config.js for robust startup
-send "echo \"module.exports = { apps: [{ name: 'nplusone', script: '.next/standalone/server.js', env: { PORT: 3000, NODE_ENV: 'production' } }] }\" > ecosystem.config.js\r"
+send "echo \"module.exports = \{ apps: [\{ name: 'nplusone', script: '.next/standalone/server.js', env: \{ PORT: 3000, NODE_ENV: 'production' \} \}] \}\" > ecosystem.config.js\r"
 expect "#"
 
 # 2. Restart using ecosystem
