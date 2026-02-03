@@ -22,7 +22,7 @@ fi
 
 # 2. Run Deployment Script
 echo "Step 2: Deploying to VPS..."
-./scripts/deploy_quick.exp
+./scripts/fix_assets.exp
 
 if [ $? -eq 0 ]; then
     echo "✅ Deployment successful! Website is live with Production keys."

@@ -1,0 +1,59 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    "Permission denied" { puts "Permission denied"; exit 1 }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+expect "#"
+
+# Update ecosystem.config.js to set correct CWD (running from inside standalone)
+send "echo 'module.exports = {' > ecosystem.config.js\r"
+expect "#"
+send "echo '  apps: \[{' >> ecosystem.config.js\r"
+expect "#"
+send "echo '    name: \"nplusone\",' >> ecosystem.config.js\r"
+expect "#"
+send "echo '    cwd: \"/var/www/nplusone/.next/standalone\",' >> ecosystem.config.js\r"
+expect "#"
+send "echo '    script: \"server.js\",' >> ecosystem.config.js\r"
+expect "#"
+send "echo '    env: {' >> ecosystem.config.js\r"
+expect "#"
+send "echo '      PORT: 3000,' >> ecosystem.config.js\r"
+expect "#"
+send "echo '      NODE_ENV: \"production\"' >> ecosystem.config.js\r"
+expect "#"
+send "echo '    }' >> ecosystem.config.js\r"
+expect "#"
+send "echo '  }\]' >> ecosystem.config.js\r"
+expect "#"
+send "echo '}' >> ecosystem.config.js\r"
+expect "#"
+
+# Restart
+send "pm2 delete all\r"
+expect "#"
+send "pm2 start ecosystem.config.js\r"
+expect "#"
+send "pm2 save\r"
+expect "#"
+send "systemctl restart nginx\r"
+expect "#"
+
+# Verify
+send "pm2 list\r"
+expect "#"
+send "curl -I localhost:3000\r"
+expect "#"
+
+send "exit\r"
+expect eof
