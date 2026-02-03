@@ -71,17 +71,16 @@ The project follows the **Next.js App Router** convention.
 ---
 
 ## 5. Payments & Checkout
-**Primary Provider:** **Razorpay**.
+**Primary Provider:** **Razorpay** & **PhonePe**.
 
 ### **Implementation Details**
 - **Checkout Flow (`/checkout`):**
   - **COD:** Direct order creation with status `PENDING`.
-  - **Online:** 
-    1. Creates internal order.
-    2. Calls `/api/payment/razorpay` to generate Razorpay Order ID.
-    3. Opens Razorpay Modal.
-    4. Verifies signature via `/api/payment/razorpay/verify`.
-    5. Updates order status to `PAID` upon success.
+  - **PhonePe (Primary):**
+    1.  Calls `/api/payment/phonepe/initiate` to generate payload + checksum.
+    2.  Redirects user to PhonePe S2S payment page.
+    3.  Handles S2S callback at `/api/payment/phonepe/callback`.
+  - **Razorpay (Legacy/Backup):** Standard modal flow.
 - **Validation:** Robust form validation includes phone number checks and required fields.
 - **Debugging:** Detailed error logging implemented in `handlePlaceOrder` to catch payment initialization failures.
 
@@ -99,12 +98,41 @@ The project follows the **Next.js App Router** convention.
 
 ---
 
-## 7. Critical Status Log
+
+---
+
+## 7. Latest Feature Audits (Jan 2026)
+
+### **A. Payments Integration (PhonePe)**
+- **Status:** **LIVE (Production Mode)**.
+- **Provider:** PhonePe (via `/api/payment/phonepe`).
+- **Flow:**
+  1.  Initiate Payment -> Redirect to PhonePe Gateway.
+  2.  Callback Handling -> `/api/payment/phonepe/callback` (Server-to-Server).
+  3.  Status Check -> `/api/payment/phonepe/check-status` (Client Verification).
+- **Environment:** Production credentials (`SU260123...`) securely injected via deployment script.
+
+### **B. Frontend Redesign**
+- **Product Cards:** 
+  - **Visuals:** Added "Discount Badge" (e.g., 42% OFF), Bold Sale Price, Strikethrough MRP.
+  - **Buttons:** Wishlist & QuickView moved to right-side vertical stack.
+  - **Data Integrity:** Fixed `originalPrice` mapping issue; Strikethrough now visible on "Similar Products" and "Recently Viewed".
+- **Mobile Header:**
+  - **UX Improvement:** Profile, Wishlist, and Cart icons moved *outside* the hamburger menu for direct accessibility on mobile/tablet.
+  - **Layout:** Positioned adjacent to the hamburger button.
+
+### **C. Deployment & Infrastructure**
+- **Current State:** Fully automated via `manual_deploy.sh` wrapper.
+- **Challenge:** Outbound SSH/Git ports (22/443) blocked in dev environment.
+- **Solution:** Deployment script now authenticates via `deploy_key` and uses `manual_deploy.sh` to orchestrate push + VPS trigger.
+- **Stability:** Excellent. Application rebuilds and restarts via PM2 successfully.
+
+## 8. Critical Status Log
 | Component | Issue | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Deployment** | CI/CD | **STABLE** | SSH Script + Standalone Build working perfectly. |
-| **API** | Env Vars | **FIXED** | `.env.local` explicitly copied to standalone dir. |
-| **Images** | Optimization | **FIXED** | `sharp` installed on VPS. |
-| **Checkout** | Error Handling | **IMPROVED** | Granular logging added for debugging. |
-| **Admin** | Build Error | **FIXED** | Applied `force-dynamic` to Admin pages. |
-| **UI** | Layouts | **POLISHED** | Recently Viewed alignment fixed. |
+| **Deployment** | Network Block | **WORKAROUND** | `manual_deploy.sh` + `deploy_key` used. |
+| **Payments** | PhonePe Prod | **ACTIVE** | Production keys configured and verified. |
+| **UI** | Product Cards | **POLISHED** | Strikethrough price fixed across all sections. |
+| **Mobile** | Header Icons | **OPTIMIZED** | Icons accessible outside hamburger menu. |
+| **SEO** | Meta Tags | **ACTIVE** | Dynamic metadata generating correctly for products. |
+

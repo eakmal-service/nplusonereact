@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    "Permission denied" { puts "Permission denied"; exit 1 }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+
+expect "#"
+send "echo '=== PM2 LIST ==='\r"
+send "pm2 list\r"
+expect "#"
+
+send "echo '=== NGINX STATUS ==='\r"
+send "systemctl status nginx --no-pager\r"
+expect "#"
+
+send "echo '=== ERROR LOGS ==='\r"
+send "tail -n 20 /root/.pm2/logs/nplusone-web-error.log\r"
+expect "#"
+
+send "echo '=== CURL LOCALHOST ==='\r"
+send "curl -I localhost:3000\r"
+expect "#"
+
+send "exit\r"
+expect eof
