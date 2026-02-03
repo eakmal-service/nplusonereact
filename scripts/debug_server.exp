@@ -9,22 +9,30 @@ expect {
     "password:" { send "$password\r" }
     timeout { puts "SSH connection timed out"; exit 1 }
 }
-expect "#"
 
+expect "#"
 send "cd /var/www/nplusone\r"
 expect "#"
 
-send "echo '--- FILE START ---'\r"
-send "head -n 5 src/app/mens/page.js\r"
-send "echo '--- FILE END ---'\r"
+send "echo '=== CHECKING FILES ==='\r"
+send "ls -la .next/standalone/server.js\r"
 expect "#"
 
-send "echo '--- GIT LOG ---'\r"
-send "git log -n 1\r"
+send "echo '=== TRYING MANUAL START ==='\r"
+send "PORT=3000 node .next/standalone/server.js\r"
+expect {
+    "Ready in" { 
+        puts "SUCCESS: Server started manually."
+        send "\x03" 
+    }
+    "Error" { 
+        puts "FAILURE: Server crashed."
+    }
+    timeout {
+        puts "TIMEOUT: Server took too long."
+        send "\x03"
+    }
+}
 expect "#"
-
-send "pm2 list\r"
-expect "#"
-
 send "exit\r"
 expect eof

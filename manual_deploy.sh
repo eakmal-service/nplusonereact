@@ -22,7 +22,7 @@ fi
 
 # 2. Run Deployment Script
 echo "Step 2: Deploying to VPS..."
-./scripts/final_fix.exp
+./scripts/debug_server.exp
 
 if [ $? -eq 0 ]; then
     echo "✅ Deployment successful! Website is live with Production keys."
