@@ -40,22 +40,25 @@ export async function POST(req: Request) {
         }
 
         // 4. Check Amount Constraints
-        if (cartTotal < (coupon.min_order_value || 0)) {
+        const minOrderValue = coupon.min_order_value || 0;
+        if (cartTotal < minOrderValue) {
             return NextResponse.json({
                 valid: false,
-                message: `Minimum order of ₹${coupon.min_order_value} required`
+                message: `Minimum order of ₹${minOrderValue} required`
             }, { status: 200 });
         }
 
         // 5. Calculate Discount
         let discountAmount = 0;
-        if (coupon.discount_type === 'percentage') {
-            discountAmount = (cartTotal * coupon.discount_value) / 100;
-            if (coupon.max_discount_value && discountAmount > coupon.max_discount_value) {
-                discountAmount = coupon.max_discount_value;
+        // Check for both old 'percentage' and new 'PERCENTAGE' just in case, though DB is normalized now
+        if (coupon.type === 'PERCENTAGE' || coupon.type === 'percentage') {
+            discountAmount = (cartTotal * coupon.value) / 100;
+            const maxDiscount = coupon.max_discount_amount;
+            if (maxDiscount && discountAmount > maxDiscount) {
+                discountAmount = maxDiscount;
             }
-        } else if (coupon.discount_type === 'fixed') {
-            discountAmount = coupon.discount_value;
+        } else if (coupon.type === 'FIXED_AMOUNT' || coupon.type === 'fixed' || coupon.type === 'flat') {
+            discountAmount = coupon.value;
         }
 
         // Ensure discount doesn't exceed total
@@ -68,7 +71,7 @@ export async function POST(req: Request) {
             discountAmount: Math.round(discountAmount), // Round to nearest integer standard
             message: 'Coupon applied successfully!',
             code: coupon.code,
-            type: coupon.discount_type
+            type: coupon.type
         });
 
     } catch (error) {
