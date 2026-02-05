@@ -191,6 +191,28 @@ const OrdersSection: React.FC = () => {
     finally { setActionLoading(false); }
   }
 
+  const handlePrintManifest = async (awb: string) => {
+    if (!awb) return alert("No AWB Number found!");
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/logistics/manifest', {
+        method: 'POST',
+        body: JSON.stringify({ awb_numbers: [awb] })
+      });
+      const data = await res.json();
+      console.log("Manifest Response:", data);
+      if (data.data) {
+        window.open(data.data, '_blank');
+      } else {
+        alert("Manifest generated details in console.");
+      }
+    } catch (e) {
+      alert("Failed to generate manifest");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
 
   const statusOptions = ['Pending', 'Processing', 'Ready to Ship', 'Shipped', 'Delivered', 'Cancelled', 'On Hold', 'RTO'];
 
