@@ -228,7 +228,7 @@ export const printLabel = async (awbNumbers: string[]) => {
         const payload = {
             data: {
                 awb_numbers: awbNumbers.join(','),
-                page_size: 'A4', // Defaulting to A4
+                page_size: '4x6', // Updated to 4x6 inch thermal format as requested
                 display_cod_prepaid: '1',
                 access_token: ACCESS_TOKEN,
                 secret_key: SECRET_KEY,

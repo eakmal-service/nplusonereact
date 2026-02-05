@@ -233,7 +233,7 @@ export interface Database {
                     discount_total: number | null
                     total_amount: number
                     coupon_code: string | null
-                    status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED' | null
+                    status: 'PENDING' | 'PROCESSING' | 'READY_TO_SHIP' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED' | 'ON_HOLD' | null
                     payment_status: string | null
                     payment_method: string | null
                     payment_id: string | null

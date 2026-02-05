@@ -45,7 +45,7 @@ export async function POST(req: Request) {
                     subtotal: total,
                     tax_total: 0,
                     shipping_cost: 0,
-                    status: 'PROCESSING', // Confirmed immediately
+                    status: 'PENDING', // Default state for admin review
                     payment_status: 'PENDING',
                     payment_method: 'COD',
                     shipping_address: {
@@ -99,53 +99,48 @@ export async function POST(req: Request) {
             }
         }
 
-        // 5. Create Shipment
+        // 5. RTO Risk Check & Shipment Creation
         try {
-            // Reconstruct full order object for logistics
-            const fullOrder = { ...orderData, items: orderItems };
-            console.log("Creating COD Shipment for Order:", orderId);
+            const { validateOrderRisk } = await import('@/lib/rto-protection');
+            const riskCheck = validateOrderRisk({
+                phoneNumber: customer.phoneNumber,
+                address: customer.address || customer.address1 || customer.addressLine1 || '',
+                pincode: customer.pincode
+            });
 
-            const shippingResult = await createShipment(fullOrder, 'COD');
+            if (!riskCheck.isSafe) {
+                console.warn(`⚠️ RTO Risk Detected for Order ${orderId}: ${riskCheck.reason}`);
 
-            if (shippingResult && shippingResult.status === 'success') {
-                let awb = 'PENDING';
-                let courier = 'iThinkLogistics';
-                let logisticOrderId = '';
-
-                // Extract data robustly
-                if (shippingResult.data) {
-                    const values = Object.values(shippingResult.data) as any[];
-                    if (values.length > 0) {
-                        const shipmentData = values[0];
-                        if (shipmentData.waybill) awb = shipmentData.waybill;
-                        if (shipmentData.ord_id) logisticOrderId = shipmentData.ord_id;
-                    }
-                }
-
+                // Move to ON_HOLD
                 await supabaseAdmin
                     .from('orders')
-                    .update({
-                        tracking_id: awb,
-                        carrier: courier,
-                        status: 'SHIPPED'
-                    })
+                    .update({ status: 'ON_HOLD' })
                     .eq('id', orderId);
-            } else {
-                console.error("❌ COD Logistics Sync Failed (API returned non-success):", JSON.stringify(shippingResult, null, 2));
 
-                // Log Failure to System Logs
+                // Log Risk
                 await supabaseAdmin.from('system_logs').insert([{
-                    event_type: 'ORDER_HOOK',
-                    status: 'FAILURE',
-                    message: 'COD Shipping API Response Failed',
-                    request_data: { orderId, paymentMethod: 'COD', fullOrder },
-                    response_data: shippingResult,
+                    event_type: 'RTO_RISK',
+                    status: 'WARNING',
+                    message: `Order put ON_HOLD. Reason: ${riskCheck.reason}`,
+                    request_data: { orderId, reason: riskCheck.reason },
                     user_id: userId
                 }]);
+
+                // EXIT EARLY - DO NOT SHIP
+                // Convert to "success" response so frontend shows success page, but backend held it.
+                return NextResponse.json({ success: true, orderId, message: "Order placed successfully. Validation pending." });
             }
+
+            // --- SAFE To Place (Manual Approval Mode) ---
+            // We previously triggered shipment here. Now we SKIP it.
+            // Admin must click "Accept" -> "Print Label" manually.
+
+            console.log(`COD Order ${orderId} placed. Status: PENDING (Waiting for Admin)`);
+            return NextResponse.json({ success: true, orderId });
+
         } catch (shipError) {
-            console.error("COD Shipment Error:", shipError);
-            // Continue -> Don't fail the order just because shipping API hiccuped
+            console.error("COD Validation Error:", shipError);
+            // Continue 
         }
 
         // 6. Send Confirmation Email

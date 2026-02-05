@@ -7,6 +7,7 @@ interface Order {
   customer_email: string;
   total_amount: number;
   status: string;
+  tracking_id?: string; // AWB
   created_at: string;
   tracking_events?: any[];
   courier_info?: any;
@@ -14,27 +15,27 @@ interface Order {
   shipping_address?: any;
 }
 
-const statusOptions = ['All Orders', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-const dateOptions = ['All Time', 'Last 7 Days', 'Last 30 Days'];
+// Workflow Tabs - Adjusted for strict flow
+const TABS = ['On Hold', 'Pending', 'Processing', 'Ready to Ship', 'Shipped', 'Cancelled', 'All Orders'];
 
-const statusColors: Record<string, string> = {
-  'Delivered': 'bg-green-600',
-  'Pending': 'bg-yellow-500',
-  'Processing': 'bg-blue-500',
-  'Shipped': 'bg-blue-600',
-  'Returned': 'bg-red-600',
-  'Cancelled': 'bg-gray-600',
+// DB Status Mapping
+const STATUS_MAP: Record<string, string[]> = {
+  'On Hold': ['ON_HOLD', 'RTO'], // RTO goes here too for review
+  'Pending': ['PENDING'], // New Orders Only
+  'Processing': ['PROCESSING'], // Accepted, Ready for Label
+  'Ready to Ship': ['READY_TO_SHIP'], // Label Printed
+  'Shipped': ['SHIPPED', 'DELIVERED'],
+  'Cancelled': ['CANCELLED', 'RETURNED'],
+  'All Orders': [] // Special case
 };
 
 const OrdersSection: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('All Orders');
-  const [date, setDate] = useState('All Time');
-
-  // Expanded Order State for Modal
+  const [activeTab, setActiveTab] = useState('Pending');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -43,278 +44,360 @@ const OrdersSection: React.FC = () => {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching orders:', error);
-    } else {
-      setOrders(data || []);
-    }
+    if (error) console.error('Error fetching orders:', error);
+    else setOrders(data || []);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-
-    // Realtime subscription
     const channel = supabase
       .channel('public:orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
       .subscribe();
-
     return () => { supabase.removeChannel(channel) };
   }, []);
 
-  const updateOrderStatus = async (id: string, newStatus: string) => {
-    // Also add a tracking event for this status change
-    const order = orders.find(o => o.id === id);
-    if (!order) return;
-
-    const newEvent = {
-      status: newStatus.toLowerCase().replace(' ', '_'),
-      label: `Order ${newStatus}`,
-      message: `Order status updated to ${newStatus}`,
-      location: 'Admin Panel',
-      timestamp: new Date().toISOString(),
-      source: 'admin'
-    };
-
-    // Cast tracking_events to array (in case it comes as jsonb/object from DB, typical JS quirk with supabase types)
-    const currentEvents = Array.isArray(order.tracking_events) ? order.tracking_events : [];
-    const updatedEvents = [...currentEvents, newEvent];
-
-    const { error } = await supabase.from('orders').update({
-      status: newStatus,
-      tracking_events: updatedEvents
-    }).eq('id', id);
-
-    if (error) {
-      alert("Failed to update status");
-    } else {
-      // Local update optimization could be here, but fetchOrders via realtime or manual refresh handles it
-      fetchOrders();
-      if (selectedOrder && selectedOrder.id === id) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus, tracking_events: updatedEvents as any });
-      }
-    }
-  };
-
-  const updateCourierInfo = async (id: string, courierName: string, trackingNumber: string, trackingUrl: string) => {
-    const { error } = await supabase.from('orders').update({
-      courier_info: {
-        name: courierName,
-        tracking_number: trackingNumber,
-        tracking_url: trackingUrl
-      }
-    }).eq('id', id);
-
-    if (error) alert("Failed to update courier info");
+  // Filter Logic
+  const filteredOrders = orders.filter(o => {
+    // 1. Tab Filter
+    let matchesTab = false;
+    if (activeTab === 'All Orders') matchesTab = true;
     else {
+      const allowedStatuses = STATUS_MAP[activeTab];
+      matchesTab = allowedStatuses.includes(o.status);
+    }
+
+    // 2. Search Filter
+    const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) ||
+      o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+      o.customer_email.toLowerCase().includes(search.toLowerCase()) ||
+      (o.tracking_id || '').toLowerCase().includes(search.toLowerCase());
+
+    return matchesTab && matchesSearch;
+  });
+
+  // Actions
+  const handleStatusUpdate = async (orderId: string, newStatus: string, actionLabel: string) => {
+    if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/orders/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          status: newStatus,
+          trackingEvent: {
+            status: newStatus.toLowerCase(),
+            label: actionLabel,
+            message: `Admin status update: ${newStatus}`,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+
+      // Optimistic Update
       fetchOrders();
-      if (selectedOrder && selectedOrder.id === id) {
-        const updated = { ...selectedOrder, courier_info: { name: courierName, tracking_number: trackingNumber, tracking_url: trackingUrl } };
-        setSelectedOrder(updated);
-      }
+      setSelectedOrder(null);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
+  const handlePrintLabel = async (awb: string, orderId: string) => {
+    // Note: If no AWB yet, we might trigger creation, but usually backend does it. 
+    // Here we assume "Processing" state implies we need to GENERATE label. 
+    // But our label API expects an AWB number? 
+    // Wait, the previous logic assumed AWB exists. 
+    // If we are in "Processing", we don't have an AWB yet because we disabled auto-ship.
+    // So "Print Label" button should actually TRIGGER SHIPMENT CREATION first if AWB is missing.
 
-  // Filtered orders
-  let filtered = orders.filter((o) =>
-    (status === 'All Orders' || o.status === status) &&
-    (o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer_email.toLowerCase().includes(search.toLowerCase()))
-  );
+    // BUT the user said "Action: Admin Prints Label -> Backend API call -> AWB Generate".
+    // So this button is actually "Generate & Print Label".
 
-  // Summary counts
-  const total = orders.length;
-  const pending = orders.filter(o => o.status === 'Pending').length;
-  const delivered = orders.filter(o => o.status === 'Delivered').length;
-  const returned = orders.filter(o => o.status === 'Returned' || o.status === 'Cancelled').length;
+    setActionLoading(true);
+    try {
+      // We probably need a new API endpoint or modify 'label' route to support "create shipment if missing" logic?
+      // OR we just use the 'place-cod' logic but exposed as an admin action?
+      // Let's assume we need to trigger shipment creation here.
+
+      // For now, let's assume the user meant we call the label API. 
+      // If AWB is missing, we can't print label. 
+      // We need a "Generate Label" action.
+      // Let's ADD a "Generate Label" button in Processing tab.
+
+      alert("Integrate 'Generate Shipment' API here. For now, assuming you need to generate it manually or via another mechanism.");
+
+      // TODO: This part needs clarification or a specific "Shipment" API. 
+      // The user says "iThink/Delhivery API call -> AWB Number generate -> PDF download".
+      // This is exactly what createShipment does.
+      // I should probably make an endpoint `/api/admin/logistics/create-shipment`
+
+    } catch (e) {
+      alert("Failed to print label");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Actually, I need to implement the "Generate Label" logic properly.
+  // The 'label' API just prints existing labels.
+  // We need an action to CREATE shipment.
+
+  const handleGenerateLabel = async (orderId: string) => {
+    if (!confirm("Generate Shipping Label? This will book the shipment with courier.")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/logistics/create-shipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to generate");
+
+      alert(`Label Generated! AWB: ${data.awb}`);
+      fetchOrders(); // Should move to Ready to Ship
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Re-using print label for existing AWBs
+  const handleDownloadLabel = async (awb: string) => {
+    if (!awb) return alert("No AWB found");
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/logistics/label', {
+        method: 'POST',
+        body: JSON.stringify({ awb_numbers: [awb] })
+      });
+      const data = await res.json();
+      if (data.data && typeof data.data === 'string' && data.data.startsWith('http')) {
+        window.open(data.data, '_blank');
+      } else if (data.file_url) {
+        window.open(data.file_url, '_blank');
+      } else {
+        alert("Label PDF URL not found in response:\n" + JSON.stringify(data, null, 2));
+      }
+    } catch (e) { alert("Error downloading label"); }
+    finally { setActionLoading(false); }
+  }
+
+
+  const statusOptions = ['Pending', 'Processing', 'Ready to Ship', 'Shipped', 'Delivered', 'Cancelled', 'On Hold', 'RTO'];
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-silver">Orders</h1>
-        <button onClick={fetchOrders} className="text-sm text-silver underline">Refresh</button>
+      <h1 className="text-2xl font-bold text-silver mb-6">Order Manager</h1>
+
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-2 overflow-x-auto">
+        {TABS.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeTab === tab
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-800 text-gray-400 hover:text-white'
+              }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
+      {/* Search & Refresh */}
+      <div className="flex gap-4 mb-4">
         <input
           type="text"
-          placeholder="Order ID, Customer Name..."
+          placeholder="Search Order ID, Name, AWB..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-[220px] p-2 rounded bg-gray-900 text-white border border-gray-700"
+          className="flex-1 bg-gray-900 border border-gray-700 text-white p-2 rounded"
         />
-        <select value={status} onChange={e => setStatus(e.target.value)} className="p-2 rounded bg-gray-900 text-white border border-gray-700">
-          {statusOptions.map(s => <option key={s}>{s}</option>)}
-        </select>
+        <button onClick={fetchOrders} className="text-silver underline text-sm">Refresh</button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-800">
-          <div className="text-xs text-gray-400 mb-1">Total Orders</div>
-          <div className="text-2xl font-bold text-white">{total}</div>
-        </div>
-        <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-800">
-          <div className="text-xs text-gray-400 mb-1">Pending</div>
-          <div className="text-2xl font-bold text-yellow-400">{pending}</div>
-        </div>
-        <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-800">
-          <div className="text-xs text-gray-400 mb-1">Delivered</div>
-          <div className="text-2xl font-bold text-green-400">{delivered}</div>
-        </div>
-        <div className="bg-gray-900 rounded-lg p-4 text-center border border-gray-800">
-          <div className="text-xs text-gray-400 mb-1">Cancelled</div>
-          <div className="text-2xl font-bold text-red-400">{returned}</div>
-        </div>
+      {/* List */}
+      <div className="space-y-3">
+        {loading ? <div className="text-gray-400">Loading...</div> :
+          filteredOrders.length === 0 ? <div className="text-gray-500">No orders in {activeTab}</div> :
+            filteredOrders.map(order => (
+              <div key={order.id} className="bg-gray-900 border border-gray-800 p-4 rounded-lg flex flex-col md:flex-row gap-4 items-start md:items-center">
+                {/* Main Info */}
+                <div className="flex-1 cursor-pointer" onClick={() => setSelectedOrder(order as any)}>
+                  <div className="flex justify-between">
+                    <span className="font-bold text-white text-lg">{order.customer_name}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${order.status === 'CANCELLED' ? 'bg-red-900 text-red-200' :
+                      order.status === 'SHIPPED' ? 'bg-green-900 text-green-200' :
+                        order.status === 'PENDING' ? 'bg-yellow-900 text-yellow-200' :
+                          'bg-blue-900 text-blue-200'
+                      }`}>{order.status}</span>
+                  </div>
+                  <div className="text-sm text-gray-400">Order ID: {order.id}</div>
+                  <div className="text-sm text-gray-400">AWB: {order.tracking_id || 'Pending'}</div>
+                  <div className="text-gray-300 font-bold mt-1">₹{order.total_amount} <span className="text-xs font-normal text-gray-500">({order.payment_info?.method || 'Method N/A'})</span></div>
+                </div>
+
+                {/* Quick Actions based on Tab */}
+                <div className="flex flex-col gap-2 min-w-[150px]">
+
+                  {/* 1. Pending (New) -> Accept or Hold */}
+                  {activeTab === 'Pending' && (
+                    <>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleStatusUpdate(order.id, 'PROCESSING', 'Order Accepted')}
+                          disabled={actionLoading}
+                          className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs py-2 px-2 rounded font-medium"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(order.id, 'ON_HOLD', 'Order Rejected/Review')}
+                          className="flex-1 bg-gray-700 hover:bg-gray-600 text-yellow-500 text-xs py-2 px-2 rounded"
+                        >
+                          Review
+                        </button>
+                      </div>
+                      <button className="bg-gray-800 text-gray-500 text-xs py-1 px-2 rounded cursor-not-allowed">Print Label (Locked)</button>
+                    </>
+                  )}
+
+                  {/* 2. Processing (Accepted) -> Print Label (Generate) */}
+                  {/* 2. Processing (Accepted) -> Generate or Print Label */}
+                  {activeTab === 'Processing' && (
+                    <>
+                      {order.tracking_id ? (
+                        <button
+                          onClick={() => handleDownloadLabel(order.tracking_id!)}
+                          className="bg-purple-600 hover:bg-purple-500 text-white text-xs py-2 px-2 rounded font-medium"
+                        >
+                          Download Label (4x6)
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateLabel(order.id)}
+                          disabled={actionLoading}
+                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs py-2 px-2 rounded font-medium"
+                        >
+                          Generate Label
+                        </button>
+                      )}
+
+                      {order.tracking_id && (
+                        <button
+                          onClick={() => handleStatusUpdate(order.id, 'READY_TO_SHIP', 'Marked Ready')}
+                          className="bg-green-600 hover:bg-green-500 text-white text-xs py-2 px-2 rounded"
+                        >
+                          Mark Ready to Ship
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* 3. Ready to Ship (Label Done) -> Manifest & Handover */}
+                  {activeTab === 'Ready to Ship' && (
+                    <>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDownloadLabel(order.tracking_id!)}
+                          disabled={!order.tracking_id}
+                          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded"
+                        >
+                          Reprint Label
+                        </button>
+                        <button
+                          onClick={() => handlePrintManifest(order.tracking_id!)}
+                          disabled={!order.tracking_id || actionLoading}
+                          className="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs py-1 px-2 rounded"
+                        >
+                          Manifest
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => handleStatusUpdate(order.id, 'SHIPPED', 'Marked Shipped (Handover)')}
+                        disabled={actionLoading}
+                        className="bg-green-600 hover:bg-green-500 text-white text-xs py-2 px-2 rounded font-medium"
+                      >
+                        Mark Shipped
+                      </button>
+                    </>
+                  )}
+
+                  {/* 4. On Hold -> Release */}
+                  {activeTab === 'On Hold' && (
+                    <button
+                      onClick={() => handleStatusUpdate(order.id, 'PROCESSING', 'Released from Hold')}
+                      className="bg-gray-600 text-white text-xs py-2 px-2 rounded"
+                    >
+                      Release (Approve)
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+        }
       </div>
 
-      <div className="space-y-4">
-        {loading ? (
-          <div className="text-center text-gray-400">Loading orders...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center text-gray-400 py-8 bg-gray-900 rounded">No orders found.</div>
-        ) : (
-          filtered.map((o) => (
-            <div key={o.id} className="bg-gray-900 rounded-lg border border-gray-800 flex flex-col md:flex-row items-center md:items-stretch p-4 gap-4">
-              <div className="flex flex-col items-center md:items-start w-24 min-w-[80px]">
-                <span className="bg-gray-700 text-white text-xs px-2 py-1 rounded mb-2">Order</span>
-              </div>
-              <div className="flex-1 cursor-pointer hover:bg-gray-800 p-2 rounded transition-colors" onClick={() => setSelectedOrder(o as unknown as Order)}>
-                <div className="font-semibold text-white text-lg mb-1">{o.customer_name} <span className="text-xs text-blue-400 ml-2">(Click to View Details)</span></div>
-                <div className="text-xs text-gray-400 mb-1">ID: {o.id}</div>
-                <div className="text-xs text-gray-400 mb-1">Total: ₹{o.total_amount?.toLocaleString()}</div>
-                <div className="text-xs text-gray-400 mb-1">Email: {o.customer_email}</div>
-                {/* Courier Preview */}
-                {o.courier_info?.name && o.courier_info.name !== "Not Assigned" && (
-                  <div className="text-xs text-green-400 mt-1">🚚 {o.courier_info.name} ({o.courier_info.tracking_number || 'No #'})</div>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-2 min-w-[120px]">
-                <div className="text-xs text-gray-400 mb-1">{new Date(o.created_at).toLocaleDateString()}</div>
-                <div className={`text-xs text-white px-2 py-1 rounded ${statusColors[o.status] || 'bg-gray-600'}`}>{o.status}</div>
-
-                <select
-                  value={o.status}
-                  onChange={(e) => updateOrderStatus(o.id, e.target.value)}
-                  className="bg-gray-800 text-xs text-white border border-gray-700 rounded p-1 mt-2"
-                >
-                  {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Order Details Modal */}
+      {/* Simple Modal Preview */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xl font-bold text-white">Order Details: {selectedOrder.id}</h2>
-              <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+          <div className="bg-gray-900 border border-gray-700 p-6 rounded-lg w-full max-w-lg">
+            <div className="flex justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Details: {selectedOrder.customer_name}</h2>
+              <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white px-2">X</button>
             </div>
-
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-gray-500">Customer</label>
-                  <div className="text-white">{selectedOrder.customer_name}</div>
-                  <div className="text-sm text-gray-400">{selectedOrder.customer_email}</div>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">Amount</label>
-                  <div className="text-white text-xl">₹{selectedOrder.total_amount?.toLocaleString()}</div>
-                  <div className="text-sm text-gray-400 capitalize">{selectedOrder.payment_info?.method || 'Method N/A'} - {selectedOrder.payment_info?.status || 'Status N/A'}</div>
-                </div>
+            <div className="space-y-4 text-sm text-gray-300">
+              <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
+              <p><strong>Phone:</strong> {(selectedOrder.shipping_address as any)?.mobile || (selectedOrder.shipping_address as any)?.phoneNumber || 'N/A'}</p>
+              <p><strong>Address:</strong><br />
+                {(selectedOrder.shipping_address as any)?.address || 'N/A'}, {(selectedOrder.shipping_address as any)?.city}<br />
+                {(selectedOrder.shipping_address as any)?.pincode}
+              </p>
+              <p><strong>Timeline:</strong></p>
+              <div className="max-h-40 overflow-y-auto border border-gray-700 p-2 rounded">
+                {selectedOrder.tracking_events?.map((e: any, i) => (
+                  <div key={i} className="text-xs mb-2 border-b border-gray-800 pb-1">
+                    <span className="text-blue-400">{new Date(e.timestamp).toLocaleString()}</span>: {e.message}
+                  </div>
+                ))}
               </div>
-
-              {/* Shipping Address */}
-              {selectedOrder.shipping_address && (
-                <div className="bg-gray-800 p-3 rounded">
-                  <h3 className="text-sm font-bold text-gray-300 mb-2">Shipping Address</h3>
-                  <div className="text-sm text-gray-400">
-                    {selectedOrder.shipping_address.name}<br />
-                    {selectedOrder.shipping_address.address}, {selectedOrder.shipping_address.city}<br />
-                    {selectedOrder.shipping_address.state} - {selectedOrder.shipping_address.pincode}<br />
-                    {selectedOrder.shipping_address.phone}
-                  </div>
-                </div>
-              )}
-
-              {/* Courier Management */}
-              <div className="bg-gray-800 p-3 rounded border border-gray-700">
-                <h3 className="text-sm font-bold text-gray-300 mb-3">Courier / Shipping</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 block mb-1">Carrier Name</label>
-                    <input
-                      type="text"
-                      className="w-full bg-gray-900 border border-gray-600 rounded p-1 text-sm text-white"
-                      defaultValue={selectedOrder.courier_info?.name || ''}
-                      id="courierName"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 block mb-1">Tracking Number</label>
-                    <input
-                      type="text"
-                      className="w-full bg-gray-900 border border-gray-600 rounded p-1 text-sm text-white"
-                      defaultValue={selectedOrder.courier_info?.tracking_number || ''}
-                      id="trackingNumber"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="text-xs text-gray-500 block mb-1">Tracking URL</label>
-                    <input
-                      type="text"
-                      className="w-full bg-gray-900 border border-gray-600 rounded p-1 text-sm text-white"
-                      defaultValue={selectedOrder.courier_info?.tracking_url || ''}
-                      id="trackingUrl"
-                    />
-                  </div>
-                </div>
-                <button
-                  className="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded w-full"
-                  onClick={() => {
-                    const name = (document.getElementById('courierName') as HTMLInputElement).value;
-                    const num = (document.getElementById('trackingNumber') as HTMLInputElement).value;
-                    const url = (document.getElementById('trackingUrl') as HTMLInputElement).value;
-                    updateCourierInfo(selectedOrder.id, name, num, url);
-                  }}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <div className="flex-1">
+                <label className="text-xs text-gray-500 block">Manual Status Override</label>
+                <select
+                  value={selectedOrder.status}
+                  onChange={(e) => handleStatusUpdate(selectedOrder.id, e.target.value, 'Manual Override')}
+                  className="bg-gray-800 text-white text-xs p-1 rounded w-full border border-gray-600"
                 >
-                  Update Courier Details
+                  {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              {selectedOrder.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => handleStatusUpdate(selectedOrder.id, 'CANCELLED', 'Cancelled by Admin')}
+                  className="bg-red-900 hover:bg-red-800 text-red-200 px-4 py-2 rounded text-xs"
+                >
+                  Cancel
                 </button>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-gray-800 p-3 rounded">
-                <h3 className="text-sm font-bold text-gray-300 mb-3">Tracking Timeline</h3>
-                <div className="space-y-4 border-l-2 border-gray-600 ml-2 pl-4 relative">
-                  {/* Events list */}
-                  {(selectedOrder.tracking_events && Array.isArray(selectedOrder.tracking_events)) ?
-                    selectedOrder.tracking_events.map((evt, idx) => (
-                      <div key={idx} className="relative">
-                        <div className="absolute -left-[21px] top-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-800"></div>
-                        <div className="text-sm text-white font-medium">{evt.label} <span className="text-xs text-gray-500 ml-2">{new Date(evt.timestamp).toLocaleString()}</span></div>
-                        <div className="text-xs text-gray-400 mt-1">{evt.message}</div>
-                        {evt.location && <div className="text-xs text-gray-500 mt-1">📍 {evt.location}</div>}
-                      </div>
-                    ))
-                    : <div className="text-xs text-gray-500">No events yet. change status to generate events.</div>}
-                </div>
-              </div>
-
+              )}
+              <button onClick={() => setSelectedOrder(null)} className="bg-gray-700 text-white px-4 py-2 rounded text-xs">Close</button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };
 
-export default OrdersSection; 
+export default OrdersSection;

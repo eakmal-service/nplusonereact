@@ -75,57 +75,65 @@ export async function POST(req: Request) {
                         let trackingId = null;
                         let carrierName = null;
                         let syncStatus = 'PENDING';
+                        let isRtoRisk = false;
 
                         try {
-                            console.log(`📦 Triggering iThinkLogistics (Prepaid) for ${orderId}`);
-                            const shippingResult = await createShipment(fullOrder, 'Prepaid');
+                            // RTO RISK CHECK
+                            const { validateOrderRisk } = await import('@/lib/rto-protection');
+                            // Extract shipping info from orderData
+                            const shippingInfo = orderData.shipping_address || {};
+                            const riskCheck = validateOrderRisk({
+                                phoneNumber: shippingInfo.mobile || shippingInfo.phoneNumber || shippingInfo.phone,
+                                address: shippingInfo.address || shippingInfo.address1 || shippingInfo.addressLine1 || '',
+                                pincode: shippingInfo.pincode
+                            });
 
-                            if (shippingResult && shippingResult.status === 'success') {
-                                syncStatus = 'SUCCESS';
+                            if (!riskCheck.isSafe) {
+                                console.warn(`⚠️ RTO Risk Detected for Prepaid Order ${orderId}: ${riskCheck.reason}`);
+                                isRtoRisk = true;
 
-                                if (shippingResult.data) {
-                                    const values = Object.values(shippingResult.data) as any[];
-                                    if (values.length > 0) {
-                                        trackingId = values[0].waybill;
-                                        carrierName = 'iThinkLogistics';
-                                    }
-                                }
-                                console.log(`🚀 Logistics Sync Success! AWB: ${trackingId}`);
+                                // Update status to ON_HOLD immediately
+                                await supabaseAdmin
+                                    .from('orders')
+                                    .update({ status: 'ON_HOLD' })
+                                    .eq('id', orderId);
+
+                                await supabaseAdmin.from('system_logs').insert([{
+                                    event_type: 'RTO_RISK',
+                                    status: 'WARNING',
+                                    message: `Prepaid Order put ON_HOLD. Reason: ${riskCheck.reason}`,
+                                    request_data: { orderId, reason: riskCheck.reason },
+                                    user_id: orderData.user_id
+                                }]);
                             } else {
-                                syncStatus = 'FAILURE';
-                                console.error("❌ Logistics Sync Failed:", JSON.stringify(shippingResult));
+                                // SAFE -> BUT MANUAL APPROVAL MODE
+                                // Do NOT trigger logistics. Wait for admin.
+                                console.log(`✅ Prepaid Order ${orderId} verified. Marked PENDING for Admin.`);
                             }
 
-                            // 4. Log the Hook Event
-                            await supabaseAdmin.from('system_logs').insert([{
-                                event_type: 'ORDER_HOOK',
-                                status: syncStatus,
-                                message: syncStatus === 'SUCCESS' ? `Prepaid Shipment Created: ${trackingId}` : 'Prepaid Shipment API Failed',
-                                request_data: { orderId, paymentMethod: 'Prepaid' },
-                                response_data: shippingResult,
-                                user_id: orderData.user_id
-                            }]);
-
                         } catch (syncErr) {
-                            console.error("❌ Logistics Sync Exception:", syncErr);
+                            console.error("Prepaid Validation Error:", syncErr);
                         }
 
-                        // 5. Update Order Status
-                        const updateData: any = {
-                            status: 'PROCESSING',
-                            payment_status: 'PAID'
-                        };
+                        // 5. Update Order Status (Only if NOT RTO Risk)
+                        // If RTO Risk, we already set it to ON_HOLD above.
+                        if (!isRtoRisk) {
+                            const updateData: any = {
+                                status: 'PROCESSING',
+                                payment_status: 'PAID'
+                            };
 
-                        if (trackingId) {
-                            updateData.tracking_id = trackingId;
-                            updateData.carrier = carrierName;
-                            updateData.status = 'SHIPPED'; // Auto-move to SHIPPED if AWB is generated?
+                            if (trackingId) {
+                                updateData.tracking_id = trackingId;
+                                updateData.carrier = carrierName;
+                                updateData.status = 'SHIPPED';
+                            }
+
+                            await supabaseAdmin
+                                .from('orders')
+                                .update(updateData)
+                                .eq('id', orderId);
                         }
-
-                        await supabaseAdmin
-                            .from('orders')
-                            .update(updateData)
-                            .eq('id', orderId);
                     }
                 }
             } catch (err) {
