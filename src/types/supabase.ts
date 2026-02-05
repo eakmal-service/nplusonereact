@@ -337,6 +337,7 @@ export interface Database {
                     usage_count: number | null
                     is_active: boolean | null
                     status: string | null
+                    created_at: string | null
                 }
                 Insert: {
                     id?: string
@@ -351,6 +352,7 @@ export interface Database {
                     usage_count?: number | null
                     is_active?: boolean | null
                     status?: string | null
+                    created_at?: string | null
                 }
                 Update: {
                     id?: string
@@ -365,6 +367,7 @@ export interface Database {
                     usage_count?: number | null
                     is_active?: boolean | null
                     status?: string | null
+                    created_at?: string | null
                 }
             }
             website_content: {
