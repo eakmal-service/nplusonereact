@@ -24,9 +24,14 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         // Transform the payload to match DB schema
+        const typeMapping: Record<string, string> = {
+            'percentage': 'PERCENTAGE',
+            'flat': 'FIXED_AMOUNT'
+        };
+
         const couponData = {
             code: body.code,
-            type: body.type,
+            type: typeMapping[body.type] || 'PERCENTAGE',
             value: body.value,
             min_order_value: body.min_order_amount, // Key mismatch fix
             max_discount_amount: body.max_discount_amount,
