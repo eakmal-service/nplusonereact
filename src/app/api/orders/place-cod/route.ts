@@ -130,6 +130,18 @@ export async function POST(req: Request) {
                         status: 'SHIPPED'
                     })
                     .eq('id', orderId);
+            } else {
+                console.error("❌ COD Logistics Sync Failed (API returned non-success):", JSON.stringify(shippingResult, null, 2));
+
+                // Log Failure to System Logs
+                await supabaseAdmin.from('system_logs').insert([{
+                    event_type: 'ORDER_HOOK',
+                    status: 'FAILURE',
+                    message: 'COD Shipping API Response Failed',
+                    request_data: { orderId, paymentMethod: 'COD', fullOrder },
+                    response_data: shippingResult,
+                    user_id: userId
+                }]);
             }
         } catch (shipError) {
             console.error("COD Shipment Error:", shipError);

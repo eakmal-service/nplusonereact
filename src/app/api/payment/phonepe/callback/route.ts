@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { StandardCheckoutClient, Env } from 'pg-sdk-node';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { createShipment } from '@/lib/logistics';
 
 // Initialize Config
 const CLIENT_ID = process.env.PHONEPE_CLIENT_ID || 'NO_CLIENT_ID_CONFIGURED';
@@ -49,13 +50,83 @@ export async function POST(req: Request) {
                 const statusRes = await client.getOrderStatus(orderId);
 
                 if (statusRes.state === 'COMPLETED') {
-                    await supabaseAdmin
+                    console.log(`✅ Payment COMPLETED for Order ${orderId}. Starting Sync...`);
+
+                    // 1. Fetch Full Order Details (with items)
+                    const { data: orderData, error: dbError } = await supabaseAdmin
                         .from('orders')
-                        .update({
-                            status: 'PROCESSING', // Correct ENUM value (was PAID which caused error)
+                        .select(`*, order_items(*)`)
+                        .eq('id', orderId)
+                        .single();
+
+                    if (dbError || !orderData) {
+                        console.error("❌ Failed to fetch order for sync:", dbError);
+                    } else {
+                        // 2. Prepare Order Object for Logistics (flatten items structure if needed)
+                        // Supabase join returns items as 'order_items' property.
+                        // logistics.ts expects 'items' or uses defaults. 
+                        // Let's normalize it to match what logistics expects (it looks for order.items).
+                        const fullOrder = {
+                            ...orderData,
+                            items: orderData.order_items
+                        };
+
+                        // 3. Trigger Logistics Sync
+                        let trackingId = null;
+                        let carrierName = null;
+                        let syncStatus = 'PENDING';
+
+                        try {
+                            console.log(`📦 Triggering iThinkLogistics (Prepaid) for ${orderId}`);
+                            const shippingResult = await createShipment(fullOrder, 'Prepaid');
+
+                            if (shippingResult && shippingResult.status === 'success') {
+                                syncStatus = 'SUCCESS';
+
+                                if (shippingResult.data) {
+                                    const values = Object.values(shippingResult.data) as any[];
+                                    if (values.length > 0) {
+                                        trackingId = values[0].waybill;
+                                        carrierName = 'iThinkLogistics';
+                                    }
+                                }
+                                console.log(`🚀 Logistics Sync Success! AWB: ${trackingId}`);
+                            } else {
+                                syncStatus = 'FAILURE';
+                                console.error("❌ Logistics Sync Failed:", JSON.stringify(shippingResult));
+                            }
+
+                            // 4. Log the Hook Event
+                            await supabaseAdmin.from('system_logs').insert([{
+                                event_type: 'ORDER_HOOK',
+                                status: syncStatus,
+                                message: syncStatus === 'SUCCESS' ? `Prepaid Shipment Created: ${trackingId}` : 'Prepaid Shipment API Failed',
+                                request_data: { orderId, paymentMethod: 'Prepaid' },
+                                response_data: shippingResult,
+                                user_id: orderData.user_id
+                            }]);
+
+                        } catch (syncErr) {
+                            console.error("❌ Logistics Sync Exception:", syncErr);
+                        }
+
+                        // 5. Update Order Status
+                        const updateData: any = {
+                            status: 'PROCESSING',
                             payment_status: 'PAID'
-                        })
-                        .eq('id', orderId);
+                        };
+
+                        if (trackingId) {
+                            updateData.tracking_id = trackingId;
+                            updateData.carrier = carrierName;
+                            updateData.status = 'SHIPPED'; // Auto-move to SHIPPED if AWB is generated?
+                        }
+
+                        await supabaseAdmin
+                            .from('orders')
+                            .update(updateData)
+                            .eq('id', orderId);
+                    }
                 }
             } catch (err) {
                 console.error("Quick Status Check Failed in Callback:", err);
