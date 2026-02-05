@@ -22,9 +22,25 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+
+        // Transform the payload to match DB schema
+        const couponData = {
+            code: body.code,
+            type: body.type,
+            value: body.value,
+            min_order_value: body.min_order_amount, // Key mismatch fix
+            max_discount_amount: body.max_discount_amount,
+            start_date: body.start_date,
+            end_date: body.end_date,
+            usage_limit: body.usage_limit,
+            per_user_limit: body.per_user_limit, // New column
+            status: body.status || 'active',
+            is_active: body.status === 'active'
+        };
+
         const { data, error } = await supabaseAdmin
             .from('coupons')
-            .insert([body])
+            .insert([couponData])
             .select()
             .single();
 

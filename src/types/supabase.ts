@@ -338,6 +338,7 @@ export interface Database {
                     is_active: boolean | null
                     status: string | null
                     created_at: string | null
+                    per_user_limit: number | null
                 }
                 Insert: {
                     id?: string
@@ -353,6 +354,7 @@ export interface Database {
                     is_active?: boolean | null
                     status?: string | null
                     created_at?: string | null
+                    per_user_limit?: number | null
                 }
                 Update: {
                     id?: string
@@ -368,6 +370,7 @@ export interface Database {
                     is_active?: boolean | null
                     status?: string | null
                     created_at?: string | null
+                    per_user_limit?: number | null
                 }
             }
             website_content: {
