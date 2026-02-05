@@ -393,6 +393,35 @@ export interface Database {
                     updated_at?: string | null
                 }
             }
+            reviews: {
+                Row: {
+                    id: string
+                    product_id: string
+                    user_id: string
+                    rating: number
+                    comment: string | null
+                    is_visible: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    product_id: string
+                    user_id: string
+                    rating: number
+                    comment?: string | null
+                    is_visible?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    product_id?: string
+                    user_id?: string
+                    rating?: number
+                    comment?: string | null
+                    is_visible?: boolean
+                    created_at?: string
+                }
+            }
             content_banners: {
                 Row: {
                     id: string

@@ -125,7 +125,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) 
       <div className="group relative block bg-transparent">
         {/* Image Container - Full Bleed */}
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md">
-          <Link href={productUrl} className="block w-full h-full">
+          <Link href={productUrl} className="block w-full h-full relative">
             <Image
               src={product.imageUrl}
               alt={product.alt || product.title}
