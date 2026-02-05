@@ -40,6 +40,22 @@ export default function AdminHeader() {
             </h1>
           </div>
 
+          {/* API Playground Link */}
+          <div className="hidden md:flex items-center ml-auto mr-6">
+            <a
+              href="/admin/api-playground"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg transition-colors border border-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12s2.545-5 7-5c4.454 0 7 5 7 5s-2.546 5-7 5c-4.455 0-7-5-7-5z" />
+                <path d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 12c0-1.66 4-3 9-3s9 1.34 9 3" />
+              </svg>
+              <span className="font-mono text-sm">API Playground</span>
+            </a>
+          </div>
+
           {/* Right Section: Notification & Profile */}
           <div className="flex items-center space-x-6">
 
