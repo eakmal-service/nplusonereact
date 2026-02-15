@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+
+expect "password:"
+send "$password\r"
+
+expect "#"
+send "cd /var/www/nplusone\r"
+
+expect "#"
+send "git pull origin main\r"
+
+expect {
+    "Username for 'https://github.com':" {
+        send_user "\nError: Git credentials required on setup. Please configure SSH keys or credentials helper on VPS.\n"
+        exit 1
+    }
+    "Already up to date." {
+        send_user "\nGit pull successful (no changes).\n"
+    }
+    "Fast-forward" {
+        send_user "\nGit pull successful.\n"
+    }
+    "#" {
+        # Proceed if prompt returns
+    }
+}
+
+expect "#"
+send "npm install\r"
+
+expect "#"
+send "npm run build\r"
+
+expect "#"
+send "pm2 restart all\r"
+
+expect "#"
+send "exit\r"
+
+expect eof

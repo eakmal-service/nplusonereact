@@ -405,7 +405,14 @@ const OrdersSection: React.FC = () => {
                   onChange={(e) => handleStatusUpdate(selectedOrder.id, e.target.value, 'Manual Override')}
                   className="bg-gray-800 text-white text-xs p-1 rounded w-full border border-gray-600"
                 >
-                  {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="PENDING">Pending</option>
+                  <option value="PROCESSING">Processing</option>
+                  <option value="READY_TO_SHIP">Ready to Ship</option>
+                  <option value="SHIPPED">Shipped</option>
+                  <option value="DELIVERED">Delivered</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="ON_HOLD">On Hold</option>
+                  <option value="RTO">RTO</option>
                 </select>
               </div>
               {selectedOrder.status !== 'CANCELLED' && (
