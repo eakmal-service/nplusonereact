@@ -146,7 +146,7 @@ export async function POST(req: Request) {
         // 6. Send Confirmation Email
         try {
             // Need to dynamically import to ensure it works in API context
-            const { sendOrderConfirmationEmail } = await import('@/lib/email');
+            const { sendOrderConfirmationEmail, sendAdminNewOrderEmail } = await import('@/lib/email');
 
             // Adjust customer details format if needed
             const customerDetails = {
@@ -155,7 +155,13 @@ export async function POST(req: Request) {
                 ...customer
             };
 
+
             await sendOrderConfirmationEmail(orderData, customerDetails, orderItems);
+
+            // --- NEW: Send Admin Notification ---
+            await sendAdminNewOrderEmail(orderData, customerDetails, orderItems);
+            // ------------------------------------
+
         } catch (emailError) {
             console.error("Email Sending Error:", emailError);
         }

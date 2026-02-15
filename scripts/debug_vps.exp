@@ -1,0 +1,46 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    "Permission denied" { puts "Permission denied"; exit 1 }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+
+expect "#"
+send "cd /var/www/nplusone\r"
+expect "#"
+
+puts "--- CHECKING STANDALONE DIR ---"
+send "ls -la .next/standalone\r"
+expect "#"
+
+puts "--- CHECKING PM2 LIST ---"
+send "pm2 list\r"
+expect "#"
+
+puts "--- CHECKING PM2 LOGS ---"
+send "pm2 logs --nostream --lines 20\r"
+expect "#"
+
+puts "--- TRYING MANUAL START ---"
+# Try starting manually to see immediate error
+send "cd .next/standalone && node server.js\r"
+# We expect this might block or fail, so generic match
+expect {
+    "Ready on" { 
+        puts "Server started successfully manually. Killing it."
+        send "\x03" 
+    }
+    "Error" { puts "Start failed with error" }
+    "#" { puts "Returned to prompt immediately?" }
+    timeout { send "\x03"; puts "Timed out waiting for start" }
+}
+expect "#"
+
+send "exit\r"
+expect eof

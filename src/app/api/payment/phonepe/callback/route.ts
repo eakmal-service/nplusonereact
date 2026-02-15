@@ -134,6 +134,27 @@ export async function POST(req: Request) {
                                 .update(updateData)
                                 .eq('id', orderId);
                         }
+
+                        // --- NEW: Send Admin Notification (Prepaid) ---
+                        try {
+                            const { sendAdminNewOrderEmail, sendOrderConfirmationEmail } = await import('@/lib/email');
+                            const customerDetails = {
+                                email: orderData.shipping_address?.email || orderData.user?.email || 'no-email@nplusone.com',
+                                name: orderData.shipping_address?.fullName || orderData.shipping_address?.name || 'Customer',
+                                ...orderData.shipping_address
+                            };
+
+                            // Send Admin Email
+                            await sendAdminNewOrderEmail(orderData, customerDetails, fullOrder.items || []);
+
+                            // Also Send Customer Confirmation if not already sent (Good practice)
+                            await sendOrderConfirmationEmail(orderData, customerDetails, fullOrder.items || []);
+
+                        } catch (emailErr) {
+                            console.error("Failed to send prepaid emails:", emailErr);
+                        }
+                        // ----------------------------------------------
+                        // ----------------------------------------------
                     }
                 }
             } catch (err) {

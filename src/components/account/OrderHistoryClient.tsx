@@ -25,6 +25,9 @@ type Order = {
     payment_status: string;
     payment_method: string;
     order_items: OrderItem[];
+    // NEW: Add tracking fields (Supabase schema says `tracking_id`)
+    tracking_id?: string | null;
+    carrier?: string | null;
 };
 
 interface Props {
@@ -39,8 +42,9 @@ const OrderHistoryClient: React.FC<Props> = ({ initialOrders }) => {
 
     // Tracking UI State
     const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null); // Which order is being tracked
-    const [trackingInput, setTrackingInput] = useState('');
-    const [trackingResult, setTrackingResult] = useState<string | null>(null);
+    const [trackingLoading, setTrackingLoading] = useState(false);
+    const [trackingData, setTrackingData] = useState<any>(null); // Stores API response
+    const [trackingError, setTrackingError] = useState<string | null>(null);
 
     // --- Filtering & Sorting Logic ---
     const filteredOrders = useMemo(() => {
@@ -82,18 +86,54 @@ const OrderHistoryClient: React.FC<Props> = ({ initialOrders }) => {
     }, [initialOrders, searchQuery, timeFilter, sortOrder]);
 
     // --- Handlers ---
-    const handleTrackSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Placeholder Logic until API is available
-        if (trackingInput.trim()) {
-            setTrackingResult(`Status: In Transit (Simulated) - Location: Hub`);
+    const openTracking = async (order: Order) => {
+        setTrackingOrderId(order.id);
+        setTrackingLoading(true);
+        setTrackingError(null);
+        setTrackingData(null);
+
+        if (!order.tracking_id) {
+            setTrackingError("Tracking information is not yet available for this order.");
+            setTrackingLoading(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/order/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ awb: order.tracking_id })
+            });
+
+            const data = await res.json();
+
+            // Check if API returned data structure we expect
+            // Logistics API returns: { [awb]: { status: '...', history: [...] } } or similar
+            // Let's assume the route returns whatever logistics.ts returns.
+            // iThinkLogistics structure usually key is AWB.
+
+            // For safety, let's just store the whole response and parse in render
+            if (data && data[order.tracking_id]) {
+                setTrackingData(data[order.tracking_id]);
+            } else if (data && data.data && data.data[order.tracking_id]) {
+                setTrackingData(data.data[order.tracking_id]); // Sometimes wrapped in data
+            } else {
+                // Fallback if structure is different or empty
+                setTrackingData(data);
+            }
+
+        } catch (err) {
+            console.error("Tracking Fetch Error:", err);
+            setTrackingError("Unable to fetch tracking updates. Please try again later.");
+        } finally {
+            setTrackingLoading(false);
         }
     };
 
-    const openTracking = (orderId: string) => {
-        setTrackingOrderId(orderId);
-        setTrackingInput('');
-        setTrackingResult(null);
+    const closeTracking = () => {
+        setTrackingOrderId(null);
+        setTrackingData(null);
+        setTrackingError(null);
     };
 
     return (
@@ -160,8 +200,8 @@ const OrderHistoryClient: React.FC<Props> = ({ initialOrders }) => {
                                     <div className="flex items-center gap-3">
                                         <h3 className="font-bold text-lg text-white">Order #{order.id.slice(0, 8)}</h3>
                                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${order.status === 'DELIVERED' ? 'bg-green-900/40 text-green-400 border-green-900' :
-                                                order.status === 'CANCELLED' ? 'bg-red-900/40 text-red-400 border-red-900' :
-                                                    'bg-blue-900/40 text-blue-400 border-blue-900'
+                                            order.status === 'CANCELLED' ? 'bg-red-900/40 text-red-400 border-red-900' :
+                                                'bg-blue-900/40 text-blue-400 border-blue-900'
                                             }`}>
                                             {order.status}
                                         </span>
@@ -233,7 +273,7 @@ const OrderHistoryClient: React.FC<Props> = ({ initialOrders }) => {
                                     {/* Tracking Button (Only for Active Orders) */}
                                     {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'RETURNED' && (
                                         <button
-                                            onClick={() => openTracking(order.id)}
+                                            onClick={() => openTracking(order)}
                                             className="ml-auto bg-white text-black hover:bg-gray-200 px-6 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
                                         >
                                             Track Order
@@ -243,49 +283,68 @@ const OrderHistoryClient: React.FC<Props> = ({ initialOrders }) => {
 
                                 {/* Tracking Expanded Panel */}
                                 {trackingOrderId === order.id && (
-                                    <div className="mt-6 bg-black p-4 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <h4 className="text-sm font-bold text-silver uppercase tracking-wider">Track Shipment</h4>
+                                    <div className="mt-6 bg-black p-6 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div>
+                                                <h4 className="text-sm font-bold text-silver uppercase tracking-wider mb-1">Track Shipment</h4>
+                                                {order.tracking_id && <p className="text-xs text-gray-500">AWB: {order.tracking_id} via {order.carrier || 'Logistics Partner'}</p>}
+                                            </div>
                                             <button
-                                                onClick={() => setTrackingOrderId(null)}
+                                                onClick={closeTracking}
                                                 className="text-gray-500 hover:text-white"
                                             >
                                                 Close
                                             </button>
                                         </div>
 
-                                        {!trackingResult ? (
-                                            <form onSubmit={handleTrackSubmit} className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Enter Tracking ID (received in email)"
-                                                    className="flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-silver outline-none"
-                                                    value={trackingInput}
-                                                    onChange={(e) => setTrackingInput(e.target.value)}
-                                                    required
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
-                                                >
-                                                    Track
-                                                </button>
-                                            </form>
-                                        ) : (
-                                            <div className="bg-gray-900 p-3 rounded border border-gray-800">
-                                                <p className="text-green-400 text-sm font-medium mb-1">✓ Tracking ID Verified</p>
-                                                <p className="text-white text-sm">{trackingResult}</p>
-                                                <button
-                                                    onClick={() => { setTrackingInput(''); setTrackingResult(null); }}
-                                                    className="text-xs text-blue-400 hover:underline mt-2"
-                                                >
-                                                    Track another ID
-                                                </button>
+                                        {trackingLoading && (
+                                            <div className="flex justify-center py-8">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                                             </div>
                                         )}
-                                        <p className="text-xs text-gray-500 mt-2">
-                                            Note: Tracking updates may take up to 24 hours to reflect after shipment.
-                                        </p>
+
+                                        {trackingError && (
+                                            <div className="text-red-400 text-sm bg-red-900/20 p-4 rounded border border-red-900/50">
+                                                {trackingError}
+                                            </div>
+                                        )}
+
+                                        {!trackingLoading && !trackingError && trackingData && (
+                                            <div className="space-y-6 relative ml-2">
+                                                {/* Vertical Line */}
+                                                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gray-800 -z-10"></div>
+
+                                                {/* History Items (Assuming history array in response) */}
+                                                {/* Need to adapt based on actual API response structure. 
+                                                    iThinkLogistics: history: [{ date_time, status, location, remark }] */}
+
+                                                {/* Fallback Display if history exists */}
+                                                {trackingData.history && Array.isArray(trackingData.history) ? (
+                                                    trackingData.history.map((scan: any, i: number) => (
+                                                        <div key={i} className="flex gap-4 items-start relative group">
+                                                            <div className={`w-4 h-4 rounded-full mt-1 flex-shrink-0 border-2 ${i === 0 ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-black border-gray-600'}`}></div>
+                                                            <div className="flex-1">
+                                                                <p className={`text-sm font-medium ${i === 0 ? 'text-white' : 'text-gray-400'}`}>{scan.status || scan.remark}</p>
+                                                                <div className="flex gap-2 text-xs text-gray-500 mt-0.5">
+                                                                    <span>{scan.date_time || scan.date}</span>
+                                                                    {scan.location && <span>&bull; {scan.location}</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    // Fallback for current status only if history array missing
+                                                    <div className="flex gap-4 items-start">
+                                                        <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] mt-1 flex-shrink-0"></div>
+                                                        <div>
+                                                            <p className="text-white font-medium">{trackingData.current_status || "In Transit"}</p>
+                                                            <p className="text-xs text-gray-400">{trackingData.remark || "Shipment is on the way"}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

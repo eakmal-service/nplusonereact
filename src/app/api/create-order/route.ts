@@ -1,3 +1,5 @@
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createShipment } from '@/lib/logistics';
@@ -16,16 +18,29 @@ export async function POST(req: Request) {
 
         const method = paymentMethod || 'COD'; // Default to COD if not specified
 
+        // --- NEW: Get User Session ---
+        const cookieStore = cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value;
+                    },
+                },
+            }
+        );
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
+        // -----------------------------
+
         // 1. Create Order
         const { data: orderData, error: orderError } = await supabaseAdmin
             .from('orders')
             .insert([
                 {
-                    // user_id: Should ideally be passed if logged in. For now, guest orders might have null user_id?
-                    // But schema has user_id REFERENCES profiles. If guest, maybe null is allowed?
-                    // Schema: user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL
-                    // It IS nullable.
-
+                    user_id: userId, // Now linking to user!
                     total_amount: total,
                     subtotal: total, // Simplified for now, or calculate from items/tax
                     tax_total: 0, // Placeholder or passed from frontend

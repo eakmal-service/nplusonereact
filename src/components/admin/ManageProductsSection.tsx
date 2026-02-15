@@ -22,8 +22,58 @@ interface ManageProductsSectionProps {
   onEdit?: (product: any) => void;
 }
 
+import { supabase } from '@/lib/supabaseClient';
+
+interface CategoryNode {
+  id: string;
+  label: string;
+  value?: string;
+  children?: CategoryNode[];
+  level?: number;
+  is_visible?: boolean;
+}
+
 const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit }) => {
-  const { products, removeProduct, updateStatus, refreshProducts } = useProducts();
+  const { products, removeProduct, updateStatus, refreshProducts, updateExistingProduct } = useProducts();
+
+  // Dynamic Categories State
+  const [dynamicCategories, setDynamicCategories] = useState<CategoryNode[]>([]);
+  const [editingCategoryProduct, setEditingCategoryProduct] = useState<any>(null); // Product being edited
+
+  // Edit Modal State
+  const [selectedSuperCat, setSelectedSuperCat] = useState<CategoryNode | null>(null);
+  const [selectedChildCat, setSelectedChildCat] = useState<CategoryNode | null>(null);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      const buildTree = (flatList: any[]): CategoryNode[] => {
+        const map: Record<string, CategoryNode> = {};
+        const roots: CategoryNode[] = [];
+        flatList.forEach(item => {
+          map[item.id] = { id: item.id, label: item.name, value: item.name, children: [], level: item.level };
+        });
+        flatList.forEach(item => {
+          if (item.parent_id && map[item.parent_id]) {
+            map[item.parent_id].children?.push(map[item.id]);
+          } else {
+            roots.push(map[item.id]);
+          }
+        });
+        return roots;
+      };
+      setDynamicCategories(buildTree(data));
+    }
+  };
+
+  React.useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All Categories');
@@ -169,7 +219,28 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
             <div className="p-4 flex-1 flex flex-col">
               <div className="font-semibold text-white mb-1 line-clamp-1 hover:text-blue-400 cursor-pointer" title={p.title} onClick={() => onEdit && onEdit(p)}>{p.title}</div>
               <div className="text-xs text-gray-400 mb-3 flex items-center gap-2">
-                <span className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">{p.category}</span>
+                <span className="bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 flex items-center gap-1">
+                  {p.category}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCategoryProduct(p);
+                      // Pre-fill logic
+                      const superCat = dynamicCategories.find(c => c.value === p.category);
+                      setSelectedSuperCat(superCat || null);
+                      if (superCat && p.subcategory) {
+                        const child = superCat.children?.find(c => c.value === p.subcategory);
+                        setSelectedChildCat(child || null);
+                      } else {
+                        setSelectedChildCat(null);
+                      }
+                    }}
+                    className="text-gray-500 hover:text-white p-0.5 rounded-full hover:bg-gray-700"
+                    title="Edit Category"
+                  >
+                    <Edit2 size={10} />
+                  </button>
+                </span>
                 {p.subcategory && <span>&bull; {p.subcategory}</span>}
               </div>
 
@@ -198,8 +269,8 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
 
               <div className="flex items-center gap-2 mt-auto">
                 <div className={`text-xs font-medium px-2 py-1 rounded border ${(p.stockQuantity || 0) > 0
-                    ? 'bg-green-900/20 text-green-400 border-green-900'
-                    : 'bg-red-900/20 text-red-400 border-red-900'
+                  ? 'bg-green-900/20 text-green-400 border-green-900'
+                  : 'bg-red-900/20 text-red-400 border-red-900'
                   }`}>
                   {(p.stockQuantity || 0) > 0 ? `Stock: ${p.stockQuantity}` : 'Out of Stock'}
                 </div>
@@ -209,8 +280,8 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                     value={p.status || 'active'}
                     onChange={(e) => handleStatusChange(p.id, e.target.value)}
                     className={`w-24 p-1 rounded text-xs border outline-none cursor-pointer ${(p.status === 'active' || !p.status)
-                        ? 'bg-gray-800 text-gray-300 border-gray-700'
-                        : 'bg-gray-800 text-gray-500 border-gray-700'
+                      ? 'bg-gray-800 text-gray-300 border-gray-700'
+                      : 'bg-gray-800 text-gray-500 border-gray-700'
                       }`}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -335,6 +406,102 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                     <Copy size={16} /> Duplicate
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Edit Modal */}
+      {editingCategoryProduct && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setEditingCategoryProduct(null)}>
+          <div className="bg-gray-900 border border-gray-700 p-6 rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-white mb-4">Edit Category</h3>
+            <p className="text-gray-400 text-sm mb-4">Product: <span className="text-white">{editingCategoryProduct.title}</span></p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Main Category</label>
+                <select
+                  className="w-full bg-black border border-gray-700 text-white p-2 rounded"
+                  onChange={(e) => {
+                    const cat = dynamicCategories.find(c => c.value === e.target.value);
+                    setSelectedSuperCat(cat || null);
+                    setSelectedChildCat(null); // Reset child
+                  }}
+                  value={selectedSuperCat?.value || ''}
+                >
+                  <option value="">Select Category</option>
+                  {dynamicCategories.map(c => <option key={c.id} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+
+              {selectedSuperCat && selectedSuperCat.children && selectedSuperCat.children.length > 0 && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Subcategory</label>
+                  <select
+                    className="w-full bg-black border border-gray-700 text-white p-2 rounded"
+                    onChange={(e) => {
+                      const cat = selectedSuperCat.children?.find(c => c.value === e.target.value);
+                      setSelectedChildCat(cat || null);
+                    }}
+                    value={selectedChildCat?.value || ''}
+                  >
+                    <option value="">Select Subcategory</option>
+                    {selectedSuperCat.children.map(c => <option key={c.id} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={async () => {
+                    if (selectedSuperCat) {
+                      // CATEGORY MAPPING LOGIC (Copied from AddProductForm to ensure DB Enum match)
+                      const CATEGORY_ENUM_MAP: Record<string, string> = {
+                        "All Boy's Wear": 'KIDS WEAR',
+                        "Boy's Wear": 'KIDS WEAR',
+                        "Girl's Wear": 'KIDS WEAR',
+                        "Men's Wear": 'MENS WEAR',
+                        "Suit Set": 'SUIT SET',
+                        "Western Wear": 'WESTERN WEAR',
+                        "Co-ord Set": 'CO-ORD SET',
+                        "Kid's Wear": 'KIDS WEAR',
+                        "Indo-Western": 'INDO-WESTERN',
+                        "all boy's wear": 'KIDS WEAR',
+                        "boy's wear": 'KIDS WEAR',
+                        "girl's wear": 'KIDS WEAR',
+                        "men's wear": 'MENS WEAR',
+                        // NEW MAPPINGS FOR WOMEN'S WEAR
+                        "Women's Wear": 'WESTERN WEAR',
+                        "Womens Wear": 'WESTERN WEAR',
+                        "women's wear": 'WESTERN WEAR',
+                      };
+
+                      const cleanCategory = selectedSuperCat.value?.trim() || '';
+                      const mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[cleanCategory.toLowerCase()] || cleanCategory;
+
+                      const updated = {
+                        ...editingCategoryProduct,
+                        category: mappedCategory,
+                        subcategory: selectedChildCat?.value || ''
+                      };
+
+                      const success = await updateExistingProduct(updated);
+                      if (success) {
+                        alert("Category Updated!");
+                        setEditingCategoryProduct(null);
+                        refreshProducts();
+                      }
+                    } else {
+                      alert("Please select a main category");
+                    }
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold"
+                >
+                  Save
+                </button>
+                <button onClick={() => setEditingCategoryProduct(null)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded">Cancel</button>
               </div>
             </div>
           </div>

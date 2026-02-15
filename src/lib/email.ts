@@ -75,3 +75,64 @@ export const sendOrderConfirmationEmail = async (order: any, customer: any, item
         console.error("Error sending email:", error);
     }
 };
+
+export const sendAdminNewOrderEmail = async (order: any, customer: any, items: any[]) => {
+    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return;
+
+    const itemsHtml = items.map((item) => `
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <img src="${item.product_image || item.product?.image || 'https://via.placeholder.com/80'}" width="60" height="80" style="object-fit: cover; border-radius: 4px;" />
+            <div>
+                <p style="margin: 0; font-weight: bold; font-size: 14px;">${item.product_name || item.product?.title}</p>
+                <p style="margin: 4px 0; font-size: 12px; color: #555;">Size: ${item.selected_size || item.size} | Qty: ${item.quantity}</p>
+                 <p style="margin: 0; font-weight: bold; font-size: 13px;">₹${item.price_per_unit || item.product?.price}</p>
+            </div>
+        </div>
+    `).join('');
+
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #000; padding: 20px; text-align: center;">
+                 <h2 style="color: white; margin: 0;">New Order Alert 🚨</h2>
+            </div>
+            
+            <div style="padding: 24px;">
+                <p style="color: #333; font-size: 16px;"><strong>Hello Admin,</strong></p>
+                <p style="color: #555;">You have received a new order!</p>
+                
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 14px;"><strong>Order ID:</strong> ${order.id}</p>
+                    <p style="margin: 5px 0 0; font-size: 14px;"><strong>Customer:</strong> ${customer.name}</p>
+                    <p style="margin: 5px 0 0; font-size: 14px;"><strong>Amount:</strong> ₹${order.total_amount}</p>
+                    <p style="margin: 5px 0 0; font-size: 14px;"><strong>Payment:</strong> ${order.payment_method} (${order.payment_status})</p>
+                    <p style="margin: 5px 0 0; font-size: 14px;"><strong>Date:</strong> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+                </div>
+
+                <h3 style="margin-bottom: 15px; font-size: 16px;">Order Items</h3>
+                ${itemsHtml}
+
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 10px; font-size: 16px;">Shipping Details</h3>
+                    <p style="margin: 0; color: #555;">${customer.address || customer.address1}, ${customer.city}, ${customer.state} - ${customer.pincode}</p>
+                    <p style="margin: 5px 0 0; color: #555;"><strong>Phone:</strong> ${customer.phoneNumber || customer.mobile}</p>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+                
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/dashboard" style="display: block; width: 100%; padding: 12px 0; background-color: #000; color: #fff; text-align: center; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to Admin Panel</a>
+            </div>
+        </div>
+    `;
+
+    try {
+        await transporter.sendMail({
+            from: `"NPlusOne System" <${SMTP_USER}>`,
+            to: 'nplusonefashion@gmail.com', // HARDCODED AS REQUESTED
+            subject: `New Order Received! #${order.id.slice(0, 8)} - ₹${order.total_amount}`,
+            html: html,
+        });
+        console.log(`Admin notification email sent.`);
+    } catch (error) {
+        console.error("Error sending admin email:", error);
+    }
+};

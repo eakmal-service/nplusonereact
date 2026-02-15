@@ -266,6 +266,9 @@ const OrdersSection: React.FC = () => {
                   </div>
                   <div className="text-sm text-gray-400">Order ID: {order.id}</div>
                   <div className="text-sm text-gray-400">AWB: {order.tracking_id || 'Pending'}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    📅 {new Date(order.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
                   <div className="text-gray-300 font-bold mt-1">₹{order.total_amount} <span className="text-xs font-normal text-gray-500">({order.payment_info?.method || 'Method N/A'})</span></div>
                 </div>
 
