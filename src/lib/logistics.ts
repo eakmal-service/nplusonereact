@@ -143,8 +143,8 @@ export const createShipment = async (order: any, paymentMode: 'Prepaid' | 'COD')
                 access_token: ACCESS_TOKEN,
                 secret_key: SECRET_KEY,
                 logistics: "Delhivery", // Optional preference? Collection has it.
-                s_type: "",
-                order_type: ""
+                s_type: "Surface",
+                order_type: "Forward"
             }
         };
 

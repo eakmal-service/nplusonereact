@@ -450,7 +450,17 @@ const ContentManagementSection = () => {
                     <>
                         {activeSection === 'hero' && renderHeroEditor()}
                         {activeSection === 'favorites' && renderFavoritesEditor()}
-                        {activeSection === 'categories' && renderGenericListEditor('categories', ['image', 'title', 'link', 'alt'])}
+                        {activeSection === 'categories' && (
+                            <div className="space-y-4">
+                                <div className="bg-blue-900/40 p-4 rounded border border-blue-800 text-blue-200 text-sm">
+                                    <p className="font-bold mb-1">ℹ️ Important Note</p>
+                                    <p>Your website currently displays <strong>Dynamic Categories</strong> (e.g., Men's Wear, Women's Wear, Kids) which are managed separately.</p>
+                                    <p className="mt-2">To edit those categories (change images, names, visibility), please use the <strong>Manage Categories</strong> tab in the main sidebar.</p>
+                                    <p className="mt-2 text-xs text-gray-400">The list below is a <em>fallback</em> and only appears if you delete all your dynamic categories.</p>
+                                </div>
+                                {renderGenericListEditor('categories', ['image', 'title', 'link', 'alt'])}
+                            </div>
+                        )}
                         {activeSection === 'banner' && (
                             <div className="bg-gray-900 p-4 rounded border border-gray-700">
                                 {/* Single Banner Editor */}

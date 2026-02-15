@@ -479,7 +479,17 @@ const ManageProductsSection: React.FC<ManageProductsSectionProps> = ({ onEdit })
                       };
 
                       const cleanCategory = selectedSuperCat.value?.trim() || '';
-                      const mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[cleanCategory.toLowerCase()] || cleanCategory;
+
+                      // Fix: Check Subcategory first for specific mapping (e.g. Co-ord Set)
+                      let mappedCategory = '';
+                      const cleanSub = selectedChildCat?.value?.trim();
+
+                      if (cleanSub && (CATEGORY_ENUM_MAP[cleanSub] || CATEGORY_ENUM_MAP[cleanSub.toLowerCase()])) {
+                        mappedCategory = CATEGORY_ENUM_MAP[cleanSub] || CATEGORY_ENUM_MAP[cleanSub.toLowerCase()];
+                      } else {
+                        // Fallback to Parent
+                        mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[cleanCategory.toLowerCase()] || cleanCategory;
+                      }
 
                       const updated = {
                         ...editingCategoryProduct,

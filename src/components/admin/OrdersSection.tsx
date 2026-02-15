@@ -159,7 +159,17 @@ const OrdersSection: React.FC = () => {
         body: JSON.stringify({ orderId })
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Failed to generate");
+      if (!data.success) {
+        // Construct a more detailed error message if available
+        let errorMessage = data.error || "Failed to generate";
+        if (data.details) {
+          // Try to extract specific message from iThink response structure if possible
+          // Usually data.details.message or data.details.data.errors
+          const detailMsg = data.details.message || JSON.stringify(data.details);
+          errorMessage += `\nDetails: ${detailMsg}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       alert(`Label Generated! AWB: ${data.awb}`);
       fetchOrders(); // Should move to Ready to Ship

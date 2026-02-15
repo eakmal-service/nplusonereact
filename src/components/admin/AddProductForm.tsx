@@ -791,24 +791,56 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         };
 
 
-        const cleanCategory = form.category?.trim();
-        // Normalize: lowercase
+        // Resolve the effective category string to map
+        // Resolve the effective category string to map
+        // Fix: Prioritize subcategory if it has a specific mapping (e.g. Co-ord Set)
+        let categoryToMap = form.category?.trim();
+        const subToMap = form.subcategory?.trim();
+
+        if (subToMap && (CATEGORY_ENUM_MAP[subToMap] || CATEGORY_ENUM_MAP[subToMap.toLowerCase()])) {
+          categoryToMap = subToMap;
+        } else {
+          // HEURISTIC: If the main category is "Women's Wear" (which isn't a DB enum), 
+          // try to use the *Parent Category* (e.g., "Western Wear", "Suit Set") if available.
+          if (selectedParentCat && (categoryToMap.toLowerCase() === "women's wear" || categoryToMap.toLowerCase() === "womens wear")) {
+            categoryToMap = selectedParentCat.label;
+          }
+        }
+
+        const cleanCategory = categoryToMap;
         const lowerCat = cleanCategory.toLowerCase();
 
+        // 1. Try Direct Map
         let mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[lowerCat];
 
-        // Fallback Logic based on keywords if not found in map
+        // 2. Fallback Logic (Refined)
         if (!mappedCategory) {
-          if (lowerCat.includes('boy') || lowerCat.includes('girl') || lowerCat.includes('kid')) {
+          // CHECK WOMEN'S CATEGORIES FIRST to prevent "men" substring match
+          if (lowerCat.includes('women') || lowerCat.includes('girl') || lowerCat.includes('saree') || lowerCat.includes('lehenga') || lowerCat.includes('kurti')) {
+            // If it's explicitly women's but didn't match 'SUIT SET' etc., what is default?
+            // Maybe 'WESTERN WEAR' or 'INDO-WESTERN'? 
+            // Let's guess based on content or default to 'WESTERN WEAR' if ambiguous, 
+            // but 'INDO-WESTERN' is safer for sarees/lehengas if they existed.
+            // For now, if it contains 'girl', it's KIDS.
+            if (lowerCat.includes('girl')) {
+              mappedCategory = 'KIDS WEAR';
+            } else {
+              // Default for unmapped Women's items
+              mappedCategory = 'WESTERN WEAR';
+            }
+          }
+          else if (lowerCat.includes('kid') || lowerCat.includes('boy')) {
             mappedCategory = 'KIDS WEAR';
-          } else if (lowerCat.includes('men') || lowerCat.includes('cargo') || lowerCat.includes('shirt') || lowerCat.includes('pant')) {
-            mappedCategory = 'MENS WEAR'; // Heuristic for "Cargo pants"
-          } else if (lowerCat.includes('suit') || lowerCat.includes('kurta')) {
+          }
+          // NOW check for men
+          else if (lowerCat.includes('men') || lowerCat.includes('cargo') || lowerCat.includes('shirt') || lowerCat.includes('pant')) {
+            mappedCategory = 'MENS WEAR';
+          }
+          else if (lowerCat.includes('suit') || lowerCat.includes('kurta')) {
             mappedCategory = 'SUIT SET';
-          } else {
-            // Ultimate Fallback - maybe 'WESTERN WEAR' is safest or 'OTHER' if exists?
-            // Let's stick to the raw value if we can't map, but knowing it will fail if not in enum.
-            // Better to console log warning.
+          }
+          else {
+            // Keep original if regex fails
             mappedCategory = cleanCategory;
           }
         }
