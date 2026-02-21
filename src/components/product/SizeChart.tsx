@@ -27,7 +27,8 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category, title 
     // If I have "Boys Cotton" (Title has BOY), isBoys=true.
     // isGirls should be false.
 
-    const isGirls = (normalizedCategory.includes('GIRL') || normalizedTitle.includes('GIRL') || normalizedCategory.includes('KID')) && !isBoys;
+    const isMens = (normalizedCategory.includes('MEN') || normalizedTitle.includes('MEN')) && !normalizedCategory.includes('WOMEN') && !normalizedTitle.includes('WOMEN') && !isBoys;
+    const isGirls = (normalizedCategory.includes('GIRL') || normalizedTitle.includes('GIRL') || normalizedCategory.includes('KID')) && !isBoys && !isMens;
 
     // Girl's Chart Data
     const girlsData = [
@@ -52,13 +53,22 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category, title 
         { size: '28', age: '5-6Y', chest: '24 - 25', topLength: '17-18', waist: '21 - 22', bottomLength: '14-15', weight: '18-20' },
     ];
 
+    // Men's Bottom Chart Data
+    const mensBottomData = [
+        { size: 'S', waist: '30', length: '40', thigh: '12.25', rise: '12.5', elasticBelt: '14', bottom: '7' },
+        { size: 'M', waist: '32', length: '40', thigh: '12.25', rise: '12.5', elasticBelt: '15', bottom: '7' },
+        { size: 'L', waist: '34', length: '41', thigh: '12.5', rise: '13', elasticBelt: '16', bottom: '7.5' },
+        { size: 'XL', waist: '36', length: '41', thigh: '13', rise: '13.5', elasticBelt: '17', bottom: '7.5' },
+        { size: '2XL', waist: '38', length: '41', thigh: '13.5', rise: '14', elasticBelt: '18', bottom: '8' },
+    ];
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className={`rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200 ${isGirls || isBoys ? 'bg-black text-silver border border-gray-700' : 'bg-white text-black'}`}>
+            <div className={`rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200 ${isGirls || isBoys || isMens ? 'bg-black text-silver border border-gray-700' : 'bg-white text-black'}`}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className={`absolute top-4 right-4 transition-colors ${isGirls || isBoys ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
+                    className={`absolute top-4 right-4 transition-colors ${isGirls || isBoys || isMens ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,6 +104,38 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose, category, title 
                                                 <td className="p-3 border border-gray-700">{row.waist}</td>
                                                 <td className="p-3 border border-gray-700">{row.bottomLength}</td>
                                                 <td className="p-3 border border-gray-700">{row.weight}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : isMens ? (
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">MEN'S BOTTOM WEAR SIZE CHART (IN INCHES)</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left border-collapse border border-gray-700">
+                                    <thead>
+                                        <tr className="bg-gray-900">
+                                            <th className="p-3 border border-gray-700 text-silver">SIZE</th>
+                                            <th className="p-3 border border-gray-700 text-silver">WAIST</th>
+                                            <th className="p-3 border border-gray-700 text-silver">LENGTH</th>
+                                            <th className="p-3 border border-gray-700 text-silver">THIGH</th>
+                                            <th className="p-3 border border-gray-700 text-silver">RISE</th>
+                                            <th className="p-3 border border-gray-700 text-silver">ELASTIC BELT</th>
+                                            <th className="p-3 border border-gray-700 text-silver">BOTTOM</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {mensBottomData.map((row) => (
+                                            <tr key={row.size} className="hover:bg-gray-900/50">
+                                                <td className="p-3 border border-gray-700 font-bold text-white">{row.size}</td>
+                                                <td className="p-3 border border-gray-700">{row.waist}</td>
+                                                <td className="p-3 border border-gray-700">{row.length}</td>
+                                                <td className="p-3 border border-gray-700">{row.thigh}</td>
+                                                <td className="p-3 border border-gray-700">{row.rise}</td>
+                                                <td className="p-3 border border-gray-700">{row.elasticBelt}</td>
+                                                <td className="p-3 border border-gray-700">{row.bottom}</td>
                                             </tr>
                                         ))}
                                     </tbody>
