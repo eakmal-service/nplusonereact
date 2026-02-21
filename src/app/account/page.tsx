@@ -190,8 +190,7 @@ export default function AccountPage() {
                                         setSaving(true);
                                         const { data, error } = await supabase
                                             .from('profiles')
-                                            .update(editForm)
-                                            .eq('id', user.id)
+                                            .upsert({ id: user.id, ...editForm })
                                             .select()
                                             .single();
 

@@ -24,6 +24,7 @@ const CheckoutPage = () => {
     // Checkout Steps State
     const [checkoutMode, setCheckoutMode] = useState<'login' | 'logged_in'>('login');
     const [paymentMethod, setPaymentMethod] = useState('phonepe'); // Default to PhonePe
+    const [isEditingAddress, setIsEditingAddress] = useState(true);
 
     // Coupon State
     const [localCoupon, setLocalCoupon] = useState('');
@@ -64,6 +65,9 @@ const CheckoutPage = () => {
                         zip: data.pincode || prev.zip,
                         name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : prev.name
                     }));
+                    if (data.address_line1) {
+                        setIsEditingAddress(false);
+                    }
                 }
             }
         };
@@ -116,6 +120,12 @@ const CheckoutPage = () => {
             return;
         }
 
+        if (isEditingAddress) {
+            setError("Please click 'Use this address' to confirm your shipping details first.");
+            window.scrollTo(0, 0);
+            return;
+        }
+
         if (!termsAccepted) {
             setError("Please agree to the Terms & Conditions to proceed.");
             window.scrollTo(0, 0);
@@ -132,14 +142,15 @@ const CheckoutPage = () => {
                 const firstName = nameParts[0] || '';
                 const lastName = nameParts.slice(1).join(' ') || '';
 
-                await supabase.from('profiles').update({
+                await supabase.from('profiles').upsert({
+                    id: user.id,
                     address_line1: formData.address,
                     city: formData.city,
                     pincode: formData.zip,
                     phone_number: formData.phoneNumber,
                     first_name: firstName,
                     last_name: lastName
-                }).eq('id', user.id);
+                });
             }
 
             const finalTotal = getDiscountedTotal();
@@ -276,72 +287,124 @@ const CheckoutPage = () => {
                         {/* 2. Shipping Address */}
                         {user && (
                             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-                                <h2 className="text-xl font-bold mb-6 text-silver flex items-center gap-2">
-                                    <span className="bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-                                    Shipping Address
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-2">Full Name *</label>
-                                        <input
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="John Doe"
-                                        />
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1">
-                                        <label className="block text-gray-400 text-sm mb-2">Email Address *</label>
-                                        <input
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="john@example.com"
-                                        />
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1">
-                                        <label className="block text-gray-400 text-sm mb-2">Phone Number *</label>
-                                        <input
-                                            name="phoneNumber"
-                                            value={formData.phoneNumber}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="+91 98765 43210"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-2">Address *</label>
-                                        <input
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="123 Fashion St, Appt 4B"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-400 text-sm mb-2">City *</label>
-                                        <input
-                                            name="city"
-                                            value={formData.city}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="New York"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-400 text-sm mb-2">ZIP Code *</label>
-                                        <input
-                                            name="zip"
-                                            value={formData.zip}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
-                                            placeholder="10001"
-                                        />
-                                    </div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold text-silver flex items-center gap-2">
+                                        <span className="bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+                                        Shipping Address
+                                    </h2>
+                                    {!isEditingAddress && (
+                                        <button
+                                            onClick={(e) => { e.preventDefault(); setIsEditingAddress(true); }}
+                                            className="text-sm text-silver underline hover:text-white"
+                                            type="button"
+                                        >
+                                            Edit Address
+                                        </button>
+                                    )}
                                 </div>
+
+                                {isEditingAddress ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="col-span-2">
+                                            <label className="block text-gray-400 text-sm mb-2">Full Name *</label>
+                                            <input
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="John Doe"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 md:col-span-1">
+                                            <label className="block text-gray-400 text-sm mb-2">Email Address *</label>
+                                            <input
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="john@example.com"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 md:col-span-1">
+                                            <label className="block text-gray-400 text-sm mb-2">Phone Number *</label>
+                                            <input
+                                                name="phoneNumber"
+                                                value={formData.phoneNumber}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="+91 98765 43210"
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-gray-400 text-sm mb-2">Address *</label>
+                                            <input
+                                                name="address"
+                                                value={formData.address}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="123 Fashion St, Appt 4B"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-400 text-sm mb-2">City *</label>
+                                            <input
+                                                name="city"
+                                                value={formData.city}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="New York"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-400 text-sm mb-2">ZIP Code *</label>
+                                            <input
+                                                name="zip"
+                                                value={formData.zip}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-black border border-gray-700 rounded px-4 py-3 focus:border-silver outline-none text-white"
+                                                placeholder="10001"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 flex justify-end gap-3 mt-4 border-t border-gray-800 pt-6">
+                                            {formData.address && (
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); setIsEditingAddress(false); }}
+                                                    className="px-4 py-2 rounded text-gray-400 font-medium hover:text-white transition"
+                                                    type="button"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const basic = formData.name && formData.phoneNumber && formData.address && formData.city && formData.zip;
+                                                    if (!basic) {
+                                                        alert("Please fill in all shipping details first.");
+                                                        return;
+                                                    }
+                                                    setIsEditingAddress(false);
+                                                }}
+                                                className="bg-white text-black px-6 py-2 rounded font-medium hover:bg-gray-200 transition"
+                                                type="button"
+                                            >
+                                                Use this address
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-black/50 border border-gray-800 p-5 rounded-lg text-gray-300">
+                                        <p className="font-bold text-white mb-1 uppercase tracking-wider text-sm">{formData.name}</p>
+                                        <p className="text-silver">{formData.address}</p>
+                                        <p className="text-silver">{formData.city}{formData.zip ? `, ${formData.zip}` : ''}</p>
+                                        <p className="mt-3 pt-3 border-t border-gray-800 text-sm text-gray-400">
+                                            Phone: <span className="text-gray-300 font-medium">{formData.phoneNumber}</span>
+                                        </p>
+                                        <p className="text-sm text-gray-400 mt-1">
+                                            Email: <span className="text-gray-300 font-medium">{formData.email}</span>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
