@@ -11,10 +11,10 @@ expect "password:"
 send "$password\r"
 
 expect "#"
-send "ls -la /etc/nginx/sites-enabled/\r"
+send "rm /etc/nginx/sites-enabled/nplusone\r"
 
 expect "#"
-send "cat > /etc/nginx/sites-available/nplusone <<EOF
+send "cat > /etc/nginx/sites-available/nplusonefashion.com <<EOF
 server {
     listen 80;
     server_name nplusonefashion.com www.nplusonefashion.com nplusone.com www.nplusone.com;
@@ -30,9 +30,6 @@ server {
 }
 EOF
 \r"
-
-expect "#"
-send "ln -sf /etc/nginx/sites-available/nplusone /etc/nginx/sites-enabled/nplusone\r"
 
 expect "#"
 send "nginx -t && systemctl restart nginx\r"

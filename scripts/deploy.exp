@@ -14,7 +14,13 @@ expect "#"
 send "cd /var/www/nplusone\r"
 
 expect "#"
-send "git pull origin main\r"
+send "git config --global --add safe.directory /var/www/nplusone\r"
+
+expect "#"
+send "git fetch origin main\r"
+
+expect "#"
+send "git reset --hard origin/main\r"
 
 expect {
     "Username for 'https://github.com':" {

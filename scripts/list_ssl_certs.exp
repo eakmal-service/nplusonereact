@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+set timeout 60
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '=== CERTBOT CERTIFICATES (/etc/letsencrypt/live) ==='\r"
+send "ls -F /etc/letsencrypt/live/ | grep '/$'\r"
+expect "#"
+
+send "echo '=== ACTIVE NGINX SSL CONFIGS ==='\r"
+send "grep -r 'ssl_certificate' /etc/nginx/sites-enabled/ | awk '{print \$1, \$2}'\r"
+expect "#"
+
+send "echo '=== CERTIFICATE EXPIRY DATES ==='\r"
+send "for cert in /etc/letsencrypt/live/*/cert.pem; do echo \"\$cert:\" && openssl x509 -enddate -noout -in \"\$cert\"; done\r"
+expect "#"
+
+send "exit\r"
+expect eof

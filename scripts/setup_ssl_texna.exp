@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+set timeout 120
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '--- RUNNING CERTBOT ---'\r"
+# Attempt non-interactive first. If it fails, we might need to handle prompts, 
+# but usually if certbot is already used (which it is for nplusone), this works.
+send "certbot --nginx -d texna.in -d www.texna.in --non-interactive --redirect --agree-tos\r"
+expect {
+    "Congratulations!" { puts "Certbot Success" }
+    "Certificate not yet due for renewal" { puts "Certificate already exists" }
+    "failed" { puts "Certbot Failed"; exit 1 }
+    "#" { }
+}
+
+send "echo '--- RELOADING NGINX ---'\r"
+send "systemctl reload nginx\r"
+expect "#"
+
+send "exit\r"
+expect eof

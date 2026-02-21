@@ -781,28 +781,30 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
           "Co-ord Set": 'CO-ORD SET',
           "Kid's Wear": 'KIDS WEAR',
           "Indo-Western": 'INDO-WESTERN',
-          // Add lowercase/variations just in case
+          // Add variations just in case
           "all boy's wear": 'KIDS WEAR',
           "boy's wear": 'KIDS WEAR',
           "girl's wear": 'KIDS WEAR',
           "men's wear": 'MENS WEAR',
           "Cargo pants": 'MENS WEAR',
           "Cargo": 'MENS WEAR',
+          // MAPPINGS FOR WOMEN'S WEAR
+          "Women's Wear": 'WESTERN WEAR',
+          "Womens Wear": 'WESTERN WEAR',
+          "women's wear": 'WESTERN WEAR',
+          "WOMEN'S WEAR": 'WESTERN WEAR',
         };
 
-
-        // Resolve the effective category string to map
         // Resolve the effective category string to map
         // Fix: Prioritize subcategory if it has a specific mapping (e.g. Co-ord Set)
-        let categoryToMap = form.category?.trim();
-        const subToMap = form.subcategory?.trim();
+        let categoryToMap = form.category?.trim() || '';
+        const subToMap = form.subcategory?.trim() || '';
 
         if (subToMap && (CATEGORY_ENUM_MAP[subToMap] || CATEGORY_ENUM_MAP[subToMap.toLowerCase()])) {
           categoryToMap = subToMap;
         } else {
-          // HEURISTIC: If the main category is "Women's Wear" (which isn't a DB enum), 
-          // try to use the *Parent Category* (e.g., "Western Wear", "Suit Set") if available.
-          if (selectedParentCat && (categoryToMap.toLowerCase() === "women's wear" || categoryToMap.toLowerCase() === "womens wear")) {
+          // HEURISTIC: If the main category is "Women's Wear", try to use Parent Category
+          if (selectedParentCat && (categoryToMap.toLowerCase().includes("women"))) {
             categoryToMap = selectedParentCat.label;
           }
         }
@@ -813,27 +815,21 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ initialData, onCancel }
         // 1. Try Direct Map
         let mappedCategory = CATEGORY_ENUM_MAP[cleanCategory] || CATEGORY_ENUM_MAP[lowerCat];
 
-        // 2. Fallback Logic (Refined)
+        // 2. Fallback Logic (Refined with word boundaries)
         if (!mappedCategory) {
-          // CHECK WOMEN'S CATEGORIES FIRST to prevent "men" substring match
-          if (lowerCat.includes('women') || lowerCat.includes('girl') || lowerCat.includes('saree') || lowerCat.includes('lehenga') || lowerCat.includes('kurti')) {
-            // If it's explicitly women's but didn't match 'SUIT SET' etc., what is default?
-            // Maybe 'WESTERN WEAR' or 'INDO-WESTERN'? 
-            // Let's guess based on content or default to 'WESTERN WEAR' if ambiguous, 
-            // but 'INDO-WESTERN' is safer for sarees/lehengas if they existed.
-            // For now, if it contains 'girl', it's KIDS.
+          // CHECK WOMEN'S CATEGORIES FIRST
+          if (lowerCat.match(/\b(women\'?s?|girl\'?s?|saree|lehenga|kurti|dress|gown)\b/i)) {
             if (lowerCat.includes('girl')) {
               mappedCategory = 'KIDS WEAR';
             } else {
-              // Default for unmapped Women's items
-              mappedCategory = 'WESTERN WEAR';
+              mappedCategory = 'WESTERN WEAR'; // Default
             }
           }
-          else if (lowerCat.includes('kid') || lowerCat.includes('boy')) {
+          else if (lowerCat.match(/\b(kid\'?s?|boy\'?s?)\b/i)) {
             mappedCategory = 'KIDS WEAR';
           }
-          // NOW check for men
-          else if (lowerCat.includes('men') || lowerCat.includes('cargo') || lowerCat.includes('shirt') || lowerCat.includes('pant')) {
+          // NOW check for men using word boundaries to prevent catching "garment"
+          else if (lowerCat.match(/\b(men\'?s?|cargo|shirt|pant|trousers?)\b/i)) {
             mappedCategory = 'MENS WEAR';
           }
           else if (lowerCat.includes('suit') || lowerCat.includes('kurta')) {

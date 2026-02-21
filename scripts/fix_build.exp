@@ -1,0 +1,43 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+
+expect "password:"
+send "$password\r"
+
+expect "#"
+send "cd /var/www/nplusone\r"
+
+expect "#"
+send "git pull origin main\r"
+
+expect "#"
+send "npm install\r"
+
+expect "#"
+send "npm run build\r"
+
+expect "#"
+send "cp -r .next/static .next/standalone/.next/static\r"
+
+expect "#"
+send "cp -r public .next/standalone/public\r"
+
+expect "#"
+send "chown -R www-data:www-data /var/www/nplusone\r"
+
+expect "#"
+send "chmod -R 755 /var/www/nplusone\r"
+
+expect "#"
+send "pm2 restart nplusone\r"
+
+expect "#"
+send "exit\r"
+
+expect eof

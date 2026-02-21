@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+
+expect "password:"
+send "$password\r"
+
+expect "#"
+send "cat > /etc/nginx/sites-available/texna-react <<EOF
+server {
+    listen 80;
+    server_name texna.in www.texna.in;
+    root /var/www/texna-react;
+    index index.html;
+    location / {
+        try_files \\\$uri \\\$uri/ /index.html;
+    }
+}
+EOF
+\r"
+
+expect "#"
+send "nginx -t && systemctl restart nginx\r"
+
+expect "#"
+send "exit\r"
+
+expect eof

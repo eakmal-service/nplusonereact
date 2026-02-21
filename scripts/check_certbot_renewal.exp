@@ -1,0 +1,28 @@
+#!/usr/bin/expect -f
+set timeout 120
+set host "72.61.229.171"
+set user "root"
+set password ")vbofQi/lHXSMqF?Nk8E"
+
+spawn ssh -o StrictHostKeyChecking=no $user@$host
+expect {
+    "password:" { send "$password\r" }
+    timeout { puts "SSH connection timed out"; exit 1 }
+}
+expect "#"
+
+send "echo '=== SYSTEMD TIMERS ==='\r"
+send "systemctl list-timers | grep certbot\r"
+expect "#"
+
+send "echo '=== CRON JOBS ==='\r"
+send "ls -l /etc/cron.d/certbot\r"
+send "cat /etc/cron.d/certbot\r"
+expect "#"
+
+send "echo '=== DRY RUN RENEWAL ==='\r"
+send "certbot renew --dry-run\r"
+expect "#"
+
+send "exit\r"
+expect eof

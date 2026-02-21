@@ -1,6 +1,6 @@
 #!/usr/bin/expect -f
 
-set timeout -1
+set timeout 20
 set host "72.61.229.171"
 set user "root"
 set password ")vbofQi/lHXSMqF?Nk8E"
@@ -11,13 +11,10 @@ expect "password:"
 send "$password\r"
 
 expect "#"
-send "ufw allow 'Nginx Full'\r"
+send "pm2 stop nplusone\r"
 
 expect "#"
-send "certbot --nginx -d nplusonefashion.com -d www.nplusonefashion.com --non-interactive --agree-tos -m nplusonefashion@gmail.com --redirect\r"
-
-expect "#"
-send "systemctl restart nginx\r"
+send "pm2 status\r"
 
 expect "#"
 send "exit\r"
