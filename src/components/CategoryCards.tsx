@@ -179,19 +179,8 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
 
 
 
-        {/* New Arrivals / Recommended Section */}
-        {recommendedData.length > 0 && (
-          <RecommendedProducts
-            products={recommendedData}
-            title="New Arrivals"
-          />
-        )}
-
-
-
-
         {/* NPlusOne Category Banner */}
-        <div className="w-full mb-8 mt-12 relative">
+        <div className="w-full mb-8 mt-8 relative">
           <Image
             src={optimizeCloudinaryUrl("https://res.cloudinary.com/douy8ujry/image/upload/v1767777418/nplusone-fashion/Banner%20images/NPlusOne.png")} // Fallback if local but safe to wrap
             alt="NPlusOne Collection"
@@ -203,6 +192,17 @@ const CategoryCards = ({ categories: cmsCategories, collections: cmsCollections,
             quality={90}
           />
         </div>
+
+        {/* New Arrivals / Recommended Section */}
+        {recommendedData.length > 0 && (
+          <RecommendedProducts
+            products={recommendedData}
+            title="New Arrivals"
+          />
+        )}
+
+
+
 
         {/* Recently Viewed Products Section */}
         {hasViewedProducts && recentlyViewed.length > 0 && (
