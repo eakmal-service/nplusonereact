@@ -19,7 +19,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 block h-full"
+      className="group bg-white rounded-xl shadow-sm hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full border border-gray-100"
     >
       <div className="relative aspect-square">
         {product.image ? (
@@ -32,7 +32,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             className="object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-b border-gray-100">
             <svg
               className="h-12 w-12 text-gray-400"
               fill="none"
@@ -50,16 +50,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
       </div>
 
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
+      <div className="flex-1 p-5 flex flex-col">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-amber-600 line-clamp-2 transition-colors duration-200">
           {product.title}
         </h3>
 
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+        <p className="mt-2 text-sm text-gray-500 line-clamp-2 flex-1">
           {product.description}
         </p>
 
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between pt-4 border-t border-gray-100">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-blue-600">
