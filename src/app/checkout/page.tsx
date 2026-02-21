@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabaseClient';
 
 
 
@@ -43,15 +44,30 @@ const CheckoutPage = () => {
     });
 
     useEffect(() => {
-        if (user) {
-            setCheckoutMode('logged_in');
-            setFormData(prev => ({
-                ...prev,
-                email: user.email || '',
-                name: user.user_metadata?.full_name || '',
-                phoneNumber: user.phone || ''
-            }));
-        }
+        const fetchUserData = async () => {
+            if (user) {
+                setCheckoutMode('logged_in');
+                setFormData(prev => ({
+                    ...prev,
+                    email: user.email || '',
+                    name: user.user_metadata?.full_name || '',
+                    phoneNumber: user.phone || ''
+                }));
+
+                const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                if (data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        phoneNumber: data.phone_number || prev.phoneNumber,
+                        address: data.address_line1 || prev.address,
+                        city: data.city || prev.city,
+                        zip: data.pincode || prev.zip,
+                        name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : prev.name
+                    }));
+                }
+            }
+        };
+        fetchUserData();
     }, [user]);
 
     // Validations
@@ -110,6 +126,22 @@ const CheckoutPage = () => {
         setError(null);
 
         try {
+            // Save newly entered checkout details back to profile as default
+            if (user) {
+                const nameParts = formData.name.trim().split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+
+                await supabase.from('profiles').update({
+                    address_line1: formData.address,
+                    city: formData.city,
+                    pincode: formData.zip,
+                    phone_number: formData.phoneNumber,
+                    first_name: firstName,
+                    last_name: lastName
+                }).eq('id', user.id);
+            }
+
             const finalTotal = getDiscountedTotal();
 
             if (paymentMethod === 'cod') {
