@@ -539,8 +539,8 @@ const CheckoutPage = () => {
                                 </div>
                                 {discount > 0 && (
                                     <div className="flex justify-between text-green-500">
-                                        <span>Discount ({discount}%)</span>
-                                        <span>-₹{(getCartTotal() * (discount / 100)).toFixed(2)}</span>
+                                        <span>Discount (Coupon)</span>
+                                        <span>-₹{discount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="border-t border-gray-800 pt-4 flex justify-between text-lg">

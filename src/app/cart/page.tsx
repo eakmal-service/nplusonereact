@@ -217,7 +217,7 @@ const CartPage = () => {
                     ) : (
                       <div className="flex justify-between items-center bg-green-900/20 border border-green-900/50 p-2 rounded">
                         <span className="text-green-500 text-sm">
-                          Coupon <b>{couponCode}</b> applied ({discount}% off)
+                          Coupon <b>{couponCode}</b> applied
                         </span>
                         <button
                           onClick={removeCoupon}
@@ -231,8 +231,8 @@ const CartPage = () => {
 
                   {couponCode && (
                     <div className="flex justify-between text-green-500">
-                      <span>Discount ({discount}%)</span>
-                      <span>-₹{(getCartTotal() * (discount / 100)).toFixed(2)}</span>
+                      <span>Discount (Coupon)</span>
+                      <span>-₹{discount.toFixed(2)}</span>
                     </div>
                   )}
 

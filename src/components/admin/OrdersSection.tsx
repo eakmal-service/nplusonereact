@@ -13,6 +13,7 @@ interface Order {
   courier_info?: any;
   payment_info?: any;
   shipping_address?: any;
+  order_items?: any[];
 }
 
 // Workflow Tabs - Adjusted for strict flow
@@ -41,7 +42,7 @@ const OrdersSection: React.FC = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('orders')
-      .select('*')
+      .select('*, order_items(*)')
       .order('created_at', { ascending: false });
 
     if (error) console.error('Error fetching orders:', error);
@@ -405,6 +406,23 @@ const OrdersSection: React.FC = () => {
                     <span className="text-blue-400">{new Date(e.timestamp).toLocaleString()}</span>: {e.message}
                   </div>
                 ))}
+              </div>
+              <p><strong>Order Items:</strong></p>
+              <div className="max-h-40 overflow-y-auto border border-gray-700 p-2 rounded bg-gray-900/50">
+                {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
+                  selectedOrder.order_items.map((item: any, i) => (
+                    <div key={i} className="text-xs mb-2 border-b border-gray-800 pb-2 last:border-b-0">
+                      <p className="font-bold text-white text-sm">{item.product_name}</p>
+                      <div className="flex gap-4 text-gray-400 mt-1">
+                        <p>Size: <span className="text-white">{item.selected_size || 'N/A'}</span></p>
+                        <p>Qty: <span className="text-white">{item.quantity}</span></p>
+                        <p>Color: <span className="text-white">{item.selected_color || 'N/A'}</span></p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-500">No items recorded in DB for this order.</p>
+                )}
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
