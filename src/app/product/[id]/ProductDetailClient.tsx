@@ -43,6 +43,53 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
     const [deliveryReturnsOpen, setDeliveryReturnsOpen] = useState(false);
     const [productDeclarationOpen, setProductDeclarationOpen] = useState(false);
 
+    // Swipe state
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const handleSwipeEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        let thumbnailsCount = 1;
+
+        // This is safe to recalculate or just use the derived thumbnails length below
+        const thbs = (product?.images && product.images.length > 0)
+            ? product.images.map((img: { url: string; alt?: string }) => ({
+                url: optimizeCloudinaryUrl(img.url),
+                alt: img.alt || product.title || ''
+            }))
+            : (product?.thumbnails && product.thumbnails.length > 0)
+                ? product.thumbnails
+                : (product?.imageUrls && product.imageUrls.length > 0)
+                    ? product.imageUrls.map((url: string) => ({
+                        url: optimizeCloudinaryUrl(url),
+                        alt: product.alt || product.title || ''
+                    }))
+                    : [{ url: optimizeCloudinaryUrl(product?.image || product?.imageUrl) || '/placeholder.png', alt: product?.title || '' }];
+        thumbnailsCount = thbs.length;
+
+        if (isLeftSwipe) {
+            setSelectedImage((prev) => (prev === thumbnailsCount - 1 ? 0 : prev + 1));
+        }
+        if (isRightSwipe) {
+            setSelectedImage((prev) => (prev === 0 ? thumbnailsCount - 1 : prev - 1));
+        }
+    };
+
     const { addToCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
@@ -182,7 +229,12 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                             {/* Main image with zoom */}
                             <div className="w-full md:w-4/5 relative flex justify-center items-center bg-gray-900 h-[500px]">
                                 <div className="relative h-full w-full overflow-hidden cursor-zoom-in group"
+                                    onTouchStart={onTouchStart}
+                                    onTouchMove={onTouchMove}
+                                    onTouchEnd={handleSwipeEnd}
                                     onMouseMove={(e) => {
+                                        // only run zoom effect if it's presumably a desktop device
+                                        if (window.innerWidth < 768) return;
                                         const container = e.currentTarget;
                                         const { left, top, width, height } = container.getBoundingClientRect();
                                         const x = (e.clientX - left) / width;
@@ -236,6 +288,21 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, simi
                                 </div>
                             </div>
                         </div>
+
+                        {/* Mobile view dots indicator */}
+                        {thumbnails.length > 1 && (
+                            <div className="flex justify-center mt-4 space-x-2 md:hidden">
+                                {thumbnails.map((_: any, idx: number) => (
+                                    <button
+                                        key={idx}
+                                        className={`w-2.5 h-2.5 rounded-full transition-colors ${selectedImage === idx ? 'bg-silver' : 'bg-gray-700'
+                                            }`}
+                                        onClick={() => setSelectedImage(idx)}
+                                        aria-label={`Go to image ${idx + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Right side - Product details */}
