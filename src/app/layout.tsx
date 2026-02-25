@@ -12,11 +12,6 @@ import GlobalErrorObserver from '@/components/GlobalErrorObserver';
 export const metadata: Metadata = {
   title: 'NPlusOne Fashion',
   description: 'Contemporary fashion for everyone',
-  other: {
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-  },
 }
 
 const inter = Inter({ subsets: ['latin'] })
@@ -28,11 +23,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-      </head>
       <body className={inter.className}>
         <GlobalErrorObserver />
         <AuthProvider>
