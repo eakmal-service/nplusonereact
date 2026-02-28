@@ -195,6 +195,8 @@ const OrdersSection: React.FC = () => {
         window.open(data.data, '_blank');
       } else if (data.file_url) {
         window.open(data.file_url, '_blank');
+      } else if (data.file_name) {
+        window.open(data.file_name, '_blank');
       } else {
         alert("Label PDF URL not found in response:\n" + JSON.stringify(data, null, 2));
       }
