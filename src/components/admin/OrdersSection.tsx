@@ -10,6 +10,8 @@ interface Order {
   tracking_id?: string; // AWB
   created_at: string;
   tracking_events?: any[];
+  payment_method?: string;
+  payment_status?: string;
   courier_info?: any;
   payment_info?: any;
   shipping_address?: any;
@@ -282,7 +284,7 @@ const OrdersSection: React.FC = () => {
                   <div className="text-xs text-gray-500 mt-1">
                     📅 {new Date(order.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <div className="text-gray-300 font-bold mt-1">₹{order.total_amount} <span className="text-xs font-normal text-gray-500">({order.payment_info?.method || 'Method N/A'})</span></div>
+                  <div className="text-gray-300 font-bold mt-1">₹{order.total_amount} <span className="text-xs font-normal text-gray-500">({order.payment_method || 'Method N/A'})</span></div>
                 </div>
 
                 {/* Quick Actions based on Tab */}
@@ -401,6 +403,7 @@ const OrdersSection: React.FC = () => {
                 {(selectedOrder.shipping_address as any)?.address || 'N/A'}, {(selectedOrder.shipping_address as any)?.city}<br />
                 {(selectedOrder.shipping_address as any)?.pincode}
               </p>
+              <p><strong>Payment Method:</strong> {selectedOrder.payment_method || 'N/A'} ({selectedOrder.payment_status || 'PENDING'})</p>
               <p><strong>Timeline:</strong></p>
               <div className="max-h-40 overflow-y-auto border border-gray-700 p-2 rounded">
                 {selectedOrder.tracking_events?.map((e: any, i) => (
